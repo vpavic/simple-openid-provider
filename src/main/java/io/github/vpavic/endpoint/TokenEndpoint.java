@@ -1,4 +1,4 @@
-package io.github.vpavic;
+package io.github.vpavic.endpoint;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;

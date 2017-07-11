@@ -1,4 +1,4 @@
-package io.github.vpavic;
+package io.github.vpavic.endpoint;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import net.minidev.json.JSONObject;
