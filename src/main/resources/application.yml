@@ -1,2 +1,5 @@
 server:
   port: 6432
+  session:
+    cookie:
+      name: sid
