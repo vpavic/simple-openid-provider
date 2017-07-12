@@ -1,10 +1,5 @@
 package io.github.vpavic.config;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import com.nimbusds.oauth2.sdk.token.Tokens;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -15,11 +10,6 @@ import org.springframework.security.core.authority.AuthorityUtils;
 
 @Configuration
 public class SecurityConfiguration {
-
-	@Bean
-	public ConcurrentMap<String, Tokens> tokenStore() {
-		return new ConcurrentHashMap<>();
-	}
 
 	@Order(0)
 	@Configuration

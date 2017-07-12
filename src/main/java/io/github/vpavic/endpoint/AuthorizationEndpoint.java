@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,6 +28,7 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import io.github.vpavic.code.AuthorizationCodeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
@@ -43,13 +43,13 @@ public class AuthorizationEndpoint {
 
 	private static final String KID = "nimbus-oidc-provider";
 
-	private final ConcurrentMap<String, Tokens> tokenStore;
+	private final AuthorizationCodeService authorizationCodeService;
 
 	private final JWKSet jwkSet;
 
-	public AuthorizationEndpoint(ConcurrentMap<String, Tokens> tokenStore,
+	public AuthorizationEndpoint(AuthorizationCodeService authorizationCodeService,
 			@Value("classpath:jwks.json") Resource jwkSetResource) throws Exception {
-		this.tokenStore = Objects.requireNonNull(tokenStore);
+		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.jwkSet = JWKSet.load(jwkSetResource.getFile());
 	}
 
@@ -67,11 +67,9 @@ public class AuthorizationEndpoint {
 
 		// Authorization Code Flow
 		if (authRequest.getResponseType().impliesCodeFlow()) {
-			AuthorizationCode code = new AuthorizationCode();
+			AuthorizationCode code = this.authorizationCodeService.create(tokens);
 			State sessionState = State.parse(request.getSession().getId());
 			ResponseMode responseMode = ResponseMode.QUERY;
-
-			this.tokenStore.put(code.getValue(), tokens);
 
 			AuthorizationResponse authResponse = new AuthenticationSuccessResponse(
 					redirectionURI, code, null, null, state, sessionState, responseMode);

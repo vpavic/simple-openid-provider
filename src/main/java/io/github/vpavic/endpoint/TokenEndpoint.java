@@ -1,7 +1,6 @@
 package io.github.vpavic.endpoint;
 
 import java.util.Objects;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,6 +19,7 @@ import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import io.github.vpavic.code.AuthorizationCodeService;
 import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,10 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "/token")
 public class TokenEndpoint {
 
-	private final ConcurrentMap<String, Tokens> tokenStore;
+	private final AuthorizationCodeService authorizationCodeService;
 
-	public TokenEndpoint(ConcurrentMap<String, Tokens> tokenStore) {
-		this.tokenStore = Objects.requireNonNull(tokenStore);
+	public TokenEndpoint(AuthorizationCodeService authorizationCodeService) {
+		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 	}
 
 	@PostMapping
@@ -46,7 +46,7 @@ public class TokenEndpoint {
 		if (authorizationGrant instanceof AuthorizationCodeGrant) {
 			AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) authorizationGrant;
 			AuthorizationCode authorizationCode = authorizationCodeGrant.getAuthorizationCode();
-			Tokens tokens = this.tokenStore.remove(authorizationCode.getValue());
+			Tokens tokens = this.authorizationCodeService.consume(authorizationCode);
 			if (tokens == null) {
 				throw new GeneralException(new ErrorObject("invalid_request"));
 			}
