@@ -2,13 +2,14 @@ package io.github.vpavic.endpoint;
 
 import java.net.URI;
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -19,12 +20,15 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationResponse;
+import com.nimbusds.oauth2.sdk.GeneralException;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -32,10 +36,9 @@ import io.github.vpavic.code.AuthorizationCodeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.view.RedirectView;
 
 @Controller
 @RequestMapping(path = "/authorize")
@@ -54,7 +57,8 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public View handleAuthorizationRequest(HttpServletRequest request) throws Exception {
+	public String handleAuthorizationRequest(HttpServletRequest request)
+			throws ParseException, JOSEException {
 		AuthenticationRequest authRequest = AuthenticationRequest.parse(request.getQueryString());
 
 		ClientID clientID = authRequest.getClientID();
@@ -74,7 +78,7 @@ public class AuthorizationEndpoint {
 			AuthorizationResponse authResponse = new AuthenticationSuccessResponse(
 					redirectionURI, code, null, null, state, sessionState, responseMode);
 
-			return new RedirectView(authResponse.toURI().toString());
+			return "redirect:" + authResponse.toURI();
 		}
 		// TODO Implicit Flow
 		else {
@@ -82,7 +86,15 @@ public class AuthorizationEndpoint {
 		}
 	}
 
-	private Tokens createTokens(AuthenticationRequest authRequest, Principal principal) throws Exception {
+	@ExceptionHandler(GeneralException.class)
+	public String handleError(GeneralException e) {
+		AuthenticationErrorResponse authResponse = new AuthenticationErrorResponse(
+				e.getRedirectionURI(), e.getErrorObject(), e.getState(), e.getResponseMode());
+		return "redirect:" + authResponse.toURI();
+	}
+
+	private Tokens createTokens(AuthenticationRequest authRequest, Principal principal)
+			throws JOSEException {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		RefreshToken refreshToken = new RefreshToken();
 
@@ -94,7 +106,7 @@ public class AuthorizationEndpoint {
 					.issuer("https://self-issued.me")
 					.subject(principal.getName())
 					.audience(authRequest.getClientID().getValue())
-					.expirationTime(Date.from(LocalDateTime.now().plusMinutes(30).toInstant(ZoneOffset.UTC)))
+					.expirationTime(Date.from(Instant.now().plus(30, ChronoUnit.MINUTES)))
 					.issueTime(new Date())
 					.build();
 			SignedJWT idToken = new SignedJWT(header, claimsSet);
