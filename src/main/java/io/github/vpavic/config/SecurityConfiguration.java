@@ -73,4 +73,25 @@ public class SecurityConfiguration {
 
 	}
 
+	@Order(5)
+	@Configuration
+	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.antMatcher("/userinfo")
+				.cors()
+					.and()
+				.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+					.and()
+				.authorizeRequests()
+					.anyRequest().permitAll();
+			// @formatter:on
+		}
+
+	}
+
 }
