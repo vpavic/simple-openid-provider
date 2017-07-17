@@ -36,4 +36,5 @@ dependencies {
 	compile 'com.nimbusds:oauth2-oidc-sdk:5.30'
 
 	testCompile 'org.springframework.boot:spring-boot-starter-test'
+	testCompile 'org.springframework.security:spring-security-test'
 }

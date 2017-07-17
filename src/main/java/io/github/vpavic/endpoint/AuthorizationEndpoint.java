@@ -5,7 +5,9 @@ import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,7 +23,6 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationResponse;
 import com.nimbusds.oauth2.sdk.GeneralException;
-import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
@@ -37,8 +38,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping(path = "/authorize")
@@ -56,10 +57,11 @@ public class AuthorizationEndpoint {
 		this.jwkSet = JWKSet.load(jwkSetResource.getFile());
 	}
 
-	@GetMapping
-	public String handleAuthorizationRequest(HttpServletRequest request)
-			throws ParseException, JOSEException {
-		AuthenticationRequest authRequest = AuthenticationRequest.parse(request.getQueryString());
+	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
+	public String handleAuthorizationRequest(HttpServletRequest request) throws Exception {
+		Map<String, String> params = request.getParameterMap().entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()[0]));
+		AuthenticationRequest authRequest = AuthenticationRequest.parse(params);
 
 		ClientID clientID = authRequest.getClientID();
 		// TODO validate client
