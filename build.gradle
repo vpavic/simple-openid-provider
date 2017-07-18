@@ -27,6 +27,16 @@ subprojects {
 		maven { url 'https://repo.spring.io/snapshot' }
 	}
 
+	dependencyManagement {
+		imports {
+			mavenBom 'io.spring.platform:platform-bom:Cairo-BUILD-SNAPSHOT'
+			mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+		}
+	}
+
+	ext['nimbus-jose-jwt.version'] = '4.39.2'
+	ext['oauth2-oidc-sdk.version'] = '5.30'
+
 	dependencies {
 		compile 'org.springframework.boot:spring-boot-starter-security'
 		compile 'org.springframework.boot:spring-boot-starter-web'

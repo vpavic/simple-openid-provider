@@ -1,4 +1,4 @@
 dependencies {
-	compile 'com.nimbusds:nimbus-jose-jwt:4.39.1'
-	compile 'com.nimbusds:oauth2-oidc-sdk:5.30'
+	compile 'com.nimbusds:nimbus-jose-jwt'
+	compile 'com.nimbusds:oauth2-oidc-sdk'
 }
