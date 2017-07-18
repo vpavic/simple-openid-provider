@@ -1,9 +1,10 @@
 ### Gradle ###
 .gradle
-build
+build/
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
+out/
 *.iml
 *.ipr
 *.iws
