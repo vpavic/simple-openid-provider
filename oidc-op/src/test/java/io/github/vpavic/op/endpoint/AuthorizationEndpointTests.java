@@ -1,4 +1,4 @@
-package io.github.vpavic.endpoint;
+package io.github.vpavic.op.endpoint;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.token.Tokens;
@@ -16,7 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import io.github.vpavic.code.AuthorizationCodeService;
+import io.github.vpavic.op.code.AuthorizationCodeService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;

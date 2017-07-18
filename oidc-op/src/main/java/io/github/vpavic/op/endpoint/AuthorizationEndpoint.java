@@ -1,4 +1,4 @@
-package io.github.vpavic.endpoint;
+package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
 import java.security.Principal;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import io.github.vpavic.code.AuthorizationCodeService;
+import io.github.vpavic.op.code.AuthorizationCodeService;
 
 @Controller
 @RequestMapping(path = "/authorize")

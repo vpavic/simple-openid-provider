@@ -1,4 +1,4 @@
-package io.github.vpavic.config;
+package io.github.vpavic.op.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

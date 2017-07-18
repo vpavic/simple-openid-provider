@@ -1,4 +1,4 @@
-package io.github.vpavic;
+package io.github.vpavic.op;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

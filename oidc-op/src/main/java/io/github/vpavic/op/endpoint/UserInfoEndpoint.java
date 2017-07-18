@@ -1,4 +1,4 @@
-package io.github.vpavic.endpoint;
+package io.github.vpavic.op.endpoint;
 
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;

@@ -1,4 +1,4 @@
-package io.github.vpavic.code;
+package io.github.vpavic.op.code;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
