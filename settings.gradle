@@ -1,3 +1,4 @@
 rootProject.name = 'nimbus-oidc-provider'
 
 include 'oidc-op'
+include 'oidc-rp'
