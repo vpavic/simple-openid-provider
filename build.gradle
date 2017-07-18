@@ -14,27 +14,26 @@ buildscript {
 	}
 }
 
-apply plugin: 'java'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'org.springframework.boot'
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'io.spring.dependency-management'
+	apply plugin: 'org.springframework.boot'
 
-sourceCompatibility = 1.8
+	sourceCompatibility = 1.8
 
-repositories {
-	jcenter()
-	maven { url 'https://repo.spring.io/milestone' }
-	maven { url 'https://repo.spring.io/snapshot' }
-}
+	repositories {
+		jcenter()
+		maven { url 'https://repo.spring.io/milestone' }
+		maven { url 'https://repo.spring.io/snapshot' }
+	}
 
-dependencies {
-	compile 'org.springframework.boot:spring-boot-starter-security'
-	compile 'org.springframework.boot:spring-boot-starter-web'
+	dependencies {
+		compile 'org.springframework.boot:spring-boot-starter-security'
+		compile 'org.springframework.boot:spring-boot-starter-web'
 
-	compile 'org.springframework.boot:spring-boot-devtools'
+		compile 'org.springframework.boot:spring-boot-devtools'
 
-	compile 'com.nimbusds:nimbus-jose-jwt:4.39.1'
-	compile 'com.nimbusds:oauth2-oidc-sdk:5.30'
-
-	testCompile 'org.springframework.boot:spring-boot-starter-test'
-	testCompile 'org.springframework.security:spring-security-test'
+		testCompile 'org.springframework.boot:spring-boot-starter-test'
+		testCompile 'org.springframework.security:spring-security-test'
+	}
 }
