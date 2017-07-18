@@ -15,7 +15,7 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -34,28 +34,25 @@ import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.key.KeyService;
 
 @Controller
 @RequestMapping(path = "/authorize")
 public class AuthorizationEndpoint {
 
-	private static final String KID = "nimbus-oidc-provider";
-
 	private final AuthorizationCodeService authorizationCodeService;
 
-	private final JWKSet jwkSet;
+	private final KeyService keyService;
 
-	public AuthorizationEndpoint(AuthorizationCodeService authorizationCodeService,
-			@Value("classpath:jwks.json") Resource jwkSetResource) throws Exception {
+	public AuthorizationEndpoint(AuthorizationCodeService authorizationCodeService, KeyService keyService)
+			throws Exception {
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
-		this.jwkSet = JWKSet.load(jwkSetResource.getFile());
+		this.keyService = Objects.requireNonNull(keyService);
 	}
 
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
@@ -106,13 +103,14 @@ public class AuthorizationEndpoint {
 		RefreshToken refreshToken = new RefreshToken();
 
 		if (authRequest.getScope().contains("openid")) {
-			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(KID).build();
+			JWK defaultJwk = this.keyService.findDefault();
+			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(defaultJwk.getKeyID()).build();
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().issuer("https://self-issued.me")
 					.subject(principal.getName()).audience(authRequest.getClientID().getValue())
 					.expirationTime(Date.from(Instant.now().plus(30, ChronoUnit.MINUTES))).issueTime(new Date())
 					.build();
 			SignedJWT idToken = new SignedJWT(header, claimsSet);
-			JWSSigner signer = new RSASSASigner((RSAKey) this.jwkSet.getKeyByKeyId(KID));
+			JWSSigner signer = new RSASSASigner((RSAKey) defaultJwk);
 			idToken.sign(signer);
 			return new OIDCTokens(idToken, accessToken, refreshToken);
 		}

@@ -1,5 +1,10 @@
 package io.github.vpavic.op.endpoint;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPublicKey;
+
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.junit.Before;
@@ -17,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.key.KeyService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -37,9 +43,17 @@ public class AuthorizationEndpointTests {
 	@MockBean
 	private AuthorizationCodeService authorizationCodeService;
 
+	@MockBean
+	private KeyService keyService;
+
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
 		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(new AuthorizationCode("test"));
+		KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
+		keyGenerator.initialize(512);
+		KeyPair keyPair = keyGenerator.genKeyPair();
+		given(this.keyService.findDefault()).willReturn(
+				new RSAKey.Builder((RSAPublicKey) keyPair.getPublic()).privateKey(keyPair.getPrivate()).build());
 	}
 
 	@Test
