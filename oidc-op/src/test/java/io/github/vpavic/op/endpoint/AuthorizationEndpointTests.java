@@ -46,9 +46,9 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void authenticationRequest_withGetAndMinimumParams_isOk() throws Exception {
 		MockHttpSession session = new MockHttpSession();
-		MockHttpServletRequestBuilder request = get("/authorize").session(session).param("scope", "openid")
-				.param("response_type", "code").param("client_id", "test-client")
-				.param("redirect_uri", "http://example.com");
+		MockHttpServletRequestBuilder request = get(
+				"/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
+						.session(session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(
 				redirectedUrl("http://example.com?code={code}&session_state={sessionState}", "test", session.getId()));
 	}
@@ -57,9 +57,9 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void authenticationRequest_withPostAndMinimumParams_isOk() throws Exception {
 		MockHttpSession session = new MockHttpSession();
-		MockHttpServletRequestBuilder request = get("/authorize").session(session).param("scope", "openid")
-				.param("response_type", "code").param("client_id", "test-client")
-				.param("redirect_uri", "http://example.com");
+		MockHttpServletRequestBuilder request = get(
+				"/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
+						.session(session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(
 				redirectedUrl("http://example.com?code={code}&session_state={sessionState}", "test", session.getId()));
 	}
