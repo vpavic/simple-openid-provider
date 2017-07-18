@@ -16,22 +16,15 @@ buildscript {
 
 subprojects {
 	apply plugin: 'java'
-	apply plugin: 'io.spring.dependency-management'
 	apply plugin: 'org.springframework.boot'
+	apply from: "$rootDir/gradle/dependency-management.gradle"
 
 	sourceCompatibility = 1.8
 
 	repositories {
 		jcenter()
-		maven { url 'https://repo.spring.io/milestone' }
-		maven { url 'https://repo.spring.io/snapshot' }
-	}
-
-	dependencyManagement {
-		dependencies {
-			dependency 'com.nimbusds:nimbus-jose-jwt:4.39.2'
-			dependency 'com.nimbusds:oauth2-oidc-sdk:5.30'
-		}
+		maven { url 'https://repo.spring.io/milestone/' }
+		maven { url 'https://repo.spring.io/snapshot/' }
 	}
 
 	dependencies {

@@ -1,0 +1,8 @@
+apply plugin: 'io.spring.dependency-management'
+
+dependencyManagement {
+	dependencies {
+		dependency 'com.nimbusds:nimbus-jose-jwt:4.39.2'
+		dependency 'com.nimbusds:oauth2-oidc-sdk:5.30'
+	}
+}
