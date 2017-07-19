@@ -1,15 +1,36 @@
 package io.github.vpavic.op.config;
 
+import java.util.Collections;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+
+import io.github.vpavic.op.key.KeyService;
 
 @Configuration
 public class SecurityConfiguration {
+
+	@Bean
+	public UserDetailsService userDetailsService() {
+		InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+		manager.createUser(User.withUsername("user").password("password").roles("USER").build());
+		return manager;
+	}
 
 	@Order(0)
 	@Configuration
@@ -77,10 +98,31 @@ public class SecurityConfiguration {
 	@Configuration
 	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+		private final UserDetailsService userDetailsService;
+
+		private final KeyService keyService;
+
+		UserInfoSecurityConfiguration(ObjectProvider<UserDetailsService> userDetailsService,
+				ObjectProvider<KeyService> keyService) {
+			this.userDetailsService = userDetailsService.getObject();
+			this.keyService = keyService.getObject();
+		}
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
+			PreAuthenticatedAuthenticationProvider authenticationProvider = new PreAuthenticatedAuthenticationProvider();
+			authenticationProvider.setPreAuthenticatedUserDetailsService(
+					new UserDetailsByNameServiceWrapper<>(this.userDetailsService));
+
+			AuthenticationManager authenticationManager = new ProviderManager(
+					Collections.singletonList(authenticationProvider));
+
+			BearerAccessTokenAuthenticationFilter authenticationFilter = new BearerAccessTokenAuthenticationFilter(
+					this.keyService, authenticationManager);
+
 			// @formatter:off
 			http
+				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
 				.antMatcher("/userinfo")
 				.cors()
 					.and()
@@ -88,7 +130,7 @@ public class SecurityConfiguration {
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 					.and()
 				.authorizeRequests()
-					.anyRequest().permitAll();
+					.anyRequest().fullyAuthenticated();
 			// @formatter:on
 		}
 

@@ -1,10 +1,14 @@
 package io.github.vpavic.op.endpoint;
 
+import java.security.Principal;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.Subject;
+import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
-import net.minidev.json.JSONObject;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -16,9 +20,11 @@ public class UserInfoEndpoint {
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public JSONObject handleUserInfoRequest(@AuthenticationPrincipal UserDetails principal) {
-		UserInfo userInfo = new UserInfo(new Subject("test"));
-		return userInfo.toJSONObject();
+	public void getUserInfo(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		Principal principal = request.getUserPrincipal();
+		UserInfo userInfo = new UserInfo(new Subject(principal.getName()));
+		UserInfoSuccessResponse userInfoResponse = new UserInfoSuccessResponse(userInfo);
+		ServletUtils.applyHTTPResponse(userInfoResponse.toHTTPResponse(), response);
 	}
 
 }
