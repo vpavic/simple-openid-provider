@@ -13,6 +13,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.id.Audience;
@@ -41,42 +42,73 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public Tokens createTokens(AuthorizationRequest request, Principal principal) {
-		BearerAccessToken accessToken = createAccessToken();
-		RefreshToken refreshToken = createRefreshToken();
+		Instant now = Instant.now();
+
+		JWK defaultJwk = this.keyService.findDefault();
+		JWSHeader header = createJwsHeader(defaultJwk);
+		JWSSigner signer = createJwsSigner(defaultJwk);
+
+		BearerAccessToken accessToken = createAccessToken(header, signer, principal, request, now);
+		RefreshToken refreshToken = new RefreshToken();
+
 		return new Tokens(accessToken, refreshToken);
 	}
 
 	@Override
 	public OIDCTokens createTokens(AuthenticationRequest request, Principal principal) {
-		String idToken = createIdToken(request, principal);
-		BearerAccessToken accessToken = createAccessToken();
-		RefreshToken refreshToken = createRefreshToken();
-		return new OIDCTokens(idToken, accessToken, refreshToken);
-	}
-
-	private BearerAccessToken createAccessToken() {
-		return new BearerAccessToken();
-	}
-
-	private RefreshToken createRefreshToken() {
-		return new RefreshToken();
-	}
-
-	private String createIdToken(AuthenticationRequest authRequest, Principal principal) {
 		Instant now = Instant.now();
 
 		JWK defaultJwk = this.keyService.findDefault();
+		JWSHeader header = createJwsHeader(defaultJwk);
+		JWSSigner signer = createJwsSigner(defaultJwk);
 
+		String idToken = createIdToken(header, signer, principal, request, now);
+		BearerAccessToken accessToken = createAccessToken(header, signer, principal, request, now);
+		RefreshToken refreshToken = new RefreshToken();
+
+		return new OIDCTokens(idToken, accessToken, refreshToken);
+	}
+
+	private JWSHeader createJwsHeader(JWK jwk) {
 		// @formatter:off
-		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+		return new JWSHeader.Builder(JWSAlgorithm.RS256)
 				.type(JOSEObjectType.JWT)
-				.keyID(defaultJwk.getKeyID())
+				.keyID(jwk.getKeyID())
 				.build();
 		// @formatter:on
+	}
 
+	private JWSSigner createJwsSigner(JWK jwk) {
+		try {
+			return new RSASSASigner((RSAKey) jwk);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private BearerAccessToken createAccessToken(JWSHeader header, JWSSigner signer, Principal principal,
+			AuthorizationRequest authRequest, Instant issuedAt) {
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().issuer(issuer.getValue()).subject(principal.getName())
+				.audience(authRequest.getClientID().getValue())
+				.expirationTime(Date.from(issuedAt.plus(30, ChronoUnit.MINUTES))).issueTime(Date.from(issuedAt))
+				.build();
+
+		try {
+			SignedJWT accessToken = new SignedJWT(header, claimsSet);
+			accessToken.sign(signer);
+			return new BearerAccessToken(accessToken.serialize());
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private String createIdToken(JWSHeader header, JWSSigner signer, Principal principal,
+			AuthenticationRequest authRequest, Instant issuedAt) {
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, new Subject(principal.getName()),
-				Audience.create(authRequest.getClientID().getValue()), Date.from(now.plus(30, ChronoUnit.MINUTES)),
-				Date.from(now));
+				Audience.create(authRequest.getClientID().getValue()), Date.from(issuedAt.plus(30, ChronoUnit.MINUTES)),
+				Date.from(issuedAt));
 
 		if (authRequest.getNonce() != null) {
 			claimsSet.setNonce(authRequest.getNonce());
@@ -84,7 +116,6 @@ public class TokenServiceImpl implements TokenService {
 
 		try {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());
-			JWSSigner signer = new RSASSASigner((RSAKey) defaultJwk);
 			idToken.sign(signer);
 			return idToken.serialize();
 		}
