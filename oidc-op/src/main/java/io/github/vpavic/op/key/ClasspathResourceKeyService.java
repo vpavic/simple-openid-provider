@@ -1,5 +1,6 @@
 package io.github.vpavic.op.key;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.nimbusds.jose.jwk.JWK;
@@ -41,7 +42,7 @@ public class ClasspathResourceKeyService implements KeyService {
 
 	@Override
 	public List<JWK> findAll() {
-		return this.jwkSet.getKeys();
+		return Collections.unmodifiableList(this.jwkSet.getKeys());
 	}
 
 }
