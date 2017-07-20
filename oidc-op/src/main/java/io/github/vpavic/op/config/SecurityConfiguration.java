@@ -8,11 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -37,17 +35,6 @@ public class SecurityConfiguration {
 	static class EndpointSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
-		protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-			// @formatter:off
-			auth
-				.inMemoryAuthentication()
-					.withUser("test-client")
-						.password("test-secret")
-						.authorities(AuthorityUtils.NO_AUTHORITIES);
-			// @formatter:on
-		}
-
-		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
@@ -56,15 +43,11 @@ public class SecurityConfiguration {
 					.and()
 				.csrf()
 					.disable()
-				.httpBasic()
-					.realmName("nimbus-oidc-provider")
-					.and()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.NEVER)
 					.and()
 				.authorizeRequests()
-					.mvcMatchers("/keys").permitAll()
-					.mvcMatchers("/token").fullyAuthenticated();
+					.anyRequest().permitAll();
 			// @formatter:on
 		}
 
