@@ -2,12 +2,13 @@ package io.github.vpavic.op.endpoint;
 
 import java.security.Principal;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,8 +51,11 @@ public class AuthorizationEndpointTests {
 	@Before
 	public void setUp() throws Exception {
 		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(new AuthorizationCode("test"));
-		given(this.tokenService.createTokens(any(AuthenticationRequest.class), any(Principal.class)))
-				.willReturn(new OIDCTokens("test", new BearerAccessToken(), new RefreshToken()));
+		given(this.tokenService.createAccessToken(any(AuthenticationRequest.class), any(Principal.class)))
+				.willReturn(new BearerAccessToken());
+		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(Principal.class)))
+				.willReturn(new PlainJWT(new JWTClaimsSet.Builder().build()));
 	}
 
 	@Test

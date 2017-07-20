@@ -6,17 +6,21 @@ import java.util.Objects;
 
 import javax.servlet.http.HttpSession;
 
+import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationResponse;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.ResponseMode;
+import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
-import com.nimbusds.oauth2.sdk.token.Tokens;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
+import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,23 +54,37 @@ public class AuthorizationEndpoint {
 
 		URI redirectionURI = authRequest.getRedirectionURI();
 		State state = authRequest.getState();
+		State sessionState = State.parse(session.getId());
+		ResponseType responseType = authRequest.getResponseType();
 
-		Tokens tokens = this.tokenService.createTokens(authRequest, principal);
+		AuthorizationResponse authResponse;
 
 		// Authorization Code Flow
-		if (authRequest.getResponseType().impliesCodeFlow()) {
+		if (responseType.impliesCodeFlow()) {
+			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
+			RefreshToken refreshToken = this.tokenService.createRefreshToken();
+			JWT idToken = this.tokenService.createIdToken(authRequest, principal);
+			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 			AuthorizationCode code = this.authorizationCodeService.create(tokens);
-			State sessionState = State.parse(session.getId());
-			ResponseMode responseMode = ResponseMode.QUERY;
 
-			AuthorizationResponse authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null,
-					state, sessionState, responseMode);
-			return "redirect:" + authResponse.toURI();
+			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
+					null);
 		}
-		// TODO Implicit Flow
+		// Implicit Flow
 		else {
-			throw new UnsupportedOperationException();
+			AccessToken accessToken = null;
+			if (responseType.contains(ResponseType.Value.TOKEN)) {
+				accessToken = this.tokenService.createAccessToken(authRequest, principal);
+			}
+			JWT idToken = null;
+			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
+				idToken = this.tokenService.createIdToken(authRequest, principal);
+			}
+			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
+					sessionState, null);
 		}
+
+		return "redirect:" + authResponse.toURI();
 	}
 
 	@ExceptionHandler(ParseException.class)
@@ -77,7 +95,7 @@ public class AuthorizationEndpoint {
 		}
 		AuthorizationResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), e.getErrorObject(),
 				e.getState(), e.getResponseMode());
-		return "redirect:" + authResponse.getRedirectionURI();
+		return "redirect:" + authResponse.toURI();
 	}
 
 }
