@@ -2,7 +2,6 @@ package io.github.vpavic.op.endpoint;
 
 import java.util.Objects;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
@@ -38,12 +37,11 @@ public class TokenEndpoint {
 	}
 
 	@PostMapping
-	public void handleTokenRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+	public void handleTokenRequest(HTTPRequest request, HttpServletResponse response) throws Exception {
 		HTTPResponse httpResponse;
 
 		try {
-			TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
+			TokenRequest tokenRequest = TokenRequest.parse(request);
 
 			ClientID clientID = tokenRequest.getClientID();
 			// TODO validate client

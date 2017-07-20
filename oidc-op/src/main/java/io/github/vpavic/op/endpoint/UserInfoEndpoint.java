@@ -2,7 +2,6 @@ package io.github.vpavic.op.endpoint;
 
 import java.security.Principal;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
@@ -20,8 +19,7 @@ public class UserInfoEndpoint {
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public void getUserInfo(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		Principal principal = request.getUserPrincipal();
+	public void getUserInfo(Principal principal, HttpServletResponse response) throws Exception {
 		UserInfo userInfo = new UserInfo(new Subject(principal.getName()));
 		UserInfoSuccessResponse userInfoResponse = new UserInfoSuccessResponse(userInfo);
 		ServletUtils.applyHTTPResponse(userInfoResponse.toHTTPResponse(), response);

@@ -1,10 +1,11 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
+import java.security.Principal;
 import java.util.Objects;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -40,12 +41,12 @@ public class AuthorizationEndpoint {
 	}
 
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public void authorize(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+	public void authorize(HTTPRequest request, Principal principal, HttpSession session, HttpServletResponse response)
+			throws Exception {
 		HTTPResponse httpResponse;
 
 		try {
-			AuthenticationRequest authRequest = AuthenticationRequest.parse(httpRequest);
+			AuthenticationRequest authRequest = AuthenticationRequest.parse(request);
 
 			ClientID clientID = authRequest.getClientID();
 			// TODO validate client
@@ -53,12 +54,12 @@ public class AuthorizationEndpoint {
 			URI redirectionURI = authRequest.getRedirectionURI();
 			State state = authRequest.getState();
 
-			Tokens tokens = this.tokenService.createTokens(authRequest, request.getUserPrincipal());
+			Tokens tokens = this.tokenService.createTokens(authRequest, principal);
 
 			// Authorization Code Flow
 			if (authRequest.getResponseType().impliesCodeFlow()) {
 				AuthorizationCode code = this.authorizationCodeService.create(tokens);
-				State sessionState = State.parse(request.getSession().getId());
+				State sessionState = State.parse(session.getId());
 				ResponseMode responseMode = ResponseMode.QUERY;
 
 				httpResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
