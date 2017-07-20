@@ -4,6 +4,7 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.Objects;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.nimbusds.jwt.JWT;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
@@ -88,14 +88,15 @@ public class AuthorizationEndpoint {
 	}
 
 	@ExceptionHandler(ParseException.class)
-	public String handleParseException(ParseException e, ServletWebRequest request) {
+	public void handleParseException(ParseException e, HttpServletResponse response) throws Exception {
 		if (e.getClientID() == null || e.getRedirectionURI() == null) {
-			request.getResponse().setStatus(HttpStatus.BAD_REQUEST.value());
-			return e.getMessage();
+			response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 		}
-		AuthorizationResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), e.getErrorObject(),
-				e.getState(), e.getResponseMode());
-		return "redirect:" + authResponse.toURI();
+		else {
+			AuthorizationResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
+					e.getErrorObject(), e.getState(), e.getResponseMode());
+			response.sendRedirect(authResponse.toURI().toString());
+		}
 	}
 
 }
