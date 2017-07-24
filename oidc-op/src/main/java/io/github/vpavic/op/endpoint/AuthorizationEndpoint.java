@@ -83,10 +83,11 @@ public class AuthorizationEndpoint {
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
+			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
+			RefreshToken refreshToken = this.tokenService.createRefreshToken();
+
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
-				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-				RefreshToken refreshToken = this.tokenService.createRefreshToken();
 				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
 				OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 				AuthorizationCode code = this.authorizationCodeService.create(tokens);
@@ -97,8 +98,6 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
-				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-				RefreshToken refreshToken = this.tokenService.createRefreshToken();
 				Tokens tokens = new Tokens(accessToken, refreshToken);
 				AuthorizationCode code = this.authorizationCodeService.create(tokens);
 
@@ -124,6 +123,7 @@ public class AuthorizationEndpoint {
 			// OAuth2 request
 			else {
 				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
+
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, null);
 			}
 		}
