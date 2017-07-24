@@ -39,20 +39,36 @@ public class TokenEndpointTests {
 	private AuthorizationCodeService authorizationCodeService;
 
 	@Test
-	public void tokenRequest_authCodeGrantType_isOk() throws Exception {
-		String authorizationCode = "test";
-		given(this.authorizationCodeService.consume(eq(new AuthorizationCode(authorizationCode))))
+	public void authCode_basicAuth_isOk() throws Exception {
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.authorizationCodeService.consume(eq(authorizationCode)))
 				.willReturn(new Tokens(new BearerAccessToken(), null));
 
 		MockHttpServletRequestBuilder request = post("/token")
-				.content("grant_type=authorization_code&redirect_uri=http://example.com&code=" + authorizationCode)
+				.content("grant_type=authorization_code&code=" + authorizationCode.getValue()
+						+ "&redirect_uri=http://example.com")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).header("Authorization",
 						new ClientSecretBasic(new ClientID("test"), new Secret("test")).toHTTPAuthorizationHeader());
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
 
 	@Test
-	public void tokenRequest_withNoParams_isBadRequest() throws Exception {
+	public void authCode_postAuth_isOk() throws Exception {
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.authorizationCodeService.consume(eq(authorizationCode)))
+				.willReturn(new Tokens(new BearerAccessToken(), null));
+
+		MockHttpServletRequestBuilder request = post("/token")
+				.content("grant_type=authorization_code&code=" + authorizationCode.getValue()
+						+ "&redirect_uri=http://example.com&client_id=test-id&client_secret=test-secret")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
+		this.mvc.perform(request).andExpect(status().isOk());
+	}
+
+	@Test
+	public void noParams_isBadRequest() throws Exception {
 		this.mvc.perform(post("/token").contentType(MediaType.APPLICATION_FORM_URLENCODED))
 				.andExpect(status().isBadRequest());
 	}
