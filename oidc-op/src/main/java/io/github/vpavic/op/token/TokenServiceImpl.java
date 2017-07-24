@@ -16,6 +16,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
@@ -40,17 +41,22 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(AuthenticationRequest authRequest, Principal principal) {
+	public AccessToken createAccessToken(AuthorizationRequest authRequest, Principal principal) {
 		Instant issuedAt = Instant.now();
 
 		JWK defaultJwk = this.keyService.findDefault();
 		JWSHeader header = createJwsHeader(defaultJwk);
 		JWSSigner signer = createJwsSigner(defaultJwk);
 
-		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().issuer(issuer.getValue()).subject(principal.getName())
+		// @formatter:off
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+				.issuer(issuer.getValue())
+				.subject(principal.getName())
 				.audience(authRequest.getClientID().getValue())
-				.expirationTime(Date.from(issuedAt.plus(30, ChronoUnit.MINUTES))).issueTime(Date.from(issuedAt))
+				.expirationTime(Date.from(issuedAt.plus(30, ChronoUnit.MINUTES)))
+				.issueTime(Date.from(issuedAt))
 				.build();
+		// @formatter:on
 
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
