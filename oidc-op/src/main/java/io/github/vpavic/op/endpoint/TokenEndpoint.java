@@ -16,6 +16,9 @@ import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
+import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
@@ -64,10 +67,27 @@ public class TokenEndpoint {
 					.consume(authorizationCodeGrant.getAuthorizationCode());
 
 			if (authContext == null) {
-				throw new GeneralException(new ErrorObject("invalid_request"));
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
 			}
 
 			AuthorizationRequest authRequest = (AuthorizationRequest) authContext.get("authRequest");
+			CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+
+			if (codeChallenge != null) {
+				CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
+
+				if (codeChallengeMethod == null) {
+					codeChallengeMethod = CodeChallengeMethod.PLAIN;
+				}
+
+				CodeVerifier codeVerifier = authorizationCodeGrant.getCodeVerifier();
+
+				if (codeVerifier == null
+						|| !codeChallenge.equals(CodeChallenge.compute(codeChallengeMethod, codeVerifier))) {
+					throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+				}
+			}
+
 			Authentication authentication = (Authentication) authContext.get("authentication");
 			UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -98,9 +118,11 @@ public class TokenEndpoint {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public JSONObject handleParseException(ParseException e) {
 		ErrorObject error = e.getErrorObject();
+
 		if (error == null) {
 			error = OAuth2Error.INVALID_REQUEST.setDescription(e.getMessage());
 		}
+
 		return new TokenErrorResponse(error).toJSONObject();
 	}
 
