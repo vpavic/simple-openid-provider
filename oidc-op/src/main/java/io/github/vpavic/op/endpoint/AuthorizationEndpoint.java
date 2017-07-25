@@ -1,7 +1,6 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
-import java.security.Principal;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletResponse;
@@ -27,6 +26,8 @@ import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,7 +51,7 @@ public class AuthorizationEndpoint {
 	}
 
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public String authorize(HTTPRequest request, Principal principal, HttpSession session) throws Exception {
+	public String authorize(HTTPRequest request, Authentication authentication, HttpSession session) throws Exception {
 		AuthorizationRequest authRequest = AuthorizationRequest.parse(request);
 
 		try {
@@ -79,12 +80,14 @@ public class AuthorizationEndpoint {
 		State state = authRequest.getState();
 		ResponseType responseType = authRequest.getResponseType();
 
+		UserDetails principal = (UserDetails) authentication.getPrincipal();
+
 		AuthorizationResponse authResponse;
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
 			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken();
+			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
 
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {

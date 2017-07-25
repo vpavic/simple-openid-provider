@@ -1,7 +1,5 @@
 package io.github.vpavic.op.endpoint;
 
-import java.security.Principal;
-
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
@@ -20,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -61,9 +60,10 @@ public class AuthorizationEndpointTests {
 		MockHttpSession session = new MockHttpSession();
 
 		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=code&client_id=test-client")
 				.session(session);
@@ -79,9 +79,10 @@ public class AuthorizationEndpointTests {
 		MockHttpSession session = new MockHttpSession();
 
 		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
 
 		MockHttpServletRequestBuilder request = post("/authorize").content("response_type=code&client_id=test-client")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(session);
@@ -95,9 +96,10 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=token&client_id=test-client")
 				.session(session);
@@ -111,9 +113,10 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
 
 		MockHttpServletRequestBuilder request = post("/authorize").content("response_type=token&client_id=test-client")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(session);
@@ -132,10 +135,11 @@ public class AuthorizationEndpointTests {
 		MockHttpSession session = new MockHttpSession();
 
 		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
-		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(Principal.class)))
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
 				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
@@ -155,10 +159,11 @@ public class AuthorizationEndpointTests {
 		MockHttpSession session = new MockHttpSession();
 
 		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
-		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(Principal.class)))
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
 				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/authorize")
@@ -176,10 +181,11 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
-		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(Principal.class)))
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
 				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
@@ -197,10 +203,11 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(Principal.class)))
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken()).willReturn(new RefreshToken());
-		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(Principal.class)))
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
 				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/authorize").content(

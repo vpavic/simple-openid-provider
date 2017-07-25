@@ -1,6 +1,5 @@
 package io.github.vpavic.op.token;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -25,6 +24,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.key.KeyService;
@@ -41,7 +41,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(AuthorizationRequest authRequest, Principal principal) {
+	public AccessToken createAccessToken(AuthorizationRequest authRequest, UserDetails principal) {
 		Instant issuedAt = Instant.now();
 
 		JWK defaultJwk = this.keyService.findDefault();
@@ -69,12 +69,12 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public RefreshToken createRefreshToken() {
+	public RefreshToken createRefreshToken(AuthorizationRequest authRequest, UserDetails principal) {
 		return new RefreshToken();
 	}
 
 	@Override
-	public JWT createIdToken(AuthenticationRequest authRequest, Principal principal) {
+	public JWT createIdToken(AuthenticationRequest authRequest, UserDetails principal) {
 		Instant issuedAt = Instant.now();
 
 		JWK defaultJwk = this.keyService.findDefault();
