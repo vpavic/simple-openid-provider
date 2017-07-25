@@ -1,6 +1,8 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletResponse;
@@ -18,13 +20,10 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
-import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,12 +39,11 @@ import io.github.vpavic.op.token.TokenService;
 @RequestMapping(path = "/authorize")
 public class AuthorizationEndpoint {
 
-	private final TokenService tokenService;
-
 	private final AuthorizationCodeService authorizationCodeService;
 
-	public AuthorizationEndpoint(TokenService tokenService, AuthorizationCodeService authorizationCodeService)
-			throws Exception {
+	private final TokenService tokenService;
+
+	public AuthorizationEndpoint(AuthorizationCodeService authorizationCodeService, TokenService tokenService) {
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 	}
@@ -86,14 +84,13 @@ public class AuthorizationEndpoint {
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
-			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
+			Map<String, Object> authContext = new HashMap<>();
+			authContext.put("authRequest", authRequest);
+			authContext.put("authentication", authentication);
 
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
-				OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
-				AuthorizationCode code = this.authorizationCodeService.create(tokens);
+				AuthorizationCode code = this.authorizationCodeService.create(authContext);
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
@@ -101,8 +98,7 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
-				Tokens tokens = new Tokens(accessToken, refreshToken);
-				AuthorizationCode code = this.authorizationCodeService.create(tokens);
+				AuthorizationCode code = this.authorizationCodeService.create(authContext);
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, null);
 			}

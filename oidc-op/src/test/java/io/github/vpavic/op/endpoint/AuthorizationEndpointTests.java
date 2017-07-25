@@ -7,7 +7,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +27,7 @@ import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,14 +56,9 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void oAuth2_authCode_get_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
-		BearerAccessToken accessToken = new BearerAccessToken();
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(new RefreshToken());
+		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=code&client_id=test-client")
 				.session(session);
@@ -75,14 +70,9 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void oAuth2_authCode_post_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
-		BearerAccessToken accessToken = new BearerAccessToken();
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(new RefreshToken());
+		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize").content("response_type=code&client_id=test-client")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(session);
@@ -130,17 +120,9 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void oidc_authCode_get_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
-		BearerAccessToken accessToken = new BearerAccessToken();
-		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(new RefreshToken());
-		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
-				.willReturn(idToken);
+		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
@@ -154,17 +136,9 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void oidc_authCode_post_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
-		BearerAccessToken accessToken = new BearerAccessToken();
-		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		MockHttpSession session = new MockHttpSession();
 
-		given(this.authorizationCodeService.create(any(Tokens.class))).willReturn(authorizationCode);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(accessToken);
-		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
-				.willReturn(new RefreshToken());
-		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
-				.willReturn(idToken);
+		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize")
 				.content("scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
