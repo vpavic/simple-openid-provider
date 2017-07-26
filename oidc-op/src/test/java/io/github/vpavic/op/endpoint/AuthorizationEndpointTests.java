@@ -1,13 +1,23 @@
 package io.github.vpavic.op.endpoint;
 
+import java.net.URI;
+import java.util.Collections;
+import java.util.Date;
+
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
+import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.auth.Secret;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,6 +34,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
@@ -46,6 +57,9 @@ public class AuthorizationEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
+	private ClientRepository clientRepository;
+
+	@MockBean
 	private AuthorizationCodeService authorizationCodeService;
 
 	@MockBean
@@ -65,6 +79,8 @@ public class AuthorizationEndpointTests {
 	public void oAuth2_authCode_get_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=code&client_id=test-client")
@@ -78,6 +94,8 @@ public class AuthorizationEndpointTests {
 	public void oAuth2_authCode_post_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize").content("response_type=code&client_id=test-client")
@@ -91,6 +109,8 @@ public class AuthorizationEndpointTests {
 	public void oAuth2_implicitRequest_get_minimumParams_isOk() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.TOKEN)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -107,6 +127,8 @@ public class AuthorizationEndpointTests {
 	public void oAuth2_implicitRequest_post_minimumParams_isOk() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.TOKEN)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -125,6 +147,8 @@ public class AuthorizationEndpointTests {
 	public void oidc_authCode_get_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -140,6 +164,8 @@ public class AuthorizationEndpointTests {
 	public void oidc_authCode_post_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize")
@@ -156,6 +182,8 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -177,6 +205,8 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -204,6 +234,17 @@ public class AuthorizationEndpointTests {
 	@WithMockUser
 	public void post_noParams_isBadRequest() throws Exception {
 		this.mvc.perform(post("/authorize")).andExpect(status().isBadRequest());
+	}
+
+	private static OIDCClientInformation testClient(ResponseType responseType) {
+		ClientID clientID = new ClientID("test-client");
+		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
+		clientMetadata.applyDefaults();
+		clientMetadata.setResponseTypes(Collections.singleton(responseType));
+		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
+		Secret secret = new Secret("test-secret");
+
+		return new OIDCClientInformation(clientID, new Date(), clientMetadata, secret);
 	}
 
 }

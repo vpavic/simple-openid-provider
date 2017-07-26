@@ -13,6 +13,7 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
@@ -23,6 +24,7 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
@@ -42,11 +45,15 @@ import io.github.vpavic.op.token.TokenService;
 @RequestMapping(path = "/token")
 public class TokenEndpoint {
 
+	private final ClientRepository clientRepository;
+
 	private final AuthorizationCodeService authorizationCodeService;
 
 	private final TokenService tokenService;
 
-	public TokenEndpoint(AuthorizationCodeService authorizationCodeService, TokenService tokenService) {
+	public TokenEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
+			TokenService tokenService) {
+		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.tokenService = Objects.requireNonNull(tokenService);
 	}
@@ -55,8 +62,26 @@ public class TokenEndpoint {
 	public JSONObject handleTokenRequest(HTTPRequest request) throws Exception {
 		TokenRequest tokenRequest = TokenRequest.parse(request);
 
-		ClientID clientID = tokenRequest.getClientID();
-		// TODO validate client
+		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+
+		ClientID clientID;
+
+		if (clientAuthentication != null) {
+			clientID = clientAuthentication.getClientID();
+		}
+		else {
+			clientID = tokenRequest.getClientID();
+		}
+
+		if (clientID == null) {
+			throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+		}
+
+		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+
+		if (client == null) {
+			throw new GeneralException(OAuth2Error.INVALID_CLIENT);
+		}
 
 		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
 

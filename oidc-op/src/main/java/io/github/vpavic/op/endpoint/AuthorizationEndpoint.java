@@ -2,6 +2,7 @@ package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -11,17 +12,20 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.AuthorizationResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
+import com.nimbusds.oauth2.sdk.GeneralException;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +34,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
@@ -38,11 +43,15 @@ import io.github.vpavic.op.token.TokenService;
 @RequestMapping(path = "/authorize")
 public class AuthorizationEndpoint {
 
+	private final ClientRepository clientRepository;
+
 	private final AuthorizationCodeService authorizationCodeService;
 
 	private final TokenService tokenService;
 
-	public AuthorizationEndpoint(AuthorizationCodeService authorizationCodeService, TokenService tokenService) {
+	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
+			TokenService tokenService) {
+		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 	}
@@ -64,18 +73,37 @@ public class AuthorizationEndpoint {
 			// otherwise still a valid OAuth2 request
 		}
 
-		ClientID clientID = authRequest.getClientID();
-		// TODO validate client
+		OIDCClientInformation client = this.clientRepository.findByClientId(authRequest.getClientID());
+
+		if (client == null) {
+			throw new GeneralException(OAuth2Error.INVALID_CLIENT);
+		}
+
+		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
 		URI redirectionURI = authRequest.getRedirectionURI();
+		Set<URI> redirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (redirectionURI == null) {
-			// TODO pull from client registration
-			redirectionURI = URI.create("http://example.com");
+			if (redirectionURIs.size() == 1) {
+				redirectionURI = redirectionURIs.iterator().next();
+			}
+			else {
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+			}
+		}
+		else {
+			if (!redirectionURIs.contains(redirectionURI)) {
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+			}
 		}
 
 		State state = authRequest.getState();
 		ResponseType responseType = authRequest.getResponseType();
+
+		if (!clientMetadata.getResponseTypes().contains(responseType)) {
+			throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+		}
 
 		UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -127,8 +155,8 @@ public class AuthorizationEndpoint {
 		return "redirect:" + authResponse.toURI();
 	}
 
-	@ExceptionHandler(ParseException.class)
-	public void handleParseException(ParseException e, HttpServletResponse response) throws Exception {
+	@ExceptionHandler(GeneralException.class)
+	public void handleParseException(GeneralException e, HttpServletResponse response) throws Exception {
 		if (e.getClientID() == null || e.getRedirectionURI() == null) {
 			response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 		}

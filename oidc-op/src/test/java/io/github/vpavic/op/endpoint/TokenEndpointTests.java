@@ -1,6 +1,7 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
+import java.util.Date;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -13,6 +14,9 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -29,6 +33,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
@@ -50,10 +55,18 @@ public class TokenEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
+	private ClientRepository clientRepository;
+
+	@MockBean
 	private AuthorizationCodeService authorizationCodeService;
 
 	@MockBean
 	private TokenService tokenService;
+
+	@Before
+	public void setUp() {
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(testClient());
+	}
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
@@ -71,7 +84,7 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+				new TestingAuthenticationToken(new User("test-secret", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
@@ -80,7 +93,7 @@ public class TokenEndpointTests {
 
 		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).header("Authorization",
-						new ClientSecretBasic(new ClientID("test"), new Secret("test")).toHTTPAuthorizationHeader());
+						new ClientSecretBasic(clientID, new Secret("test-secret")).toHTTPAuthorizationHeader());
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
 
@@ -208,6 +221,16 @@ public class TokenEndpointTests {
 	public void noParams_isBadRequest() throws Exception {
 		this.mvc.perform(post("/token").contentType(MediaType.APPLICATION_FORM_URLENCODED))
 				.andExpect(status().isBadRequest());
+	}
+
+	private static OIDCClientInformation testClient() {
+		ClientID clientID = new ClientID("test-client");
+		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
+		clientMetadata.applyDefaults();
+		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
+		Secret secret = new Secret("test-secret");
+
+		return new OIDCClientInformation(clientID, new Date(), clientMetadata, secret);
 	}
 
 }
