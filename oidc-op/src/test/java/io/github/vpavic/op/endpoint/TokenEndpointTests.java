@@ -37,7 +37,6 @@ import io.github.vpavic.op.token.TokenService;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,9 +58,21 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
+		ClientID clientID = new ClientID("test-client");
+		URI redirectionUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		// @formatter:off
+		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
+				.redirectionURI(redirectionUri)
+				.build();
+		// @formatter:on
+
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
+				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
+
 		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", mock(AuthorizationRequest.class));
+		authContext.put("authRequest", authRequest);
 		authContext.put("authentication",
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
@@ -70,9 +81,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token")
-				.content("grant_type=authorization_code&code=" + authorizationCode.getValue()
-						+ "&redirect_uri=http://example.com")
+		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).header("Authorization",
 						new ClientSecretBasic(new ClientID("test"), new Secret("test")).toHTTPAuthorizationHeader());
 		this.mvc.perform(request).andExpect(status().isOk());
@@ -80,9 +89,21 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_postAuth_isOk() throws Exception {
+		ClientID clientID = new ClientID("test-client");
+		URI redirectionUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		// @formatter:off
+		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
+				.redirectionURI(redirectionUri)
+				.build();
+		// @formatter:on
+
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
+				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
+
 		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", mock(AuthorizationRequest.class));
+		authContext.put("authRequest", authRequest);
 		authContext.put("authentication",
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
@@ -91,9 +112,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token")
-				.content("grant_type=authorization_code&code=" + authorizationCode.getValue()
-						+ "&redirect_uri=http://example.com&client_id=test-id&client_secret=test-secret")
+		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
@@ -101,18 +120,19 @@ public class TokenEndpointTests {
 	@Test
 	public void authCode_pkceDefault_isOk() throws Exception {
 		ClientID clientID = new ClientID("test-client");
+		URI redirectionUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(URI.create("http://rp.example.com"))
+				.redirectionURI(redirectionUri)
 				.codeChallenge(codeVerifier, null)
 				.build();
 		// @formatter:on
 
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
-				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
+				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
 		Map<String, Object> authContext = new HashMap<>();
 		authContext.put("authRequest", authRequest);
@@ -132,19 +152,20 @@ public class TokenEndpointTests {
 	@Test
 	public void authCode_pkcePlain_isOk() throws Exception {
 		ClientID clientID = new ClientID("test-client");
+		URI redirectionUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.PLAIN;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(URI.create("http://rp.example.com"))
+				.redirectionURI(redirectionUri)
 				.codeChallenge(codeVerifier, codeChallengeMethod)
 				.build();
 		// @formatter:on
 
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
-				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
+				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
 		Map<String, Object> authContext = new HashMap<>();
 		authContext.put("authRequest", authRequest);
@@ -164,19 +185,20 @@ public class TokenEndpointTests {
 	@Test
 	public void authCode_pkceS256_isOk() throws Exception {
 		ClientID clientID = new ClientID("test-client");
+		URI redirectionUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.S256;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(URI.create("http://rp.example.com"))
+				.redirectionURI(redirectionUri)
 				.codeChallenge(codeVerifier, codeChallengeMethod)
 				.build();
 		// @formatter:on
 
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
-				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
+				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
 		Map<String, Object> authContext = new HashMap<>();
 		authContext.put("authRequest", authRequest);
