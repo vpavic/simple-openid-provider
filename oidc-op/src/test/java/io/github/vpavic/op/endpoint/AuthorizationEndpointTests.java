@@ -24,11 +24,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -65,7 +65,7 @@ public class AuthorizationEndpointTests {
 	public void oAuth2_authCode_get_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=code&client_id=test-client")
 				.session(this.session);
@@ -78,7 +78,7 @@ public class AuthorizationEndpointTests {
 	public void oAuth2_authCode_post_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize").content("response_type=code&client_id=test-client")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(this.session);
@@ -125,7 +125,7 @@ public class AuthorizationEndpointTests {
 	public void oidc_authCode_get_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
@@ -140,7 +140,7 @@ public class AuthorizationEndpointTests {
 	public void oidc_authCode_post_minimumParams_isOk() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.authorizationCodeService.create(anyMap())).willReturn(authorizationCode);
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize")
 				.content("scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")

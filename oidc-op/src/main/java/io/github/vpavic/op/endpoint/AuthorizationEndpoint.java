@@ -1,8 +1,6 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletResponse;
@@ -32,6 +30,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
@@ -84,13 +83,11 @@ public class AuthorizationEndpoint {
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
-			Map<String, Object> authContext = new HashMap<>();
-			authContext.put("authRequest", authRequest);
-			authContext.put("authentication", authentication);
+			AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, authentication);
 
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
-				AuthorizationCode code = this.authorizationCodeService.create(authContext);
+				AuthorizationCode code = this.authorizationCodeService.create(context);
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
@@ -98,7 +95,7 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
-				AuthorizationCode code = this.authorizationCodeService.create(authContext);
+				AuthorizationCode code = this.authorizationCodeService.create(context);
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, null);
 			}

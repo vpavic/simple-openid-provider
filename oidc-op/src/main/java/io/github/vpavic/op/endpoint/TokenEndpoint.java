@@ -1,6 +1,5 @@
 package io.github.vpavic.op.endpoint;
 
-import java.util.Map;
 import java.util.Objects;
 
 import com.nimbusds.jwt.JWT;
@@ -35,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
@@ -63,14 +63,14 @@ public class TokenEndpoint {
 		// Authorization Code Grant Type
 		if (authorizationGrant instanceof AuthorizationCodeGrant) {
 			AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) authorizationGrant;
-			Map<String, ?> authContext = this.authorizationCodeService
+			AuthorizationCodeContext context = this.authorizationCodeService
 					.consume(authorizationCodeGrant.getAuthorizationCode());
 
-			if (authContext == null) {
+			if (context == null) {
 				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
 			}
 
-			AuthorizationRequest authRequest = (AuthorizationRequest) authContext.get("authRequest");
+			AuthorizationRequest authRequest = context.getAuthRequest();
 			CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 
 			if (codeChallenge != null) {
@@ -88,7 +88,7 @@ public class TokenEndpoint {
 				}
 			}
 
-			Authentication authentication = (Authentication) authContext.get("authentication");
+			Authentication authentication = context.getAuthentication();
 			UserDetails principal = (UserDetails) authentication.getPrincipal();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);

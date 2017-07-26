@@ -1,8 +1,6 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -31,6 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
@@ -71,13 +70,11 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", authRequest);
-		authContext.put("authentication",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.authorizationCodeService.consume(eq(authorizationCode))).will(invocation -> authContext);
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
@@ -102,13 +99,11 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", authRequest);
-		authContext.put("authentication",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.authorizationCodeService.consume(eq(authorizationCode))).will(invocation -> authContext);
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
@@ -134,13 +129,11 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", authRequest);
-		authContext.put("authentication",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.authorizationCodeService.consume(eq(authorizationCode))).will(invocation -> authContext);
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
@@ -167,13 +160,11 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", authRequest);
-		authContext.put("authentication",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.authorizationCodeService.consume(eq(authorizationCode))).will(invocation -> authContext);
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
@@ -200,13 +191,11 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		Map<String, Object> authContext = new HashMap<>();
-		authContext.put("authRequest", authRequest);
-		authContext.put("authentication",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.authorizationCodeService.consume(eq(authorizationCode))).will(invocation -> authContext);
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 

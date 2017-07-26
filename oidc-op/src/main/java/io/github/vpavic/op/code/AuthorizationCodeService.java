@@ -1,13 +1,11 @@
- package io.github.vpavic.op.code;
+package io.github.vpavic.op.code;
 
- import java.util.Map;
-
- import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
 
 public interface AuthorizationCodeService {
 
-	AuthorizationCode create(Map<String, ?> authContext);
+	AuthorizationCode create(AuthorizationCodeContext context);
 
-	Map<String, ?> consume(AuthorizationCode code);
+	AuthorizationCodeContext consume(AuthorizationCode code);
 
 }

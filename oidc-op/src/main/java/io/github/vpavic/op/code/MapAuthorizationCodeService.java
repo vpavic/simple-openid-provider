@@ -1,6 +1,5 @@
 package io.github.vpavic.op.code;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -10,24 +9,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class MapAuthorizationCodeService implements AuthorizationCodeService {
 
-	private final ConcurrentMap<String, Map<String, ?>> store = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, AuthorizationCodeContext> store = new ConcurrentHashMap<>();
 
 	@Override
-	public AuthorizationCode create(Map<String, ?> authContext) {
+	public AuthorizationCode create(AuthorizationCodeContext context) {
 		AuthorizationCode code = new AuthorizationCode();
-		this.store.put(code.getValue(), authContext);
+		this.store.put(code.getValue(), context);
 		return code;
 	}
 
 	@Override
-	public Map<String, ?> consume(AuthorizationCode code) {
-		Map<String, ?> authContext = this.store.remove(code.getValue());
+	public AuthorizationCodeContext consume(AuthorizationCode code) {
+		AuthorizationCodeContext context = this.store.remove(code.getValue());
 
-		if (authContext == null) {
+		if (context == null) {
 			throw new IllegalArgumentException("Invalid code " + code);
 		}
 
-		return authContext;
+		return context;
 	}
 
 }
