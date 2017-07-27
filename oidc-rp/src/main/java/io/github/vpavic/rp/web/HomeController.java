@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class HomeController {
 
 	@GetMapping
-	public Authentication home(Authentication authentication) {
-		return authentication;
+	public String home(Authentication authentication) {
+		return authentication.getPrincipal().toString();
 	}
 
 }
