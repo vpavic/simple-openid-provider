@@ -8,7 +8,9 @@ import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
@@ -16,7 +18,6 @@ import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -63,13 +64,11 @@ public class TokenEndpointTests {
 	@MockBean
 	private TokenService tokenService;
 
-	@Before
-	public void setUp() {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(testClient());
-	}
-
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
+
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -80,7 +79,8 @@ public class TokenEndpointTests {
 				.build();
 		// @formatter:on
 
-		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
+		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
@@ -92,13 +92,16 @@ public class TokenEndpointTests {
 				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
-				.contentType(MediaType.APPLICATION_FORM_URLENCODED).header("Authorization",
-						new ClientSecretBasic(clientID, new Secret("test-secret")).toHTTPAuthorizationHeader());
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.header("Authorization", clientAuth.toHTTPAuthorizationHeader());
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
 
 	@Test
 	public void authCode_postAuth_isOk() throws Exception {
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(ClientAuthenticationMethod.CLIENT_SECRET_POST));
+
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -109,7 +112,8 @@ public class TokenEndpointTests {
 				.build();
 		// @formatter:on
 
-		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
+		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
@@ -127,6 +131,9 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkceDefault_isOk() throws Exception {
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(ClientAuthenticationMethod.NONE));
+
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
@@ -157,6 +164,9 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkcePlain_isOk() throws Exception {
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(ClientAuthenticationMethod.NONE));
+
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
@@ -188,6 +198,9 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkceS256_isOk() throws Exception {
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(ClientAuthenticationMethod.NONE));
+
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
@@ -223,11 +236,12 @@ public class TokenEndpointTests {
 				.andExpect(status().isBadRequest());
 	}
 
-	private static OIDCClientInformation testClient() {
+	private static OIDCClientInformation testClient(ClientAuthenticationMethod authMethod) {
 		ClientID clientID = new ClientID("test-client");
 		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
 		clientMetadata.applyDefaults();
 		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
+		clientMetadata.setTokenEndpointAuthMethod(authMethod);
 		Secret secret = new Secret("test-secret");
 
 		return new OIDCClientInformation(clientID, new Date(), clientMetadata, secret);
