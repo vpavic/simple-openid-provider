@@ -20,12 +20,15 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
+import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -111,10 +114,14 @@ public class AuthorizationEndpoint {
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
-			AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, authentication);
+			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
+			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
 
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
+				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
+				OIDCTokens tokens = new OIDCTokens(idToken, accessToken, refreshToken);
+				AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, tokens);
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 				State sessionState = State.parse(session.getId());
 
@@ -123,6 +130,8 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
+				Tokens tokens = new Tokens(accessToken, refreshToken);
+				AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, tokens);
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, null);

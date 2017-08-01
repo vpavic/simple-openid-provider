@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -29,18 +28,13 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
-import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,7 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
-import io.github.vpavic.op.token.TokenService;
 
 @RestController
 @RequestMapping(path = "/token")
@@ -60,13 +53,9 @@ public class TokenEndpoint {
 
 	private final AuthorizationCodeService authorizationCodeService;
 
-	private final TokenService tokenService;
-
-	public TokenEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService) {
+	public TokenEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService) {
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
-		this.tokenService = Objects.requireNonNull(tokenService);
 	}
 
 	@PostMapping
@@ -105,25 +94,11 @@ public class TokenEndpoint {
 				}
 			}
 
-			Authentication authentication = context.getAuthentication();
-			UserDetails principal = (UserDetails) authentication.getPrincipal();
+			Tokens tokens = context.getTokens();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
-
-			AccessTokenResponse tokenResponse;
-
-			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
-				OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
-
-				tokenResponse = new OIDCTokenResponse(tokens);
-			}
-			else {
-				Tokens tokens = new Tokens(accessToken, refreshToken);
-
-				tokenResponse = new AccessTokenResponse(tokens);
-			}
+			AccessTokenResponse tokenResponse = tokens instanceof OIDCTokens
+					? new OIDCTokenResponse((OIDCTokens) tokens)
+					: new AccessTokenResponse(tokens);
 
 			return tokenResponse.toJSONObject();
 		}

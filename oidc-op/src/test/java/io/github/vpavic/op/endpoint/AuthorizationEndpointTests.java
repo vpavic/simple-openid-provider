@@ -81,6 +81,10 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new BearerAccessToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=code&client_id=test-client")
@@ -96,6 +100,10 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new BearerAccessToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize").content("response_type=code&client_id=test-client")
@@ -149,6 +157,12 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new BearerAccessToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
+				.willReturn(new PlainJWT(new JWTClaimsSet.Builder().build()));
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -166,6 +180,12 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new BearerAccessToken());
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
+				.willReturn(new PlainJWT(new JWTClaimsSet.Builder().build()));
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = post("/authorize")
