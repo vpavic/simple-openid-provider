@@ -114,7 +114,7 @@ public class AuthorizationEndpointTests {
 
 	@Test
 	@WithMockUser
-	public void oAuth2_implicitRequest_get_minimumParams_isOk() throws Exception {
+	public void oAuth2_implicit_get_minimumParams_isOk() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
@@ -132,7 +132,7 @@ public class AuthorizationEndpointTests {
 
 	@Test
 	@WithMockUser
-	public void oAuth2_implicitRequest_post_minimumParams_isOk() throws Exception {
+	public void oAuth2_implicit_post_minimumParams_isOk() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
@@ -146,6 +146,49 @@ public class AuthorizationEndpointTests {
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&token_type=Bearer", accessToken.getValue()));
+	}
+
+	@Test
+	@WithMockUser
+	public void oAuth2_hybrid_get_minimumParams_isOk() throws Exception {
+		BearerAccessToken accessToken = new BearerAccessToken();
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE, ResponseType.Value.TOKEN)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+
+		MockHttpServletRequestBuilder request = get("/authorize?response_type=code token&client_id=test-client")
+				.session(this.session);
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrl("http://example.com#access_token={accessToken}&code={code}&token_type=Bearer",
+						accessToken.getValue(), authorizationCode.getValue()));
+	}
+
+	@Test
+	@WithMockUser
+	public void oAuth2_hybrid_post_minimumParams_isOk() throws Exception {
+		BearerAccessToken accessToken = new BearerAccessToken();
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE, ResponseType.Value.TOKEN)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+
+		MockHttpServletRequestBuilder request = post("/authorize")
+				.content("response_type=code token&client_id=test-client")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(this.session);
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrl("http://example.com#access_token={accessToken}&code={code}&token_type=Bearer",
+						accessToken.getValue(), authorizationCode.getValue()));
 	}
 
 	// OIDC requests
@@ -198,7 +241,7 @@ public class AuthorizationEndpointTests {
 
 	@Test
 	@WithMockUser
-	public void oidc_implicitRequest_get_minimumParams_isOk() throws Exception {
+	public void oidc_implicit_get_minimumParams_isOk() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -221,7 +264,7 @@ public class AuthorizationEndpointTests {
 
 	@Test
 	@WithMockUser
-	public void oidc_implicitRequest_post_minimumParams_isOk() throws Exception {
+	public void oidc_implicit_post_minimumParams_isOk() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -240,6 +283,56 @@ public class AuthorizationEndpointTests {
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&id_token={idToken}&token_type=Bearer&session_state={sessionState}",
 				accessToken.getValue(), idToken.serialize(), this.session.getId()));
+	}
+
+	@Test
+	@WithMockUser
+	public void oidc_hybrid_get_minimumParams_isOk() throws Exception {
+		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(testClient(
+				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
+				.willReturn(idToken);
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+
+		MockHttpServletRequestBuilder request = get(
+				"/authorize?scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
+		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
+				"http://example.com#access_token={accessToken}&code={code}&id_token={idToken}&token_type=Bearer&session_state={sessionState}",
+				accessToken.getValue(), authorizationCode.getValue(), idToken.serialize(), this.session.getId()));
+	}
+
+	@Test
+	@WithMockUser
+	public void oidc_hybrid_post_minimumParams_isOk() throws Exception {
+		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(testClient(
+				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
+		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+				.willReturn(new RefreshToken());
+		given(this.tokenService.createIdToken(any(AuthenticationRequest.class), any(UserDetails.class)))
+				.willReturn(idToken);
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+
+		MockHttpServletRequestBuilder request = post("/authorize").content(
+				"scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED).session(this.session);
+		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
+				"http://example.com#access_token={accessToken}&code={code}&id_token={idToken}&token_type=Bearer&session_state={sessionState}",
+				accessToken.getValue(), authorizationCode.getValue(), idToken.serialize(), this.session.getId()));
 	}
 
 	// Misc requests

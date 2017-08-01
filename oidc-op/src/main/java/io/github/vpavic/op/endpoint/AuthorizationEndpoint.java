@@ -121,8 +121,8 @@ public class AuthorizationEndpoint {
 			if (authRequest instanceof AuthenticationRequest) {
 				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
 				OIDCTokens tokens = new OIDCTokens(idToken, accessToken, refreshToken);
-				AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, tokens);
-				AuthorizationCode code = this.authorizationCodeService.create(context);
+				AuthorizationCode code = this.authorizationCodeService
+						.create(new AuthorizationCodeContext(authRequest, tokens));
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
@@ -131,23 +131,23 @@ public class AuthorizationEndpoint {
 			// OAuth2 request
 			else {
 				Tokens tokens = new Tokens(accessToken, refreshToken);
-				AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, tokens);
-				AuthorizationCode code = this.authorizationCodeService.create(context);
+				AuthorizationCode code = this.authorizationCodeService
+						.create(new AuthorizationCodeContext(authRequest, tokens));
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, null);
 			}
 		}
 		// Implicit Flow
-		else {
+		else if (!responseType.contains(ResponseType.Value.CODE)) {
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
+				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
 				AccessToken accessToken = null;
 
 				if (responseType.contains(ResponseType.Value.TOKEN)) {
 					accessToken = this.tokenService.createAccessToken(authRequest, principal);
 				}
 
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
@@ -158,6 +158,34 @@ public class AuthorizationEndpoint {
 				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, null);
+			}
+		}
+		// Hybrid Flow
+		else {
+			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
+			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
+
+			boolean includeAccessToken = responseType.contains(ResponseType.Value.TOKEN);
+
+			// OpenID Connect request
+			if (authRequest instanceof AuthenticationRequest) {
+				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
+				OIDCTokens tokens = new OIDCTokens(idToken, accessToken, refreshToken);
+				AuthorizationCode code = this.authorizationCodeService
+						.create(new AuthorizationCodeContext(authRequest, tokens));
+				State sessionState = State.parse(session.getId());
+
+				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken,
+						includeAccessToken ? accessToken : null, state, sessionState, null);
+			}
+			// OAuth2 request
+			else {
+				Tokens tokens = new Tokens(accessToken, refreshToken);
+				AuthorizationCode code = this.authorizationCodeService
+						.create(new AuthorizationCodeContext(authRequest, tokens));
+
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, code,
+						includeAccessToken ? accessToken : null, state, null);
 			}
 		}
 
