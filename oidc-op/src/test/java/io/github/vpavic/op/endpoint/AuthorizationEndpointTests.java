@@ -10,12 +10,14 @@ import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.junit.Before;
@@ -199,7 +201,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE), new Scope(OIDCScopeValue.OPENID)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(new BearerAccessToken());
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -222,7 +224,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE)));
+				.willReturn(testClient(new ResponseType(ResponseType.Value.CODE), new Scope(OIDCScopeValue.OPENID)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(new BearerAccessToken());
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -246,7 +248,8 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
+				.willReturn(testClient(new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+						new Scope(OIDCScopeValue.OPENID)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -269,7 +272,8 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
+				.willReturn(testClient(new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+						new Scope(OIDCScopeValue.OPENID)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -293,7 +297,8 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(testClient(
-				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
+				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+				new Scope(OIDCScopeValue.OPENID)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -318,7 +323,8 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(testClient(
-				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
+				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+				new Scope(OIDCScopeValue.OPENID)));
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createRefreshToken(any(AuthorizationRequest.class), any(UserDetails.class)))
@@ -349,15 +355,20 @@ public class AuthorizationEndpointTests {
 		this.mvc.perform(post("/authorize")).andExpect(status().isBadRequest());
 	}
 
-	private static OIDCClientInformation testClient(ResponseType responseType) {
+	private static OIDCClientInformation testClient(ResponseType responseType, Scope scope) {
 		ClientID clientID = new ClientID("test-client");
 		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
 		clientMetadata.applyDefaults();
-		clientMetadata.setResponseTypes(Collections.singleton(responseType));
 		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
+		clientMetadata.setScope(scope);
+		clientMetadata.setResponseTypes(Collections.singleton(responseType));
 		Secret secret = new Secret("test-secret");
 
 		return new OIDCClientInformation(clientID, new Date(), clientMetadata, secret);
+	}
+
+	private static OIDCClientInformation testClient(ResponseType responseType) {
+		return testClient(responseType, null);
 	}
 
 }

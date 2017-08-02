@@ -15,6 +15,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
@@ -84,24 +85,9 @@ public class AuthorizationEndpoint {
 
 		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
-		URI redirectionURI = authRequest.getRedirectionURI();
-		Set<URI> redirectionURIs = clientMetadata.getRedirectionURIs();
+		URI redirectionURI = resolveRedirectionURI(authRequest, clientMetadata);
+		Scope scope = resolveScope(authRequest, clientMetadata);
 
-		if (redirectionURI == null) {
-			if (redirectionURIs.size() == 1) {
-				redirectionURI = redirectionURIs.iterator().next();
-			}
-			else {
-				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
-			}
-		}
-		else {
-			if (!redirectionURIs.contains(redirectionURI)) {
-				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
-			}
-		}
-
-		State state = authRequest.getState();
 		ResponseType responseType = authRequest.getResponseType();
 
 		if (!clientMetadata.getResponseTypes().contains(responseType)) {
@@ -109,6 +95,8 @@ public class AuthorizationEndpoint {
 		}
 
 		UserDetails principal = (UserDetails) authentication.getPrincipal();
+		State state = authRequest.getState();
+		ResponseMode responseMode = authRequest.getResponseMode();
 
 		AuthorizationResponse authResponse;
 
@@ -126,7 +114,7 @@ public class AuthorizationEndpoint {
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
-						null);
+						responseMode);
 			}
 			// OAuth2 request
 			else {
@@ -134,7 +122,7 @@ public class AuthorizationEndpoint {
 				AuthorizationCode code = this.authorizationCodeService
 						.create(new AuthorizationCodeContext(authRequest, tokens));
 
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, null);
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, responseMode);
 			}
 		}
 		// Implicit Flow
@@ -151,13 +139,13 @@ public class AuthorizationEndpoint {
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
-						sessionState, null);
+						sessionState, responseMode);
 			}
 			// OAuth2 request
 			else {
 				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
 
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, null);
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, responseMode);
 			}
 		}
 		// Hybrid Flow
@@ -176,7 +164,7 @@ public class AuthorizationEndpoint {
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken,
-						includeAccessToken ? accessToken : null, state, sessionState, null);
+						includeAccessToken ? accessToken : null, state, sessionState, responseMode);
 			}
 			// OAuth2 request
 			else {
@@ -185,11 +173,50 @@ public class AuthorizationEndpoint {
 						.create(new AuthorizationCodeContext(authRequest, tokens));
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code,
-						includeAccessToken ? accessToken : null, state, null);
+						includeAccessToken ? accessToken : null, state, responseMode);
 			}
 		}
 
 		return "redirect:" + authResponse.toURI();
+	}
+
+	private URI resolveRedirectionURI(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
+			throws GeneralException {
+		URI redirectionURI = authRequest.getRedirectionURI();
+		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
+
+		if (redirectionURI == null) {
+			if (registeredRedirectionURIs.size() == 1) {
+				redirectionURI = registeredRedirectionURIs.iterator().next();
+			}
+			else {
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+			}
+		}
+		else {
+			if (!registeredRedirectionURIs.contains(redirectionURI)) {
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+			}
+		}
+
+		return redirectionURI;
+	}
+
+	private Scope resolveScope(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
+			throws GeneralException {
+		Scope scope = authRequest.getScope();
+		Scope registeredScope = clientMetadata.getScope();
+
+		if (scope == null) {
+			scope = registeredScope;
+		}
+		else {
+			if (registeredScope == null || !registeredScope.toStringList().containsAll(scope.toStringList())) {
+				throw new GeneralException(OAuth2Error.INVALID_SCOPE);
+			}
+		}
+
+		return scope;
 	}
 
 	@ExceptionHandler(GeneralException.class)
