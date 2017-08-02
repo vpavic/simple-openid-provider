@@ -1,6 +1,7 @@
 package io.github.vpavic.op.config;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.FilterChain;
@@ -8,12 +9,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.factories.DefaultJWSVerifierFactory;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.proc.JWSVerifierFactory;
-import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SimpleSecurityContext;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -35,8 +40,6 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private final AuthenticationDetailsSource<HttpServletRequest, ?> authenticationDetailsSource = new WebAuthenticationDetailsSource();
 
-	private final JWSVerifierFactory jwsVerifierFactory = new DefaultJWSVerifierFactory();
-
 	private final KeyService keyService;
 
 	private final AuthenticationManager authenticationManager;
@@ -53,17 +56,19 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 		try {
 			BearerAccessToken accessToken = BearerAccessToken.parse(httpRequest);
-			SignedJWT jwt = SignedJWT.parse(accessToken.getValue());
-			JWSHeader header = jwt.getHeader();
-			RSAKey rsaKey = (RSAKey) this.keyService.findByKeyId(header.getKeyID());
-			JWSVerifier verifier = this.jwsVerifierFactory.createJWSVerifier(header, rsaKey.toPublicKey());
-			if (jwt.verify(verifier)) {
-				String username = jwt.getJWTClaimsSet().getSubject();
-				PreAuthenticatedAuthenticationToken authToken = new PreAuthenticatedAuthenticationToken(username, "");
-				authToken.setDetails(this.authenticationDetailsSource.buildDetails(request));
-				Authentication authResult = this.authenticationManager.authenticate(authToken);
-				SecurityContextHolder.getContext().setAuthentication(authResult);
-			}
+			List<JWK> keys = this.keyService.findAll();
+
+			ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
+			JWSKeySelector<SimpleSecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,
+					new ImmutableJWKSet<>(new JWKSet(keys)));
+			jwtProcessor.setJWSKeySelector(keySelector);
+			JWTClaimsSet claimsSet = jwtProcessor.process(accessToken.getValue(), null);
+
+			String username = claimsSet.getSubject();
+			PreAuthenticatedAuthenticationToken authToken = new PreAuthenticatedAuthenticationToken(username, "");
+			authToken.setDetails(this.authenticationDetailsSource.buildDetails(request));
+			Authentication authResult = this.authenticationManager.authenticate(authToken);
+			SecurityContextHolder.getContext().setAuthentication(authResult);
 		}
 		catch (Exception e) {
 			logger.error("Bearer authentication attempt failed", e);
