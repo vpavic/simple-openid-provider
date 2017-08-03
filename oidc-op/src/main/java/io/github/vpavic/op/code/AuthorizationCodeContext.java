@@ -3,25 +3,25 @@ package io.github.vpavic.op.code;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
-import com.nimbusds.oauth2.sdk.token.Tokens;
+import org.springframework.security.core.Authentication;
 
 public class AuthorizationCodeContext {
 
 	private final AuthorizationRequest authRequest;
 
-	private final Tokens tokens;
+	private final Authentication authentication;
 
-	public AuthorizationCodeContext(AuthorizationRequest authRequest, Tokens tokens) {
+	public AuthorizationCodeContext(AuthorizationRequest authRequest, Authentication authentication) {
 		this.authRequest = Objects.requireNonNull(authRequest);
-		this.tokens = Objects.requireNonNull(tokens);
+		this.authentication = Objects.requireNonNull(authentication);
 	}
 
 	public AuthorizationRequest getAuthRequest() {
 		return this.authRequest;
 	}
 
-	public Tokens getTokens() {
-		return this.tokens;
+	public Authentication getAuthentication() {
+		return this.authentication;
 	}
 
 }

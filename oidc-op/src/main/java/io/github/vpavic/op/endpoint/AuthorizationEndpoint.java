@@ -21,15 +21,13 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -102,15 +100,11 @@ public class AuthorizationEndpoint {
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
-			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
+			AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, authentication);
 
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
-				OIDCTokens tokens = new OIDCTokens(idToken, accessToken, refreshToken);
-				AuthorizationCode code = this.authorizationCodeService
-						.create(new AuthorizationCodeContext(authRequest, tokens));
+				AuthorizationCode code = this.authorizationCodeService.create(context);
 				State sessionState = State.parse(session.getId());
 
 				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
@@ -118,9 +112,7 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
-				Tokens tokens = new Tokens(accessToken, refreshToken);
-				AuthorizationCode code = this.authorizationCodeService
-						.create(new AuthorizationCodeContext(authRequest, tokens));
+				AuthorizationCode code = this.authorizationCodeService.create(context);
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, responseMode);
 			}
@@ -150,30 +142,40 @@ public class AuthorizationEndpoint {
 		}
 		// Hybrid Flow
 		else {
-			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
-
-			boolean includeAccessToken = responseType.contains(ResponseType.Value.TOKEN);
-
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
-				OIDCTokens tokens = new OIDCTokens(idToken, accessToken, refreshToken);
+				JWT idToken = null;
+
+				if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
+					idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
+				}
+
+				AccessToken accessToken = null;
+
+				if (responseType.contains(ResponseType.Value.TOKEN)) {
+					accessToken = this.tokenService.createAccessToken(authRequest, principal);
+				}
+
 				AuthorizationCode code = this.authorizationCodeService
-						.create(new AuthorizationCodeContext(authRequest, tokens));
+						.create(new AuthorizationCodeContext(authRequest, authentication));
+
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken,
-						includeAccessToken ? accessToken : null, state, sessionState, responseMode);
+				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
+						sessionState, responseMode);
 			}
 			// OAuth2 request
 			else {
-				Tokens tokens = new Tokens(accessToken, refreshToken);
 				AuthorizationCode code = this.authorizationCodeService
-						.create(new AuthorizationCodeContext(authRequest, tokens));
+						.create(new AuthorizationCodeContext(authRequest, authentication));
 
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, code,
-						includeAccessToken ? accessToken : null, state, responseMode);
+				AccessToken accessToken = null;
+
+				if (responseType.contains(ResponseType.Value.TOKEN)) {
+					accessToken = this.tokenService.createAccessToken(authRequest, principal);
+				}
+
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, accessToken, state, responseMode);
 			}
 		}
 
