@@ -1,15 +1,16 @@
-### Gradle ###
-.gradle
+# Gradle
+.gradle/
 build/
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA
 .idea/
 out/
 *.iml
 *.ipr
 *.iws
 
-### Eclipse ###
+# Eclipse
+bin/
 .classpath
 .project
 .settings
