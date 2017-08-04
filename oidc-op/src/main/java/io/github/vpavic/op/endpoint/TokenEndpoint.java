@@ -159,7 +159,7 @@ public class TokenEndpoint {
 			}
 
 			ClientAuthenticationVerifier<Void> verifier = new ClientAuthenticationVerifier<>(
-					new ClientInformationCredentialsSelector(client),
+					new ClientInformationCredentialsSelector(client), null,
 					Collections.singleton(new Audience(this.properties.getIssuer())));
 			verifier.verify(clientAuthentication, null, null);
 		}
