@@ -19,6 +19,7 @@ import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -62,13 +63,28 @@ public class AuthorizationEndpoint {
 	public String authorize(HTTPRequest request, Authentication authentication, HttpSession session) throws Exception {
 		AuthorizationRequest authRequest = AuthorizationRequest.parse(request);
 
+		ClientID clientID = authRequest.getClientID();
+		URI redirectURI = authRequest.getRedirectionURI();
+		Scope scope = authRequest.getScope();
+		State state = authRequest.getState();
+
 		try {
 			authRequest = AuthenticationRequest.parse(request);
 		}
 		catch (ParseException e) {
-			Scope scope = authRequest.getScope();
+			if (redirectURI == null) {
+				String msg = "Missing \"redirect_uri\" parameter";
+				throw new ParseException(msg, OAuth2Error.INVALID_REQUEST.appendDescription(": " + msg), clientID, null,
+						authRequest.impliedResponseMode(), state);
+			}
 
-			if (scope != null && scope.contains(OIDCScopeValue.OPENID)) {
+			if (scope == null) {
+				String msg = "Missing \"scope\" parameter";
+				throw new ParseException(msg, OAuth2Error.INVALID_REQUEST.appendDescription(": " + msg), clientID,
+						redirectURI, authRequest.impliedResponseMode(), state);
+			}
+
+			if (scope.contains(OIDCScopeValue.OPENID)) {
 				throw e;
 			}
 
@@ -83,8 +99,17 @@ public class AuthorizationEndpoint {
 
 		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
-		URI redirectionURI = resolveRedirectionURI(authRequest, clientMetadata);
-		Scope scope = resolveScope(authRequest, clientMetadata);
+		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
+
+		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectURI)) {
+			throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+		}
+
+		Scope registeredScope = clientMetadata.getScope();
+
+		if (registeredScope == null || !registeredScope.toStringList().containsAll(scope.toStringList())) {
+			throw new GeneralException(OAuth2Error.INVALID_SCOPE);
+		}
 
 		ResponseType responseType = authRequest.getResponseType();
 
@@ -93,7 +118,6 @@ public class AuthorizationEndpoint {
 		}
 
 		UserDetails principal = (UserDetails) authentication.getPrincipal();
-		State state = authRequest.getState();
 		ResponseMode responseMode = authRequest.getResponseMode();
 
 		AuthorizationResponse authResponse;
@@ -107,14 +131,14 @@ public class AuthorizationEndpoint {
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
+				authResponse = new AuthenticationSuccessResponse(redirectURI, code, null, null, state, sessionState,
 						responseMode);
 			}
 			// OAuth2 request
 			else {
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, responseMode);
+				authResponse = new AuthorizationSuccessResponse(redirectURI, code, null, state, responseMode);
 			}
 		}
 		// Implicit Flow
@@ -130,14 +154,14 @@ public class AuthorizationEndpoint {
 
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
+				authResponse = new AuthenticationSuccessResponse(redirectURI, null, idToken, accessToken, state,
 						sessionState, responseMode);
 			}
 			// OAuth2 request
 			else {
 				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
 
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, responseMode);
+				authResponse = new AuthorizationSuccessResponse(redirectURI, null, accessToken, state, responseMode);
 			}
 		}
 		// Hybrid Flow
@@ -161,7 +185,7 @@ public class AuthorizationEndpoint {
 
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
+				authResponse = new AuthenticationSuccessResponse(redirectURI, code, idToken, accessToken, state,
 						sessionState, responseMode);
 			}
 			// OAuth2 request
@@ -175,50 +199,11 @@ public class AuthorizationEndpoint {
 					accessToken = this.tokenService.createAccessToken(authRequest, principal);
 				}
 
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, accessToken, state, responseMode);
+				authResponse = new AuthorizationSuccessResponse(redirectURI, code, accessToken, state, responseMode);
 			}
 		}
 
 		return "redirect:" + authResponse.toURI();
-	}
-
-	private URI resolveRedirectionURI(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
-			throws GeneralException {
-		URI redirectionURI = authRequest.getRedirectionURI();
-		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
-
-		if (redirectionURI == null) {
-			if (registeredRedirectionURIs.size() == 1) {
-				redirectionURI = registeredRedirectionURIs.iterator().next();
-			}
-			else {
-				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
-			}
-		}
-		else {
-			if (!registeredRedirectionURIs.contains(redirectionURI)) {
-				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
-			}
-		}
-
-		return redirectionURI;
-	}
-
-	private Scope resolveScope(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
-			throws GeneralException {
-		Scope scope = authRequest.getScope();
-		Scope registeredScope = clientMetadata.getScope();
-
-		if (scope == null) {
-			scope = registeredScope;
-		}
-		else {
-			if (registeredScope == null || !registeredScope.toStringList().containsAll(scope.toStringList())) {
-				throw new GeneralException(OAuth2Error.INVALID_SCOPE);
-			}
-		}
-
-		return scope;
 	}
 
 	@ExceptionHandler(GeneralException.class)
