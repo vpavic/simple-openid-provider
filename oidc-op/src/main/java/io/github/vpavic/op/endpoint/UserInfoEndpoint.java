@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.
+ *
+ * @author Vedran Pavic
+ * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
+ */
 @RestController
 @RequestMapping(path = "/userinfo")
 public class UserInfoEndpoint {

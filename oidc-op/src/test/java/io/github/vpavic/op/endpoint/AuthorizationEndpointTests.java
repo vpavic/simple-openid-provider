@@ -51,6 +51,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Tests for {@link AuthorizationEndpoint}.
+ *
+ * @author Vedran Pavic
+ */
 @RunWith(SpringRunner.class)
 @WebMvcTest(AuthorizationEndpoint.class)
 public class AuthorizationEndpointTests {

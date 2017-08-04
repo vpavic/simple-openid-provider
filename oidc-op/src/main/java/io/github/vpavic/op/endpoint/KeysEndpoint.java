@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.vpavic.op.key.KeyService;
 
+/**
+ * Endpoint that publishes server's public RSA keys as a JSON Web Key (JWK) set.
+ *
+ * @author Vedran Pavic
+ */
 @RestController
 @RequestMapping(path = "/keys")
 public class KeysEndpoint {

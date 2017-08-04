@@ -46,6 +46,11 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Tests for {@link TokenEndpoint}.
+ *
+ * @author Vedran Pavic
+ */
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = TokenEndpoint.class, secure = false)
 public class TokenEndpointTests {

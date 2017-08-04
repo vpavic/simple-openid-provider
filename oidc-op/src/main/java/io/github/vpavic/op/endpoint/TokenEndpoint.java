@@ -43,6 +43,14 @@ import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
+/**
+ * OAuth 2.0 and OpenID Connect 1.0 compatible Token Endpoint implementation.
+ *
+ * @author Vedran Pavic
+ * @see <a href="https://tools.ietf.org/html/rfc6749">RFC 6749: The OAuth 2.0 Authorization Framework</a>
+ * @see <a href="https://tools.ietf.org/html/rfc7636">RFC 7636: Proof Key for Code Exchange by OAuth Public Clients</a>
+ * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
+ */
 @RestController
 @RequestMapping(path = "/token")
 public class TokenEndpoint {
