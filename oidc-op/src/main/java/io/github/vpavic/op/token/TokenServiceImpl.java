@@ -1,5 +1,6 @@
 package io.github.vpavic.op.token;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -43,6 +44,7 @@ public class TokenServiceImpl implements TokenService {
 	@Override
 	public AccessToken createAccessToken(AuthorizationRequest authRequest, UserDetails principal) {
 		Instant issuedAt = Instant.now();
+		Duration maxAge = Duration.ofMinutes(30);
 
 		JWK defaultJwk = this.keyService.findDefault();
 		JWSHeader header = createJwsHeader(defaultJwk);
@@ -53,7 +55,7 @@ public class TokenServiceImpl implements TokenService {
 				.issuer(issuer.getValue())
 				.subject(principal.getName())
 				.audience(authRequest.getClientID().getValue())
-				.expirationTime(Date.from(issuedAt.plus(30, ChronoUnit.MINUTES)))
+				.expirationTime(Date.from(issuedAt.plus(maxAge)))
 				.issueTime(Date.from(issuedAt))
 				.build();
 		// @formatter:on
@@ -61,7 +63,7 @@ public class TokenServiceImpl implements TokenService {
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
 			accessToken.sign(signer);
-			return new BearerAccessToken(accessToken.serialize());
+			return new BearerAccessToken(accessToken.serialize(), maxAge.getSeconds(), authRequest.getScope());
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
