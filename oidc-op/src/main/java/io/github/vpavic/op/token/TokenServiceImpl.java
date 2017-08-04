@@ -2,7 +2,7 @@ package io.github.vpavic.op.token;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
 
@@ -24,6 +24,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,8 @@ public class TokenServiceImpl implements TokenService {
 
 	private static final Issuer issuer = new Issuer("http://localhost:6432");
 
+	private static final Duration maxAge = Duration.ofMinutes(30);
+
 	private final KeyService keyService;
 
 	public TokenServiceImpl(KeyService keyService) {
@@ -44,7 +47,6 @@ public class TokenServiceImpl implements TokenService {
 	@Override
 	public AccessToken createAccessToken(AuthorizationRequest authRequest, UserDetails principal) {
 		Instant issuedAt = Instant.now();
-		Duration maxAge = Duration.ofMinutes(30);
 
 		JWK defaultJwk = this.keyService.findDefault();
 		JWSHeader header = createJwsHeader(defaultJwk);
@@ -84,12 +86,14 @@ public class TokenServiceImpl implements TokenService {
 		JWSSigner signer = createJwsSigner(defaultJwk);
 
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, new Subject(principal.getName()),
-				Audience.create(authRequest.getClientID().getValue()), Date.from(issuedAt.plus(30, ChronoUnit.MINUTES)),
+				Audience.create(authRequest.getClientID().getValue()), Date.from(issuedAt.plus(maxAge)),
 				Date.from(issuedAt));
 
 		if (authRequest.getNonce() != null) {
 			claimsSet.setNonce(authRequest.getNonce());
 		}
+
+		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 
 		try {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());
