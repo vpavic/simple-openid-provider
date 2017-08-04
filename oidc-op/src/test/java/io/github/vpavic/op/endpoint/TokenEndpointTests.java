@@ -12,6 +12,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
+import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -59,6 +60,9 @@ public class TokenEndpointTests {
 	private ClientRepository clientRepository;
 
 	@MockBean
+	private ClientAuthenticationVerifier<ClientRepository> clientAuthenticationVerifier;
+
+	@MockBean
 	private AuthorizationCodeService authorizationCodeService;
 
 	@MockBean
@@ -66,9 +70,6 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
-
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -99,9 +100,6 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_postAuth_isOk() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(ClientAuthenticationMethod.CLIENT_SECRET_POST));
-
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
