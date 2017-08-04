@@ -1,0 +1,2 @@
+org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc=\
+io.github.vpavic.op.config.OpenIdProviderConfiguration

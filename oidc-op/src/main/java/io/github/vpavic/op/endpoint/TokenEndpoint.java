@@ -50,11 +50,14 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.token.TokenService;
 
 @RestController
 @RequestMapping(path = "/token")
 public class TokenEndpoint {
+
+	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
@@ -62,8 +65,9 @@ public class TokenEndpoint {
 
 	private final TokenService tokenService;
 
-	public TokenEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService) {
+	public TokenEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+			AuthorizationCodeService authorizationCodeService, TokenService tokenService) {
+		this.properties = properties;
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.tokenService = Objects.requireNonNull(tokenService);
@@ -156,7 +160,7 @@ public class TokenEndpoint {
 
 			ClientAuthenticationVerifier<Void> verifier = new ClientAuthenticationVerifier<>(
 					new ClientInformationCredentialsSelector(client),
-					Collections.singleton(new Audience("http://localhost:6432")));
+					Collections.singleton(new Audience(this.properties.getIssuer())));
 			verifier.verify(clientAuthentication, null, null);
 		}
 		else {

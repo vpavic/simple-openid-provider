@@ -29,24 +29,25 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.key.KeyService;
 
 @Service
 public class TokenServiceImpl implements TokenService {
 
-	private static final Issuer issuer = new Issuer("http://localhost:6432");
-
-	private static final Duration maxAge = Duration.ofMinutes(30);
+	private final OpenIdProviderProperties properties;
 
 	private final KeyService keyService;
 
-	public TokenServiceImpl(KeyService keyService) {
+	public TokenServiceImpl(OpenIdProviderProperties properties, KeyService keyService) {
+		this.properties = properties;
 		this.keyService = Objects.requireNonNull(keyService);
 	}
 
 	@Override
 	public AccessToken createAccessToken(AuthorizationRequest authRequest, UserDetails principal) {
 		Instant issuedAt = Instant.now();
+		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
 		JWK defaultJwk = this.keyService.findDefault();
 		JWSHeader header = createJwsHeader(defaultJwk);
@@ -54,10 +55,10 @@ public class TokenServiceImpl implements TokenService {
 
 		// @formatter:off
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-				.issuer(issuer.getValue())
+				.issuer(this.properties.getIssuer())
 				.subject(principal.getName())
 				.audience(authRequest.getClientID().getValue())
-				.expirationTime(Date.from(issuedAt.plus(maxAge)))
+				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
 				.build();
 		// @formatter:on
@@ -65,7 +66,8 @@ public class TokenServiceImpl implements TokenService {
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
 			accessToken.sign(signer);
-			return new BearerAccessToken(accessToken.serialize(), maxAge.getSeconds(), authRequest.getScope());
+			return new BearerAccessToken(accessToken.serialize(), accessTokenValidityDuration.getSeconds(),
+					authRequest.getScope());
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -85,9 +87,9 @@ public class TokenServiceImpl implements TokenService {
 		JWSHeader header = createJwsHeader(defaultJwk);
 		JWSSigner signer = createJwsSigner(defaultJwk);
 
-		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, new Subject(principal.getName()),
-				Audience.create(authRequest.getClientID().getValue()), Date.from(issuedAt.plus(maxAge)),
-				Date.from(issuedAt));
+		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
+				new Subject(principal.getName()), Audience.create(authRequest.getClientID().getValue()),
+				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
 		if (authRequest.getNonce() != null) {
 			claimsSet.setNonce(authRequest.getNonce());
