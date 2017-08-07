@@ -43,10 +43,12 @@ import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.token.TokenService;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -133,21 +135,41 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void oAuth2_authCode_withoutClientId_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestAuthCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?response_type=code&redirect_uri=http://example.com&scope=test").session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
 	@WithMockUser
 	public void oAuth2_authCode_withoutRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestAuthCodeClient());
 
 		MockHttpServletRequestBuilder request = get("/authorize?response_type=code&client_id=test-client&scope=test")
 				.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
+	}
+
+	@Test
+	@WithMockUser
+	public void oAuth2_authCode_withInvalidRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestAuthCodeClient());
+
+		MockHttpServletRequestBuilder request = get(
+				"/authorize?response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com&scope=test")
+						.session(this.session);
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
@@ -162,6 +184,20 @@ public class AuthorizationEndpointTests {
 						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
+	}
+
+	@Test
+	@WithMockUser
+	public void oAuth2_authCode_withoutScopeWithInvalidRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestAuthCodeClient());
+
+		MockHttpServletRequestBuilder request = get(
+				"/authorize?response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com")
+						.session(this.session);
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
@@ -217,21 +253,27 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void oAuth2_implicit_withoutClientId_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestImplicitClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?response_type=token&redirect_uri=http://example.com&scope=test").session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
 	@WithMockUser
 	public void oAuth2_implicit_withoutRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestImplicitClient());
 
 		MockHttpServletRequestBuilder request = get("/authorize#response_type=token&client_id=test-client&scope=test")
 				.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
@@ -310,21 +352,27 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void oAuth2_hybrid_withoutClientId_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestHybridClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?response_type=code token&redirect_uri=http://example.com&scope=test").session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
 	@WithMockUser
 	public void oAuth2_hybrid_withoutRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oAuth2TestHybridClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize#response_type=code token&client_id=test-client&scope=test").session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
@@ -422,21 +470,27 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void oidc_authCode_withoutClientId_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oidcTestAuthCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=code&redirect_uri=http://example.com").session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
 	@WithMockUser
 	public void oidc_authCode_withoutRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(oidcTestAuthCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=code&client_id=test-client&state=").session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
@@ -539,25 +593,31 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void oidc_implicitWithIdTokenAndToken_withoutClientId_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(oidcTestImplicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=id_token token&redirect_uri=http://example.com&nonce=test")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
 	@WithMockUser
 	public void oidc_implicitWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(oidcTestImplicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=id_token token&client_id=test-client&nonce=test")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
@@ -687,25 +747,31 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void oidc_hybridWithIdTokenAndToken_withoutClientId_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(oidcTestHybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=code id_token token&redirect_uri=http://example.com")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	@Test
 	@WithMockUser
 	public void oidc_hybridWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
+		ErrorObject error = OAuth2Error.INVALID_REQUEST;
+
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(oidcTestHybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/authorize?scope=openid&response_type=code id_token token&client_id=test-client&state=")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest());
+		this.mvc.perform(request).andExpect(status().isBadRequest())
+				.andExpect(content().string(containsString(error.getCode())));
 	}
 
 	private static OIDCClientInformation testClient(ResponseType responseType, Scope scope) {
