@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.nimbusds.jwt.JWT;
@@ -12,6 +11,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.AuthorizationResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -29,13 +29,14 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
@@ -218,14 +219,30 @@ public class AuthorizationEndpoint {
 	}
 
 	@ExceptionHandler(GeneralException.class)
-	public void handleParseException(GeneralException e, HttpServletResponse response) throws Exception {
+	public String handleParseException(GeneralException e, ServletWebRequest request, Model model) throws Exception {
+		ErrorObject error = e.getErrorObject();
+
+		if (error == null) {
+			error = OAuth2Error.INVALID_REQUEST.appendDescription(": " + e.getMessage());
+		}
+
 		if (e.getClientID() == null || e.getRedirectionURI() == null) {
-			response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+			int httpStatus = error.getHTTPStatusCode();
+			String code = error.getCode();
+			String description = error.getDescription();
+
+			if (request.getResponse() != null) {
+				request.getResponse().setStatus(httpStatus);
+			}
+
+			model.addAttribute("code", code);
+			model.addAttribute("description", description);
+			return "error";
 		}
 		else {
-			AuthorizationResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
-					e.getErrorObject(), e.getState(), e.getResponseMode());
-			response.sendRedirect(authResponse.toURI().toString());
+			AuthorizationResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), error,
+					e.getState(), e.getResponseMode());
+			return "redirect:" + authResponse.toURI();
 		}
 	}
 
