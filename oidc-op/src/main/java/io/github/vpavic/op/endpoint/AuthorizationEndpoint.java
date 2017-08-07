@@ -73,51 +73,24 @@ public class AuthorizationEndpoint {
 
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
 	public String authorize(HTTPRequest request, Authentication authentication, HttpSession session) throws Exception {
-		AuthorizationRequest authRequest = AuthorizationRequest.parse(request);
-
-		ResponseMode responseMode = authRequest.impliedResponseMode();
-		ClientID clientID = authRequest.getClientID();
-		URI redirectURI = authRequest.getRedirectionURI();
-		Scope scope = authRequest.getScope();
-		State state = authRequest.getState();
-
-		try {
-			authRequest = AuthenticationRequest.parse(request);
-		}
-		catch (ParseException e) {
-			if (redirectURI == null) {
-				throw new GeneralException("Missing \"redirect_uri\" parameter", OAuth2Error.INVALID_REQUEST, clientID,
-						null, responseMode, state, e);
-			}
-
-			OIDCClientInformation client = resolveClient(authRequest);
-			validateRedirectUri(authRequest, client.getOIDCMetadata());
-
-			if (scope == null) {
-				throw new GeneralException("Missing \"scope\" parameter", OAuth2Error.INVALID_REQUEST, clientID,
-						redirectURI, responseMode, state, e);
-			}
-
-			if (scope.contains(OIDCScopeValue.OPENID)) {
-				throw e;
-			}
-
-			// otherwise still a valid OAuth2 request
-		}
-
+		AuthorizationRequest authRequest = resolveAuthRequest(request);
 		OIDCClientInformation client = resolveClient(authRequest);
 		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
-		validateRedirectUri(authRequest, clientMetadata);
+
+		validateRedirectionURI(authRequest, clientMetadata);
 		validateScope(authRequest, clientMetadata);
 		validateResponseType(authRequest, clientMetadata);
 
-		UserDetails principal = (UserDetails) authentication.getPrincipal();
 		ResponseType responseType = authRequest.getResponseType();
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		URI redirectionURI = authRequest.getRedirectionURI();
+		State state = authRequest.getState();
+		UserDetails principal = (UserDetails) authentication.getPrincipal();
 
 		AuthorizationResponse authResponse;
 
 		// Authorization Code Flow
-		if (authRequest.getResponseType().impliesCodeFlow()) {
+		if (responseType.impliesCodeFlow()) {
 			AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, authentication);
 
 			// OpenID Connect request
@@ -125,14 +98,14 @@ public class AuthorizationEndpoint {
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectURI, code, null, null, state, sessionState,
+				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
 						responseMode);
 			}
 			// OAuth2 request
 			else {
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 
-				authResponse = new AuthorizationSuccessResponse(redirectURI, code, null, state, responseMode);
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, responseMode);
 			}
 		}
 		// Implicit Flow
@@ -148,14 +121,14 @@ public class AuthorizationEndpoint {
 
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectURI, null, idToken, accessToken, state,
+				authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
 						sessionState, responseMode);
 			}
 			// OAuth2 request
 			else {
 				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
 
-				authResponse = new AuthorizationSuccessResponse(redirectURI, null, accessToken, state, responseMode);
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, responseMode);
 			}
 		}
 		// Hybrid Flow
@@ -179,7 +152,7 @@ public class AuthorizationEndpoint {
 
 				State sessionState = State.parse(session.getId());
 
-				authResponse = new AuthenticationSuccessResponse(redirectURI, code, idToken, accessToken, state,
+				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
 						sessionState, responseMode);
 			}
 			// OAuth2 request
@@ -193,32 +166,69 @@ public class AuthorizationEndpoint {
 					accessToken = this.tokenService.createAccessToken(authRequest, principal);
 				}
 
-				authResponse = new AuthorizationSuccessResponse(redirectURI, code, accessToken, state, responseMode);
+				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, accessToken, state, responseMode);
 			}
 		}
 
 		return "redirect:" + authResponse.toURI();
 	}
 
+	private AuthorizationRequest resolveAuthRequest(HTTPRequest request) throws GeneralException {
+		AuthorizationRequest authRequest = AuthorizationRequest.parse(request);
+
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientID = authRequest.getClientID();
+		URI redirectionURI = authRequest.getRedirectionURI();
+		Scope scope = authRequest.getScope();
+		State state = authRequest.getState();
+
+		try {
+			authRequest = AuthenticationRequest.parse(request);
+		}
+		catch (ParseException e) {
+			if (redirectionURI == null) {
+				throw new GeneralException(
+						OAuth2Error.INVALID_REQUEST.setDescription("Missing \"redirect_uri\" parameter"));
+			}
+
+			OIDCClientInformation client = resolveClient(authRequest);
+			validateRedirectionURI(authRequest, client.getOIDCMetadata());
+
+			if (scope == null) {
+				throw new GeneralException("Missing \"scope\" parameter", OAuth2Error.INVALID_REQUEST, clientID,
+						redirectionURI, responseMode, state);
+			}
+
+			if (scope.contains(OIDCScopeValue.OPENID)) {
+				throw e;
+			}
+
+			// otherwise still a valid OAuth2 request
+		}
+
+		return authRequest;
+	}
+
 	private OIDCClientInformation resolveClient(AuthorizationRequest authRequest) throws GeneralException {
-		OIDCClientInformation client = this.clientRepository.findByClientId(authRequest.getClientID());
+		ClientID clientID = authRequest.getClientID();
+		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
 		if (client == null) {
-			ErrorObject error = OAuth2Error.INVALID_CLIENT;
-			throw new GeneralException(error.getDescription(), error, authRequest.getClientID(),
-					authRequest.getRedirectionURI(), authRequest.impliedResponseMode(), authRequest.getState());
+			throw new GeneralException(
+					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"client_id\" parameter: " + clientID));
 		}
 
 		return client;
 	}
 
-	private void validateRedirectUri(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
+	private void validateRedirectionURI(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
 			throws GeneralException {
+		URI redirectionURI = authRequest.getRedirectionURI();
 		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
-		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(authRequest.getRedirectionURI())) {
-			throw new GeneralException("Mismatching \"redirect_uri\" parameter", OAuth2Error.INVALID_REQUEST,
-					authRequest.getClientID(), null, authRequest.impliedResponseMode(), authRequest.getState());
+		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectionURI)) {
+			throw new GeneralException(OAuth2Error.INVALID_REQUEST
+					.setDescription("Invalid \"redirect_uri\" parameter: " + redirectionURI));
 		}
 	}
 
@@ -251,7 +261,7 @@ public class AuthorizationEndpoint {
 			error = OAuth2Error.INVALID_REQUEST;
 		}
 
-		if (e.getClientID() == null || e.getRedirectionURI() == null) {
+		if (e.getRedirectionURI() == null) {
 			if (request.getResponse() != null) {
 				request.getResponse().setStatus(error.getHTTPStatusCode());
 			}
