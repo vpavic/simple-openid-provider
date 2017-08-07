@@ -18,6 +18,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.id.Audience;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -25,6 +26,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -87,8 +89,10 @@ public class TokenServiceImpl implements TokenService {
 		JWSHeader header = createJwsHeader(defaultJwk);
 		JWSSigner signer = createJwsSigner(defaultJwk);
 
+		ClientID clientID = authRequest.getClientID();
+
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
-				new Subject(principal.getName()), Audience.create(authRequest.getClientID().getValue()),
+				new Subject(principal.getName()), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
 		if (authRequest.getNonce() != null) {
@@ -96,6 +100,7 @@ public class TokenServiceImpl implements TokenService {
 		}
 
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
+		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
 
 		try {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());
