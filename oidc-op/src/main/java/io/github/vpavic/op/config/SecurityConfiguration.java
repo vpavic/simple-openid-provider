@@ -70,8 +70,7 @@ public class SecurityConfiguration {
 				.logout()
 					.and()
 				.authorizeRequests()
-					.mvcMatchers("/").permitAll()
-					.mvcMatchers("/oauth2/authorize").authenticated();
+					.anyRequest().authenticated();
 			// @formatter:on
 		}
 
