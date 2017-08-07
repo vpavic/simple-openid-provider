@@ -52,7 +52,7 @@ import io.github.vpavic.op.token.TokenService;
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
 @RestController
-@RequestMapping(path = "/token")
+@RequestMapping(path = "/oauth2/token")
 public class TokenEndpoint {
 
 	private final ClientRepository clientRepository;

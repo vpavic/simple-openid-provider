@@ -97,7 +97,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.header("Authorization", clientAuth.toHTTPAuthorizationHeader());
 		this.mvc.perform(request).andExpect(status().isOk());
@@ -127,7 +127,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
@@ -160,7 +160,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
@@ -194,7 +194,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
@@ -228,14 +228,14 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
 				.willReturn(accessToken);
 
-		MockHttpServletRequestBuilder request = post("/token").content(tokenRequest.toHTTPRequest().getQuery())
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
 		this.mvc.perform(request).andExpect(status().isOk());
 	}
 
 	@Test
 	public void noParams_isBadRequest() throws Exception {
-		this.mvc.perform(post("/token").contentType(MediaType.APPLICATION_FORM_URLENCODED))
+		this.mvc.perform(post("/oauth2/token").contentType(MediaType.APPLICATION_FORM_URLENCODED))
 				.andExpect(status().isBadRequest());
 	}
 

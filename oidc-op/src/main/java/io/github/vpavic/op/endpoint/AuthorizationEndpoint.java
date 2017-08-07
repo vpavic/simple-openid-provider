@@ -55,7 +55,7 @@ import io.github.vpavic.op.token.TokenService;
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
 @Controller
-@RequestMapping(path = "/authorize")
+@RequestMapping(path = "/oauth2/authorize")
 public class AuthorizationEndpoint {
 
 	private final ClientRepository clientRepository;

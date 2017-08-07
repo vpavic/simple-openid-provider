@@ -39,7 +39,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/keys", "/token")
+					.antMatchers("/oauth2/keys", "/oauth2/token")
 					.and()
 				.csrf()
 					.disable()
@@ -62,7 +62,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/", "/login", "/logout", "/authorize")
+					.antMatchers("/", "/login", "/logout", "/oauth2/authorize")
 					.and()
 				.formLogin()
 					.permitAll()
@@ -71,7 +71,7 @@ public class SecurityConfiguration {
 					.and()
 				.authorizeRequests()
 					.mvcMatchers("/").permitAll()
-					.mvcMatchers("/authorize").authenticated();
+					.mvcMatchers("/oauth2/authorize").authenticated();
 			// @formatter:on
 		}
 
@@ -106,7 +106,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
-				.antMatcher("/userinfo")
+				.antMatcher("/oauth2/userinfo")
 				.cors()
 					.and()
 				.sessionManagement()

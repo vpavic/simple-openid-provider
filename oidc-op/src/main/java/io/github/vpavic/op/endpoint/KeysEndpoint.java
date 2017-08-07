@@ -18,7 +18,7 @@ import io.github.vpavic.op.key.KeyService;
  * @author Vedran Pavic
  */
 @RestController
-@RequestMapping(path = "/keys")
+@RequestMapping(path = "/oauth2/keys")
 public class KeysEndpoint {
 
 	private final KeyService keyService;
