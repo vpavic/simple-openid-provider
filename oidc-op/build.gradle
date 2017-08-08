@@ -1,4 +1,6 @@
 dependencies {
+	compile 'org.springframework.session:spring-session-hazelcast'
+
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
 }

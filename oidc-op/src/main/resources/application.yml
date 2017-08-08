@@ -1,5 +1,6 @@
 server:
   port: 6432
+
+spring:
   session:
-    cookie:
-      name: sid
+    store-type: hazelcast
