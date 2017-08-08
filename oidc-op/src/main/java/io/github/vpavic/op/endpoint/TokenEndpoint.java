@@ -6,7 +6,6 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
-import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -26,7 +25,7 @@ import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -92,11 +91,10 @@ public class TokenEndpoint {
 				throw new GeneralException(OAuth2Error.INVALID_GRANT);
 			}
 
-			AuthorizationRequest authRequest = context.getAuthRequest();
-			CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+			CodeChallenge codeChallenge = context.getCodeChallenge();
 
 			if (codeChallenge != null) {
-				CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
+				CodeChallengeMethod codeChallengeMethod = context.getCodeChallengeMethod();
 
 				if (codeChallengeMethod == null) {
 					codeChallengeMethod = CodeChallengeMethod.PLAIN;
@@ -112,17 +110,16 @@ public class TokenEndpoint {
 
 			Authentication authentication = context.getAuthentication();
 			UserDetails principal = (UserDetails) authentication.getPrincipal();
-			ClientID clientID = authRequest.getClientID();
-			Scope scope = authRequest.getScope();
+			ClientID clientID = context.getClientID();
+			Scope scope = context.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken();
 
 			AccessTokenResponse tokenResponse;
 
-			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken(principal, clientID, scope,
-						((AuthenticationRequest) authRequest).getNonce());
+			if (scope.contains(OIDCScopeValue.OPENID)) {
+				JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, context.getNonce());
 				OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
 				tokenResponse = new OIDCTokenResponse(tokens);

@@ -1,20 +1,25 @@
 package io.github.vpavic.op.code;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.springframework.stereotype.Service;
 
 @Service
-public class MapAuthorizationCodeService implements AuthorizationCodeService {
+public class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
 
-	private final ConcurrentMap<String, AuthorizationCodeContext> store = new ConcurrentHashMap<>();
+	private final IMap<String, AuthorizationCodeContext> store;
+
+	public HazelcastAuthorizationCodeService(HazelcastInstance hazelcastInstance) {
+		this.store = hazelcastInstance.getMap("authorizationCodes");
+	}
 
 	@Override
 	public AuthorizationCode create(AuthorizationCodeContext context) {
 		AuthorizationCode code = new AuthorizationCode();
-		this.store.put(code.getValue(), context);
+		this.store.put(code.getValue(), context, 10, TimeUnit.MINUTES);
 		return code;
 	}
 

@@ -3,10 +3,11 @@ package io.github.vpavic.op.endpoint;
 import java.net.URI;
 import java.util.Date;
 
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.AuthorizationRequest;
-import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
@@ -15,6 +16,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -44,6 +46,7 @@ import io.github.vpavic.op.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -82,24 +85,21 @@ public class TokenEndpointTests {
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		// @formatter:off
-		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(redirectionUri)
-				.scope(scope)
-				.build();
-		// @formatter:on
-
 		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
-				new TestingAuthenticationToken(new User("test-secret", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		AuthorizationCodeContext context = new AuthorizationCodeContext(
+				new TestingAuthenticationToken(new User("test-secret", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"),
+				clientID, scope, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(UserDetails.class), any(ClientID.class), any(Scope.class), isNull()))
+				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -114,59 +114,21 @@ public class TokenEndpointTests {
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		// @formatter:off
-		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(redirectionUri)
-				.scope(scope)
-				.build();
-		// @formatter:on
-
 		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		AuthorizationCodeContext context = new AuthorizationCodeContext(
+				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
+				scope, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
-
-		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
-				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
-		this.mvc.perform(request).andExpect(status().isOk());
-	}
-
-	@Test
-	public void authCode_pkceDefault_isOk() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(ClientAuthenticationMethod.NONE));
-
-		ClientID clientID = new ClientID("test-client");
-		URI redirectionUri = URI.create("http://rp.example.com");
-		Scope scope = new Scope(OIDCScopeValue.OPENID);
-		CodeVerifier codeVerifier = new CodeVerifier();
-		AuthorizationCode authorizationCode = new AuthorizationCode();
-
-		// @formatter:off
-		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(redirectionUri)
-				.scope(scope)
-				.codeChallenge(codeVerifier, null)
-				.build();
-		// @formatter:on
-
-		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
-				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
-
-		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
-		BearerAccessToken accessToken = new BearerAccessToken();
-
-		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(UserDetails.class), any(ClientID.class), any(Scope.class), isNull()))
+				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -183,26 +145,23 @@ public class TokenEndpointTests {
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.PLAIN;
+		CodeChallenge codeChallenge = CodeChallenge.compute(codeChallengeMethod, codeVerifier);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
-
-		// @formatter:off
-		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(redirectionUri)
-				.scope(scope)
-				.codeChallenge(codeVerifier, codeChallengeMethod)
-				.build();
-		// @formatter:on
 
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		AuthorizationCodeContext context = new AuthorizationCodeContext(
+				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
+				scope, codeChallenge, codeChallengeMethod);
 		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(UserDetails.class), any(ClientID.class), any(Scope.class), isNull()))
+				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -219,26 +178,23 @@ public class TokenEndpointTests {
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.S256;
+		CodeChallenge codeChallenge = CodeChallenge.compute(codeChallengeMethod, codeVerifier);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
-
-		// @formatter:off
-		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
-				.redirectionURI(redirectionUri)
-				.scope(scope)
-				.codeChallenge(codeVerifier, codeChallengeMethod)
-				.build();
-		// @formatter:on
 
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest,
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		AuthorizationCodeContext context = new AuthorizationCodeContext(
+				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
+				scope, codeChallenge, codeChallengeMethod);
 		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(UserDetails.class), any(ClientID.class), any(Scope.class), isNull()))
+				.willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

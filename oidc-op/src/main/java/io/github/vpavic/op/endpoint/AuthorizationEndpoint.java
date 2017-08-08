@@ -21,6 +21,8 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
@@ -87,16 +89,20 @@ public class AuthorizationEndpoint {
 		URI redirectionURI = authRequest.getRedirectionURI();
 		Scope scope = authRequest.getScope();
 		State state = authRequest.getState();
+		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		UserDetails principal = (UserDetails) authentication.getPrincipal();
 
 		AuthorizationResponse authResponse;
 
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
-			AuthorizationCodeContext context = new AuthorizationCodeContext(authRequest, authentication);
+			AuthorizationCodeContext context = new AuthorizationCodeContext(authentication, clientID, scope,
+					codeChallenge, codeChallengeMethod);
 
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
+				context.setNonce(((AuthenticationRequest) authRequest).getNonce());
 				AuthorizationCode code = this.authorizationCodeService.create(context);
 				State sessionState = State.parse(session.getId());
 
@@ -136,6 +142,9 @@ public class AuthorizationEndpoint {
 		}
 		// Hybrid Flow
 		else {
+			AuthorizationCodeContext context = new AuthorizationCodeContext(authentication, clientID, scope,
+					codeChallenge, codeChallengeMethod);
+
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
 				JWT idToken = null;
@@ -151,8 +160,8 @@ public class AuthorizationEndpoint {
 					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 				}
 
-				AuthorizationCode code = this.authorizationCodeService
-						.create(new AuthorizationCodeContext(authRequest, authentication));
+				context.setNonce(((AuthenticationRequest) authRequest).getNonce());
+				AuthorizationCode code = this.authorizationCodeService.create(context);
 
 				State sessionState = State.parse(session.getId());
 
@@ -161,8 +170,7 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
-				AuthorizationCode code = this.authorizationCodeService
-						.create(new AuthorizationCodeContext(authRequest, authentication));
+				AuthorizationCode code = this.authorizationCodeService.create(context);
 
 				AccessToken accessToken = null;
 
