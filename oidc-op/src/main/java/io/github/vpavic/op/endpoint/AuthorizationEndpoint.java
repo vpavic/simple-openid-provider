@@ -83,7 +83,9 @@ public class AuthorizationEndpoint {
 
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientID = authRequest.getClientID();
 		URI redirectionURI = authRequest.getRedirectionURI();
+		Scope scope = authRequest.getScope();
 		State state = authRequest.getState();
 		UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -112,11 +114,12 @@ public class AuthorizationEndpoint {
 		else if (!responseType.contains(ResponseType.Value.CODE)) {
 			// OpenID Connect request
 			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
+				JWT idToken = this.tokenService.createIdToken(principal, clientID, scope,
+						((AuthenticationRequest) authRequest).getNonce());
 				AccessToken accessToken = null;
 
 				if (responseType.contains(ResponseType.Value.TOKEN)) {
-					accessToken = this.tokenService.createAccessToken(authRequest, principal);
+					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 				}
 
 				State sessionState = State.parse(session.getId());
@@ -126,7 +129,7 @@ public class AuthorizationEndpoint {
 			}
 			// OAuth2 request
 			else {
-				AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
+				AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, responseMode);
 			}
@@ -138,13 +141,14 @@ public class AuthorizationEndpoint {
 				JWT idToken = null;
 
 				if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-					idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
+					idToken = this.tokenService.createIdToken(principal, clientID, scope,
+							((AuthenticationRequest) authRequest).getNonce());
 				}
 
 				AccessToken accessToken = null;
 
 				if (responseType.contains(ResponseType.Value.TOKEN)) {
-					accessToken = this.tokenService.createAccessToken(authRequest, principal);
+					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 				}
 
 				AuthorizationCode code = this.authorizationCodeService
@@ -163,7 +167,7 @@ public class AuthorizationEndpoint {
 				AccessToken accessToken = null;
 
 				if (responseType.contains(ResponseType.Value.TOKEN)) {
-					accessToken = this.tokenService.createAccessToken(authRequest, principal);
+					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 				}
 
 				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, accessToken, state, responseMode);

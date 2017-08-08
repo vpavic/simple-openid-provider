@@ -10,6 +10,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
@@ -18,6 +19,7 @@ import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -110,14 +112,17 @@ public class TokenEndpoint {
 
 			Authentication authentication = context.getAuthentication();
 			UserDetails principal = (UserDetails) authentication.getPrincipal();
+			ClientID clientID = authRequest.getClientID();
+			Scope scope = authRequest.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(authRequest, principal);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(authRequest, principal);
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			RefreshToken refreshToken = this.tokenService.createRefreshToken();
 
 			AccessTokenResponse tokenResponse;
 
 			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken((AuthenticationRequest) authRequest, principal);
+				JWT idToken = this.tokenService.createIdToken(principal, clientID, scope,
+						((AuthenticationRequest) authRequest).getNonce());
 				OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
 				tokenResponse = new OIDCTokenResponse(tokens);

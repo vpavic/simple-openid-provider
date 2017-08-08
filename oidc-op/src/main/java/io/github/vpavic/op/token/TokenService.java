@@ -1,18 +1,19 @@
 package io.github.vpavic.op.token;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.oauth2.sdk.AuthorizationRequest;
+import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface TokenService {
 
-	AccessToken createAccessToken(AuthorizationRequest authRequest, UserDetails principal);
+	AccessToken createAccessToken(UserDetails principal, ClientID clientID, Scope scope);
 
-	RefreshToken createRefreshToken(AuthorizationRequest authRequest, UserDetails principal);
+	RefreshToken createRefreshToken();
 
-	JWT createIdToken(AuthenticationRequest authRequest, UserDetails principal);
+	JWT createIdToken(UserDetails principal, ClientID clientID, Scope scope, Nonce nonce);
 
 }

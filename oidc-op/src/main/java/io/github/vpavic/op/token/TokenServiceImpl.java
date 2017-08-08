@@ -16,7 +16,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.AuthorizationRequest;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
@@ -24,7 +24,7 @@ import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
@@ -47,7 +47,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(AuthorizationRequest authRequest, UserDetails principal) {
+	public AccessToken createAccessToken(UserDetails principal, ClientID clientID, Scope scope) {
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
@@ -59,7 +59,7 @@ public class TokenServiceImpl implements TokenService {
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
 				.subject(principal.getName())
-				.audience(authRequest.getClientID().getValue())
+				.audience(clientID.getValue())
 				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
 				.build();
@@ -68,8 +68,7 @@ public class TokenServiceImpl implements TokenService {
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
 			accessToken.sign(signer);
-			return new BearerAccessToken(accessToken.serialize(), accessTokenValidityDuration.getSeconds(),
-					authRequest.getScope());
+			return new BearerAccessToken(accessToken.serialize(), accessTokenValidityDuration.getSeconds(), scope);
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -77,28 +76,23 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public RefreshToken createRefreshToken(AuthorizationRequest authRequest, UserDetails principal) {
+	public RefreshToken createRefreshToken() {
 		return new RefreshToken();
 	}
 
 	@Override
-	public JWT createIdToken(AuthenticationRequest authRequest, UserDetails principal) {
+	public JWT createIdToken(UserDetails principal, ClientID clientID, Scope scope, Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
 		JWK defaultJwk = this.keyService.findDefault();
 		JWSHeader header = createJwsHeader(defaultJwk);
 		JWSSigner signer = createJwsSigner(defaultJwk);
 
-		ClientID clientID = authRequest.getClientID();
-
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
 				new Subject(principal.getName()), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
-		if (authRequest.getNonce() != null) {
-			claimsSet.setNonce(authRequest.getNonce());
-		}
-
+		claimsSet.setNonce(nonce);
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
 

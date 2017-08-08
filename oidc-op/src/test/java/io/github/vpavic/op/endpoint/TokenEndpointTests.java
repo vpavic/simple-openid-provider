@@ -7,6 +7,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
@@ -17,6 +18,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.junit.Rule;
@@ -77,11 +79,13 @@ public class TokenEndpointTests {
 	public void authCode_basicAuth_isOk() throws Exception {
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
 				.redirectionURI(redirectionUri)
+				.scope(scope)
 				.build();
 		// @formatter:on
 
@@ -94,7 +98,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -107,11 +111,13 @@ public class TokenEndpointTests {
 	public void authCode_postAuth_isOk() throws Exception {
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
 				.redirectionURI(redirectionUri)
+				.scope(scope)
 				.build();
 		// @formatter:on
 
@@ -124,7 +130,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -139,12 +145,14 @@ public class TokenEndpointTests {
 
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		CodeVerifier codeVerifier = new CodeVerifier();
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
 				.redirectionURI(redirectionUri)
+				.scope(scope)
 				.codeChallenge(codeVerifier, null)
 				.build();
 		// @formatter:on
@@ -157,7 +165,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -172,6 +180,7 @@ public class TokenEndpointTests {
 
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.PLAIN;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -179,6 +188,7 @@ public class TokenEndpointTests {
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
 				.redirectionURI(redirectionUri)
+				.scope(scope)
 				.codeChallenge(codeVerifier, codeChallengeMethod)
 				.build();
 		// @formatter:on
@@ -191,7 +201,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -206,6 +216,7 @@ public class TokenEndpointTests {
 
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.S256;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -213,6 +224,7 @@ public class TokenEndpointTests {
 		// @formatter:off
 		AuthorizationRequest authRequest = new AuthorizationRequest.Builder(ResponseType.getDefault(), clientID)
 				.redirectionURI(redirectionUri)
+				.scope(scope)
 				.codeChallenge(codeVerifier, codeChallengeMethod)
 				.build();
 		// @formatter:on
@@ -225,7 +237,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthorizationRequest.class), any(UserDetails.class)))
+		given(this.tokenService.createAccessToken(any(UserDetails.class), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
