@@ -8,13 +8,9 @@ import javax.servlet.http.HttpSession;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.AuthorizationRequest;
-import com.nimbusds.oauth2.sdk.AuthorizationResponse;
-import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
@@ -24,21 +20,21 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
-import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
@@ -73,15 +69,9 @@ public class AuthorizationEndpoint {
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 	}
 
-	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
+	@GetMapping
 	public String authorize(HTTPRequest request, Authentication authentication, HttpSession session) throws Exception {
-		AuthorizationRequest authRequest = resolveAuthRequest(request);
-		OIDCClientInformation client = resolveClient(authRequest);
-		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
-
-		validateRedirectionURI(authRequest, clientMetadata);
-		validateScope(authRequest, clientMetadata);
-		validateResponseType(authRequest, clientMetadata);
+		AuthenticationRequest authRequest = AuthenticationRequest.parse(request);
 
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
@@ -89,140 +79,7 @@ public class AuthorizationEndpoint {
 		URI redirectionURI = authRequest.getRedirectionURI();
 		Scope scope = authRequest.getScope();
 		State state = authRequest.getState();
-		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
-		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
-		UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-		AuthorizationResponse authResponse;
-
-		// Authorization Code Flow
-		if (responseType.impliesCodeFlow()) {
-			AuthorizationCodeContext context = new AuthorizationCodeContext(authentication, clientID, scope,
-					codeChallenge, codeChallengeMethod);
-
-			// OpenID Connect request
-			if (authRequest instanceof AuthenticationRequest) {
-				context.setNonce(((AuthenticationRequest) authRequest).getNonce());
-				AuthorizationCode code = this.authorizationCodeService.create(context);
-				State sessionState = State.parse(session.getId());
-
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
-						responseMode);
-			}
-			// OAuth2 request
-			else {
-				AuthorizationCode code = this.authorizationCodeService.create(context);
-
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, null, state, responseMode);
-			}
-		}
-		// Implicit Flow
-		else if (!responseType.contains(ResponseType.Value.CODE)) {
-			// OpenID Connect request
-			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = this.tokenService.createIdToken(principal, clientID, scope,
-						((AuthenticationRequest) authRequest).getNonce());
-				AccessToken accessToken = null;
-
-				if (responseType.contains(ResponseType.Value.TOKEN)) {
-					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
-				}
-
-				State sessionState = State.parse(session.getId());
-
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
-						sessionState, responseMode);
-			}
-			// OAuth2 request
-			else {
-				AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
-
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, null, accessToken, state, responseMode);
-			}
-		}
-		// Hybrid Flow
-		else {
-			AuthorizationCodeContext context = new AuthorizationCodeContext(authentication, clientID, scope,
-					codeChallenge, codeChallengeMethod);
-
-			// OpenID Connect request
-			if (authRequest instanceof AuthenticationRequest) {
-				JWT idToken = null;
-
-				if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-					idToken = this.tokenService.createIdToken(principal, clientID, scope,
-							((AuthenticationRequest) authRequest).getNonce());
-				}
-
-				AccessToken accessToken = null;
-
-				if (responseType.contains(ResponseType.Value.TOKEN)) {
-					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
-				}
-
-				context.setNonce(((AuthenticationRequest) authRequest).getNonce());
-				AuthorizationCode code = this.authorizationCodeService.create(context);
-
-				State sessionState = State.parse(session.getId());
-
-				authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
-						sessionState, responseMode);
-			}
-			// OAuth2 request
-			else {
-				AuthorizationCode code = this.authorizationCodeService.create(context);
-
-				AccessToken accessToken = null;
-
-				if (responseType.contains(ResponseType.Value.TOKEN)) {
-					accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
-				}
-
-				authResponse = new AuthorizationSuccessResponse(redirectionURI, code, accessToken, state, responseMode);
-			}
-		}
-
-		return "redirect:" + authResponse.toURI();
-	}
-
-	private AuthorizationRequest resolveAuthRequest(HTTPRequest request) throws GeneralException {
-		AuthorizationRequest authRequest = AuthorizationRequest.parse(request);
-
-		ResponseMode responseMode = authRequest.impliedResponseMode();
-		ClientID clientID = authRequest.getClientID();
-		URI redirectionURI = authRequest.getRedirectionURI();
-		Scope scope = authRequest.getScope();
-		State state = authRequest.getState();
-
-		try {
-			authRequest = AuthenticationRequest.parse(request);
-		}
-		catch (ParseException e) {
-			if (redirectionURI == null) {
-				throw new GeneralException(
-						OAuth2Error.INVALID_REQUEST.setDescription("Missing \"redirect_uri\" parameter"));
-			}
-
-			OIDCClientInformation client = resolveClient(authRequest);
-			validateRedirectionURI(authRequest, client.getOIDCMetadata());
-
-			if (scope == null) {
-				throw new GeneralException("Missing \"scope\" parameter", OAuth2Error.INVALID_REQUEST, clientID,
-						redirectionURI, responseMode, state);
-			}
-
-			if (scope.contains(OIDCScopeValue.OPENID)) {
-				throw e;
-			}
-
-			// otherwise still a valid OAuth2 request
-		}
-
-		return authRequest;
-	}
-
-	private OIDCClientInformation resolveClient(AuthorizationRequest authRequest) throws GeneralException {
-		ClientID clientID = authRequest.getClientID();
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
 		if (client == null) {
@@ -230,63 +87,97 @@ public class AuthorizationEndpoint {
 					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"client_id\" parameter: " + clientID));
 		}
 
-		return client;
-	}
+		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
-	private void validateRedirectionURI(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
-			throws GeneralException {
-		URI redirectionURI = authRequest.getRedirectionURI();
 		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectionURI)) {
 			throw new GeneralException(OAuth2Error.INVALID_REQUEST
 					.setDescription("Invalid \"redirect_uri\" parameter: " + redirectionURI));
 		}
-	}
 
-	private void validateScope(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
-			throws GeneralException {
 		Scope registeredScope = clientMetadata.getScope();
 
-		if (registeredScope == null
-				|| !registeredScope.toStringList().containsAll(authRequest.getScope().toStringList())) {
-			ErrorObject error = OAuth2Error.INVALID_SCOPE;
-			throw new GeneralException(error.getDescription(), error, authRequest.getClientID(),
-					authRequest.getRedirectionURI(), authRequest.impliedResponseMode(), authRequest.getState());
+		if (registeredScope == null || !registeredScope.toStringList().containsAll(scope.toStringList())) {
+			throw new GeneralException(OAuth2Error.INVALID_SCOPE);
 		}
-	}
 
-	private void validateResponseType(AuthorizationRequest authRequest, OIDCClientMetadata clientMetadata)
-			throws GeneralException {
-		if (!clientMetadata.getResponseTypes().contains(authRequest.getResponseType())) {
-			ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
-			throw new GeneralException(error.getDescription(), error, authRequest.getClientID(),
-					authRequest.getRedirectionURI(), authRequest.impliedResponseMode(), authRequest.getState());
+		if (!clientMetadata.getResponseTypes().contains(responseType)) {
+			throw new GeneralException(OAuth2Error.UNAUTHORIZED_CLIENT);
 		}
+
+		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
+		Nonce nonce = authRequest.getNonce();
+		UserDetails principal = (UserDetails) authentication.getPrincipal();
+
+		AuthenticationSuccessResponse authResponse;
+
+		// Authorization Code Flow
+		if (responseType.impliesCodeFlow()) {
+			AuthorizationCodeContext context = new AuthorizationCodeContext(authentication, clientID, scope,
+					codeChallenge, codeChallengeMethod, nonce);
+
+			AuthorizationCode code = this.authorizationCodeService.create(context);
+			State sessionState = State.parse(session.getId());
+
+			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
+					responseMode);
+		}
+		// Implicit Flow
+		else if (!responseType.contains(ResponseType.Value.CODE)) {
+			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, nonce);
+			AccessToken accessToken = null;
+
+			if (responseType.contains(ResponseType.Value.TOKEN)) {
+				accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			}
+
+			State sessionState = State.parse(session.getId());
+
+			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
+					sessionState, responseMode);
+		}
+		// Hybrid Flow
+		else {
+			AuthorizationCodeContext context = new AuthorizationCodeContext(authentication, clientID, scope,
+					codeChallenge, codeChallengeMethod, nonce);
+
+			JWT idToken = null;
+
+			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
+				idToken = this.tokenService.createIdToken(principal, clientID, scope, nonce);
+			}
+
+			AccessToken accessToken = null;
+
+			if (responseType.contains(ResponseType.Value.TOKEN)) {
+				accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			}
+
+			AuthorizationCode code = this.authorizationCodeService.create(context);
+
+			State sessionState = State.parse(session.getId());
+
+			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
+					sessionState, responseMode);
+		}
+
+		return "redirect:" + authResponse.toURI();
 	}
 
 	@ExceptionHandler(GeneralException.class)
-	public String handleParseException(GeneralException e, ServletWebRequest request, Model model) throws Exception {
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public String handleGeneralException(GeneralException e, Model model) {
 		ErrorObject error = e.getErrorObject();
 
 		if (error == null) {
 			error = OAuth2Error.INVALID_REQUEST;
 		}
 
-		if (e.getRedirectionURI() == null) {
-			if (request.getResponse() != null) {
-				request.getResponse().setStatus(error.getHTTPStatusCode());
-			}
-
-			model.addAttribute("code", error.getCode());
-			model.addAttribute("description", e.getMessage());
-			return "error";
-		}
-		else {
-			AuthorizationResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), error,
-					e.getState(), e.getResponseMode());
-			return "redirect:" + authResponse.toURI();
-		}
+		model.addAttribute("code", error.getCode());
+		model.addAttribute("description", e.getMessage());
+		return "error";
 	}
 
 }

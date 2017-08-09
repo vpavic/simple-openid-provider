@@ -22,15 +22,16 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final CodeChallengeMethod codeChallengeMethod;
 
-	private Nonce nonce;
+	private final Nonce nonce;
 
 	public AuthorizationCodeContext(Authentication authentication, ClientID clientID, Scope scope,
-			CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod) {
+			CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod, Nonce nonce) {
 		this.authentication = Objects.requireNonNull(authentication);
 		this.clientID = Objects.requireNonNull(clientID);
 		this.scope = Objects.requireNonNull(scope);
 		this.codeChallenge = codeChallenge;
 		this.codeChallengeMethod = codeChallengeMethod;
+		this.nonce = nonce;
 	}
 
 	public Authentication getAuthentication() {
@@ -55,10 +56,6 @@ public class AuthorizationCodeContext implements Serializable {
 
 	public Nonce getNonce() {
 		return this.nonce;
-	}
-
-	public void setNonce(Nonce nonce) {
-		this.nonce = nonce;
 	}
 
 }

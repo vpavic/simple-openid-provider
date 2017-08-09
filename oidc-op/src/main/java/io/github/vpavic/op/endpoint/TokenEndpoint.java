@@ -3,7 +3,6 @@ package io.github.vpavic.op.endpoint;
 import java.util.Objects;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -24,8 +23,6 @@ import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.oauth2.sdk.token.Tokens;
-import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -116,21 +113,10 @@ public class TokenEndpoint {
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken();
 
-			AccessTokenResponse tokenResponse;
+			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, context.getNonce());
+			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
-			if (scope.contains(OIDCScopeValue.OPENID)) {
-				JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, context.getNonce());
-				OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
-
-				tokenResponse = new OIDCTokenResponse(tokens);
-			}
-			else {
-				Tokens tokens = new Tokens(accessToken, refreshToken);
-
-				tokenResponse = new AccessTokenResponse(tokens);
-			}
-
-			return tokenResponse.toJSONObject();
+			return new OIDCTokenResponse(tokens).toJSONObject();
 		}
 
 		return new TokenErrorResponse(OAuth2Error.UNSUPPORTED_GRANT_TYPE).toJSONObject();

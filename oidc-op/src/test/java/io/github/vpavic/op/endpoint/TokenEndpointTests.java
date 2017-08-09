@@ -91,7 +91,7 @@ public class TokenEndpointTests {
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(
 				new TestingAuthenticationToken(new User("test-secret", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"),
-				clientID, scope, null, null);
+				clientID, scope, null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -120,7 +120,7 @@ public class TokenEndpointTests {
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
-				scope, null, null);
+				scope, null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -153,7 +153,7 @@ public class TokenEndpointTests {
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
-				scope, codeChallenge, codeChallengeMethod);
+				scope, codeChallenge, codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -186,7 +186,7 @@ public class TokenEndpointTests {
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(
 				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
-				scope, codeChallenge, codeChallengeMethod);
+				scope, codeChallenge, codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
