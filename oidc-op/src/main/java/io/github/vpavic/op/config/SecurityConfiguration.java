@@ -65,6 +65,7 @@ public class SecurityConfiguration {
 					.antMatchers("/", "/login", "/logout", "/oauth2/authorize")
 					.and()
 				.formLogin()
+					.loginPage("/login")
 					.permitAll()
 					.and()
 				.logout()
