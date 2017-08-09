@@ -177,7 +177,7 @@ public class AuthorizationEndpoint {
 
 		model.addAttribute("code", error.getCode());
 		model.addAttribute("description", e.getMessage());
-		return "error";
+		return "oauth2/error";
 	}
 
 }

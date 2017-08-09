@@ -3,4 +3,7 @@ dependencies {
 
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
+
+	compile 'org.webjars:bootstrap'
+	compile 'org.webjars:webjars-locator'
 }
