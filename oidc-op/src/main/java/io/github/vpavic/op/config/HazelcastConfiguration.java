@@ -14,10 +14,16 @@ public class HazelcastConfiguration {
 	@Bean
 	public Config config() {
 		// @formatter:off
-		Config config = new Config("kaas")
+		Config config = new Config("oidc-op")
 				.setProperty("hazelcast.logging.type", "slf4j")
 				.setProperty("hazelcast.phone.home.enabled", "false")
 				.setProperty("hazelcast.rest.enabled", "true");
+		// @formatter:on
+
+		// @formatter:off
+		config.getGroupConfig()
+				.setName("oidc-op")
+				.setPassword("oidc-op");
 		// @formatter:on
 
 		// @formatter:off
