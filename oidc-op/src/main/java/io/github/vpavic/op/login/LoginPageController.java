@@ -18,9 +18,9 @@ public class LoginPageController {
 	}
 
 	@GetMapping(params = "error")
-	public String loginError(@SessionAttribute(name = WebAttributes.AUTHENTICATION_EXCEPTION) AuthenticationException e,
-			Model model) {
-		model.addAttribute("error", e.getMessage());
+	public String loginError(Model model,
+			@SessionAttribute(name = WebAttributes.AUTHENTICATION_EXCEPTION, required = false) AuthenticationException e) {
+		model.addAttribute("error", e != null ? e.getMessage() : "Unable to authenticate");
 		return "login";
 	}
 
