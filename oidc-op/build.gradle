@@ -1,9 +1,11 @@
 dependencies {
-	compile 'org.springframework.session:spring-session-hazelcast'
+	compile 'org.springframework.boot:spring-boot-starter-jdbc'
 
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
-
+	compile 'org.flywaydb:flyway-core'
+	compile 'org.postgresql:postgresql'
+	compile 'org.springframework.session:spring-session-hazelcast'
 	compile 'org.webjars:bootstrap'
 	compile 'org.webjars:webjars-locator'
 }

@@ -9,4 +9,6 @@ public interface ClientRepository {
 
 	OIDCClientInformation findByClientId(ClientID clientID);
 
+	void deleteByClientId(ClientID clientID);
+
 }
