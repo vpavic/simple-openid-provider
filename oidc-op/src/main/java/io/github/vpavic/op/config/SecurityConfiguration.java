@@ -39,7 +39,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/oauth2/keys", "/oauth2/token")
+					.antMatchers("/oauth2/keys", "/oauth2/token", "/.well-known/openid-configuration")
 					.and()
 				.csrf()
 					.disable()
