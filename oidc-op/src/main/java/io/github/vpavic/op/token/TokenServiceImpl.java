@@ -28,7 +28,7 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
@@ -47,7 +47,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(UserDetails principal, ClientID clientID, Scope scope) {
+	public AccessToken createAccessToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope) {
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
@@ -81,7 +81,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public JWT createIdToken(UserDetails principal, ClientID clientID, Scope scope, Nonce nonce) {
+	public JWT createIdToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope, Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
 		JWK defaultJwk = this.keyService.findActive();

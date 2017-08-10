@@ -3,11 +3,15 @@ package io.github.vpavic.op.endpoint;
 import java.util.Objects;
 
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
+import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
+import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
@@ -23,13 +27,14 @@ import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
+import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -74,12 +79,31 @@ public class TokenEndpoint {
 	public JSONObject handleTokenRequest(HTTPRequest request) throws Exception {
 		TokenRequest tokenRequest = TokenRequest.parse(request);
 
-		validateClient(tokenRequest);
-
 		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
+
+		AccessTokenResponse tokenResponse;
 
 		// Authorization Code Grant Type
 		if (authorizationGrant instanceof AuthorizationCodeGrant) {
+			ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+
+			if (clientAuthentication != null) {
+				Context<ClientRepository> context = new Context<>();
+				context.set(this.clientRepository);
+				this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
+			}
+			else {
+				OIDCClientInformation client = this.clientRepository.findByClientId(tokenRequest.getClientID());
+
+				if (client == null) {
+					throw InvalidClientException.BAD_ID;
+				}
+
+				if (!ClientAuthenticationMethod.NONE.equals(client.getOIDCMetadata().getTokenEndpointAuthMethod())) {
+					throw InvalidClientException.NOT_REGISTERED_FOR_AUTH_METHOD;
+				}
+			}
+
 			AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) authorizationGrant;
 			AuthorizationCodeContext context = this.authorizationCodeService
 					.consume(authorizationCodeGrant.getAuthorizationCode());
@@ -106,41 +130,52 @@ public class TokenEndpoint {
 			}
 
 			Authentication authentication = context.getAuthentication();
-			UserDetails principal = (UserDetails) authentication.getPrincipal();
+			AuthenticatedPrincipal principal = (AuthenticatedPrincipal) authentication.getPrincipal();
 			ClientID clientID = context.getClientID();
 			Scope scope = context.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken();
-
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, context.getNonce());
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
-			return new OIDCTokenResponse(tokens).toJSONObject();
+			tokenResponse = new OIDCTokenResponse(tokens);
 		}
+		// Resource Owner Password Credentials Grant Type
+		else if (authorizationGrant instanceof ResourceOwnerPasswordCredentialsGrant) {
+			// TODO
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+		}
+		// Client Credentials Grant Type
+		else if (authorizationGrant instanceof ClientCredentialsGrant) {
+			ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
 
-		return new TokenErrorResponse(OAuth2Error.UNSUPPORTED_GRANT_TYPE).toJSONObject();
-	}
+			if (clientAuthentication == null) {
+				throw InvalidClientException.BAD_SECRET;
+			}
 
-	private void validateClient(TokenRequest tokenRequest) throws Exception {
-		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
-
-		if (clientAuthentication != null) {
 			Context<ClientRepository> context = new Context<>();
 			context.set(this.clientRepository);
 			this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
+
+			ClientID clientID = clientAuthentication.getClientID();
+			AuthenticatedPrincipal principal = clientID::getValue;
+			Scope scope = tokenRequest.getScope();
+
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			Tokens tokens = new Tokens(accessToken, null);
+
+			tokenResponse = new AccessTokenResponse(tokens);
+		}
+		else if (authorizationGrant instanceof RefreshTokenGrant) {
+			// TODO
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 		else {
-			OIDCClientInformation client = this.clientRepository.findByClientId(tokenRequest.getClientID());
-
-			if (client == null) {
-				throw InvalidClientException.BAD_ID;
-			}
-
-			if (!ClientAuthenticationMethod.NONE.equals(client.getOIDCMetadata().getTokenEndpointAuthMethod())) {
-				throw InvalidClientException.NOT_REGISTERED_FOR_AUTH_METHOD;
-			}
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
+
+		return tokenResponse.toJSONObject();
 	}
 
 	@ExceptionHandler(GeneralException.class)

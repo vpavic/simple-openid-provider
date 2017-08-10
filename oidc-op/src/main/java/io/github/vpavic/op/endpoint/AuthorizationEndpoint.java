@@ -27,8 +27,8 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -109,7 +109,7 @@ public class AuthorizationEndpoint {
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
-		UserDetails principal = (UserDetails) authentication.getPrincipal();
+		AuthenticatedPrincipal principal = (AuthenticatedPrincipal) authentication.getPrincipal();
 
 		AuthenticationSuccessResponse authResponse;
 
