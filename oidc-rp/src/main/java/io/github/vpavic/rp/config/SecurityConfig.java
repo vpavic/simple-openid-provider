@@ -17,7 +17,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.clientSecret("test-secret")
 				.clientAuthenticationMethod(ClientAuthenticationMethod.BASIC)
 				.authorizedGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-				.redirectUri("http://localhost:7979/oauth2/authorize/code/test-client")
+				.redirectUri("http://localhost:8080/oauth2/authorize/code/test-client")
 				.scopes("openid")
 				.authorizationUri("http://localhost:6432/oauth2/authorize")
 				.tokenUri("http://localhost:6432/oauth2/token")
