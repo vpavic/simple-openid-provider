@@ -6,6 +6,7 @@ dependencies {
 	compile 'org.flywaydb:flyway-core'
 	compile 'org.postgresql:postgresql'
 	compile 'org.springframework.session:spring-session-hazelcast'
+	compile 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4'
 	compile 'org.webjars:bootstrap'
 	compile 'org.webjars:webjars-locator'
 }
