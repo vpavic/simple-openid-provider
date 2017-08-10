@@ -51,7 +51,7 @@ public class TokenServiceImpl implements TokenService {
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
-		JWK defaultJwk = this.keyService.findDefault();
+		JWK defaultJwk = this.keyService.findActive();
 		JWSHeader header = createJwsHeader(defaultJwk);
 		JWSSigner signer = createJwsSigner(defaultJwk);
 
@@ -84,7 +84,7 @@ public class TokenServiceImpl implements TokenService {
 	public JWT createIdToken(UserDetails principal, ClientID clientID, Scope scope, Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
-		JWK defaultJwk = this.keyService.findDefault();
+		JWK defaultJwk = this.keyService.findActive();
 		JWSHeader header = createJwsHeader(defaultJwk);
 		JWSSigner signer = createJwsSigner(defaultJwk);
 

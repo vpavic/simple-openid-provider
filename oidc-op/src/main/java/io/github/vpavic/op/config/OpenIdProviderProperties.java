@@ -1,6 +1,7 @@
 package io.github.vpavic.op.config;
 
 import java.time.Duration;
+import java.time.Period;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -14,6 +15,8 @@ public class OpenIdProviderProperties {
 	private Duration refreshTokenValidityDuration = Duration.ofDays(30);
 
 	private Duration idTokenValidityDuration = Duration.ofMinutes(30);
+
+	private Period jwkRetentionPeriod = Period.ofDays(10);
 
 	public String getIssuer() {
 		return this.issuer;
@@ -45,6 +48,14 @@ public class OpenIdProviderProperties {
 
 	public void setIdTokenValidityDuration(Duration idTokenValidityDuration) {
 		this.idTokenValidityDuration = idTokenValidityDuration;
+	}
+
+	public Period getJwkRetentionPeriod() {
+		return this.jwkRetentionPeriod;
+	}
+
+	public void setJwkRetentionPeriod(Period jwkRetentionPeriod) {
+		this.jwkRetentionPeriod = jwkRetentionPeriod;
 	}
 
 }

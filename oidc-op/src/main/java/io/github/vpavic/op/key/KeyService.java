@@ -6,8 +6,10 @@ import com.nimbusds.jose.jwk.JWK;
 
 public interface KeyService {
 
-	JWK findDefault();
+	JWK findActive();
 
 	List<JWK> findAll();
+
+	void rotate();
 
 }
