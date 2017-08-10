@@ -59,7 +59,7 @@ public class TokenServiceImpl implements TokenService {
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
 				.subject(principal.getName())
-				.audience(clientID.getValue())
+				.audience(this.properties.getIssuer())
 				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
 				.build();
