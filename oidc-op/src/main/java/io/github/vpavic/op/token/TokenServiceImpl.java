@@ -5,17 +5,19 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
@@ -51,9 +53,14 @@ public class TokenServiceImpl implements TokenService {
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
-		JWK defaultJwk = this.keyService.findActive();
-		JWSHeader header = createJwsHeader(defaultJwk);
-		JWSSigner signer = createJwsSigner(defaultJwk);
+		JWK jwk = this.keyService.findActive();
+
+		// @formatter:off
+		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+				.type(JOSEObjectType.JWT)
+				.keyID(jwk.getKeyID())
+				.build();
+		// @formatter:on
 
 		// @formatter:off
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
@@ -62,21 +69,24 @@ public class TokenServiceImpl implements TokenService {
 				.audience(this.properties.getIssuer())
 				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
+				.jwtID(UUID.randomUUID().toString())
 				.build();
 		// @formatter:on
 
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
+			RSASSASigner signer = new RSASSASigner((RSAKey) jwk);
 			accessToken.sign(signer);
 			return new BearerAccessToken(accessToken.serialize(), accessTokenValidityDuration.getSeconds(), scope);
 		}
-		catch (Exception e) {
+		catch (JOSEException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
 	public RefreshToken createRefreshToken() {
+		// TODO associate refresh token with context and store it
 		return new RefreshToken();
 	}
 
@@ -84,9 +94,14 @@ public class TokenServiceImpl implements TokenService {
 	public JWT createIdToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope, Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
-		JWK defaultJwk = this.keyService.findActive();
-		JWSHeader header = createJwsHeader(defaultJwk);
-		JWSSigner signer = createJwsSigner(defaultJwk);
+		JWK jwk = this.keyService.findActive();
+
+		// @formatter:off
+		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+				.type(JOSEObjectType.JWT)
+				.keyID(jwk.getKeyID())
+				.build();
+		// @formatter:on
 
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
 				new Subject(principal.getName()), Audience.create(clientID.getValue()),
@@ -98,28 +113,11 @@ public class TokenServiceImpl implements TokenService {
 
 		try {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());
+			RSASSASigner signer = new RSASSASigner((RSAKey) jwk);
 			idToken.sign(signer);
 			return idToken;
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private JWSHeader createJwsHeader(JWK jwk) {
-		// @formatter:off
-		return new JWSHeader.Builder(JWSAlgorithm.RS256)
-				.type(JOSEObjectType.JWT)
-				.keyID(jwk.getKeyID())
-				.build();
-		// @formatter:on
-	}
-
-	private JWSSigner createJwsSigner(JWK jwk) {
-		try {
-			return new RSASSASigner((RSAKey) jwk);
-		}
-		catch (Exception e) {
+		catch (ParseException | JOSEException e) {
 			throw new RuntimeException(e);
 		}
 	}
