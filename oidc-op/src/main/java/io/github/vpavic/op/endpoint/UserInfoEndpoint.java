@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
 @RestController
-@RequestMapping(path = "/oauth2/userinfo")
+@RequestMapping(path = UserInfoEndpoint.PATH_MAPPING)
 public class UserInfoEndpoint {
+
+	public static final String PATH_MAPPING = "/oauth2/userinfo";
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })

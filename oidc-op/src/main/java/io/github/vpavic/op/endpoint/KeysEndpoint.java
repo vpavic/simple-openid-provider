@@ -18,8 +18,10 @@ import io.github.vpavic.op.key.KeyService;
  * @author Vedran Pavic
  */
 @RestController
-@RequestMapping(path = "/oauth2/keys")
+@RequestMapping(path = KeysEndpoint.PATH_MAPPING)
 public class KeysEndpoint {
+
+	public static final String PATH_MAPPING = "/oauth2/keys";
 
 	private final KeyService keyService;
 

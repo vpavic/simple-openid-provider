@@ -23,6 +23,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.vpavic.op.client.ClientRepository;
+import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.op.endpoint.KeysEndpoint;
+import io.github.vpavic.op.endpoint.TokenEndpoint;
+import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)
@@ -43,11 +47,10 @@ public class OpenIdProviderConfiguration {
 	@Bean
 	public OIDCProviderMetadata providerMetadata() {
 		OIDCProviderMetadata providerMetadata = new OIDCProviderMetadata(new Issuer(this.properties.getIssuer()),
-				Collections.singletonList(SubjectType.PUBLIC),
-				URI.create(this.properties.getIssuer() + "/oauth2/keys"));
-		providerMetadata.setAuthorizationEndpointURI(URI.create(this.properties.getIssuer() + "/oauth2/authorize"));
-		providerMetadata.setTokenEndpointURI(URI.create(this.properties.getIssuer() + "/oauth2/token"));
-		providerMetadata.setUserInfoEndpointURI(URI.create(this.properties.getIssuer() + "/oauth2/userinfo"));
+				Collections.singletonList(SubjectType.PUBLIC), createURI(KeysEndpoint.PATH_MAPPING));
+		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
+		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
+		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
 		providerMetadata.setScopes(new Scope(OIDCScopeValue.OPENID));
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
@@ -62,6 +65,10 @@ public class OpenIdProviderConfiguration {
 				ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
 		return providerMetadata;
+	}
+
+	private URI createURI(String path) {
+		return URI.create(this.properties.getIssuer() + path);
 	}
 
 }
