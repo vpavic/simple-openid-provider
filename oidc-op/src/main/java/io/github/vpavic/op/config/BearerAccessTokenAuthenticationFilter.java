@@ -71,7 +71,7 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			SecurityContextHolder.getContext().setAuthentication(authResult);
 		}
 		catch (Exception e) {
-			logger.error("Bearer authentication attempt failed", e);
+			logger.warn("Bearer authentication attempt failed: {}", e.getMessage());
 		}
 
 		filterChain.doFilter(request, response);
