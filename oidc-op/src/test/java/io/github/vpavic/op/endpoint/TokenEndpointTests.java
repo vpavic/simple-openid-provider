@@ -9,6 +9,7 @@ import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
+import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
@@ -32,8 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.AuthenticatedPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -78,6 +81,9 @@ public class TokenEndpointTests {
 
 	@MockBean
 	private TokenService tokenService;
+
+	@MockBean
+	private AuthenticationManager authenticationManager;
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
@@ -203,6 +209,47 @@ public class TokenEndpointTests {
 	}
 
 	@Test
+	public void resourceOwnerPasswordCredentials_basicAuth_isOk() throws Exception {
+		ClientID clientID = new ClientID("test-client");
+
+		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
+				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")));
+
+		BearerAccessToken accessToken = new BearerAccessToken();
+
+		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
+				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
+				.willReturn(accessToken);
+
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.header("Authorization", clientAuth.toHTTPAuthorizationHeader());
+		this.mvc.perform(request).andExpect(status().isOk());
+	}
+
+	@Test
+	public void resourceOwnerPasswordCredentials_postAuth_isOk() throws Exception {
+		ClientID clientID = new ClientID("test-client");
+
+		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
+				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")));
+
+		BearerAccessToken accessToken = new BearerAccessToken();
+
+		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
+				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
+				.willReturn(accessToken);
+
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
+		this.mvc.perform(request).andExpect(status().isOk());
+	}
+
+	@Test
 	public void clientCredentials_basicAuth_isOk() throws Exception {
 		ClientID clientID = new ClientID("test-client");
 
@@ -212,8 +259,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				isNull())).willReturn(accessToken);
+		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
+				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -231,8 +278,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				isNull())).willReturn(accessToken);
+		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
+				.willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

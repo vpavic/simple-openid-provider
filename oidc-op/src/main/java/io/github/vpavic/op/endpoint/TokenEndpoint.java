@@ -17,6 +17,7 @@ import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
@@ -33,8 +34,11 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -68,13 +72,17 @@ public class TokenEndpoint {
 
 	private final TokenService tokenService;
 
+	private final AuthenticationManager authenticationManager;
+
 	public TokenEndpoint(ClientRepository clientRepository,
 			ClientAuthenticationVerifier<ClientRepository> clientAuthenticationVerifier,
-			AuthorizationCodeService authorizationCodeService, TokenService tokenService) {
+			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
+			AuthenticationManager authenticationManager) {
 		this.clientAuthenticationVerifier = Objects.requireNonNull(clientAuthenticationVerifier);
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.tokenService = Objects.requireNonNull(tokenService);
+		this.authenticationManager = Objects.requireNonNull(authenticationManager);
 	}
 
 	@PostMapping
@@ -145,8 +153,39 @@ public class TokenEndpoint {
 		}
 		// Resource Owner Password Credentials Grant Type
 		else if (authorizationGrant instanceof ResourceOwnerPasswordCredentialsGrant) {
-			// TODO
-			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+			ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+
+			if (clientAuthentication == null) {
+				throw InvalidClientException.BAD_SECRET;
+			}
+
+			Context<ClientRepository> context = new Context<>();
+			context.set(this.clientRepository);
+			this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
+
+			ResourceOwnerPasswordCredentialsGrant passwordCredentialsGrant = (ResourceOwnerPasswordCredentialsGrant) authorizationGrant;
+			String username = passwordCredentialsGrant.getUsername();
+			Secret password = passwordCredentialsGrant.getPassword();
+
+			Authentication authentication;
+
+			try {
+				authentication = this.authenticationManager
+						.authenticate(new UsernamePasswordAuthenticationToken(username, password.getValue()));
+			}
+			catch (AuthenticationException e) {
+				throw new GeneralException(OAuth2Error.INVALID_GRANT);
+			}
+
+			AuthenticatedPrincipal principal = (AuthenticatedPrincipal) authentication.getPrincipal();
+			ClientID clientID = clientAuthentication.getClientID();
+			Scope scope = tokenRequest.getScope();
+
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			RefreshToken refreshToken = this.tokenService.createRefreshToken();
+			Tokens tokens = new Tokens(accessToken, refreshToken);
+
+			tokenResponse = new AccessTokenResponse(tokens);
 		}
 		// Client Credentials Grant Type
 		else if (authorizationGrant instanceof ClientCredentialsGrant) {
