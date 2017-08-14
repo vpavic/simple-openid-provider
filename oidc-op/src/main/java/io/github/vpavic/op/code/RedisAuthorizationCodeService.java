@@ -3,6 +3,8 @@ package io.github.vpavic.op.code;
 import java.util.concurrent.TimeUnit;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.GeneralException;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -29,12 +31,12 @@ public class RedisAuthorizationCodeService implements AuthorizationCodeService {
 	}
 
 	@Override
-	public AuthorizationCodeContext consume(AuthorizationCode code) {
+	public AuthorizationCodeContext consume(AuthorizationCode code) throws GeneralException {
 		String key = getKey(code);
 		AuthorizationCodeContext context = (AuthorizationCodeContext) this.redisOperations.boundValueOps(key).get();
 
 		if (context == null) {
-			throw new IllegalArgumentException("Invalid code " + code);
+			throw new GeneralException(OAuth2Error.INVALID_GRANT);
 		}
 
 		this.redisOperations.delete(key);
