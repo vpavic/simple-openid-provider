@@ -43,9 +43,13 @@ public class TokenServiceImpl implements TokenService {
 
 	private final KeyService keyService;
 
-	public TokenServiceImpl(OpenIdProviderProperties properties, KeyService keyService) {
+	private final RefreshTokenStore refreshTokenStore;
+
+	public TokenServiceImpl(OpenIdProviderProperties properties, KeyService keyService,
+			RefreshTokenStore refreshTokenStore) {
 		this.properties = properties;
 		this.keyService = Objects.requireNonNull(keyService);
+		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
 	}
 
 	@Override
@@ -85,9 +89,15 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public RefreshToken createRefreshToken() {
-		// TODO associate refresh token with context and store it
-		return new RefreshToken();
+	public RefreshToken createRefreshToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope) {
+		Instant issuedAt = Instant.now();
+		Duration refreshTokenValidityDuration = this.properties.getRefreshTokenValidityDuration();
+
+		RefreshToken refreshToken = new RefreshToken();
+		Instant expiry = issuedAt.plus(refreshTokenValidityDuration);
+		RefreshTokenContext context = new RefreshTokenContext(principal, clientID, scope, expiry);
+		this.refreshTokenStore.save(refreshToken, context);
+		return refreshToken;
 	}
 
 	@Override

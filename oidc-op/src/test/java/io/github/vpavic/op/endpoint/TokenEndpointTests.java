@@ -1,6 +1,7 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.Date;
 
 import com.nimbusds.jwt.JWT;
@@ -9,6 +10,7 @@ import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
+import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
@@ -22,6 +24,7 @@ import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
@@ -46,6 +49,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.token.RefreshTokenContext;
+import io.github.vpavic.op.token.RefreshTokenStore;
 import io.github.vpavic.op.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -84,6 +89,9 @@ public class TokenEndpointTests {
 
 	@MockBean
 	private AuthenticationManager authenticationManager;
+
+	@MockBean
+	private RefreshTokenStore refreshTokenStore;
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
@@ -280,6 +288,49 @@ public class TokenEndpointTests {
 
 		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
 				.willReturn(accessToken);
+
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
+		this.mvc.perform(request).andExpect(status().isOk());
+	}
+
+	@Test
+	public void refreshToken_basicAuth_isOk() throws Exception {
+		ClientID clientID = new ClientID("test-client");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
+
+		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
+				new RefreshTokenGrant(new RefreshToken()));
+
+		BearerAccessToken accessToken = new BearerAccessToken();
+
+		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
+				any(Scope.class))).willReturn(accessToken);
+		given(this.refreshTokenStore.load(any(RefreshToken.class)))
+				.willReturn(new RefreshTokenContext(() -> "user", clientID, scope, Instant.now()));
+
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.header("Authorization", clientAuth.toHTTPAuthorizationHeader());
+		this.mvc.perform(request).andExpect(status().isOk());
+	}
+
+	@Test
+	public void refreshToken_postAuth_isOk() throws Exception {
+		ClientID clientID = new ClientID("test-client");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
+
+		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
+				new RefreshTokenGrant(new RefreshToken()));
+
+		BearerAccessToken accessToken = new BearerAccessToken();
+
+		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
+				any(Scope.class))).willReturn(accessToken);
+		given(this.refreshTokenStore.load(any(RefreshToken.class)))
+				.willReturn(new RefreshTokenContext(() -> "user", clientID, scope, Instant.now()));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

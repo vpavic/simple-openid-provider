@@ -12,7 +12,7 @@ public interface TokenService {
 
 	AccessToken createAccessToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope);
 
-	RefreshToken createRefreshToken();
+	RefreshToken createRefreshToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope);
 
 	JWT createIdToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope, Nonce nonce);
 

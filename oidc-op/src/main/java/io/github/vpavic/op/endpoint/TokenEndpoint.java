@@ -48,6 +48,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.token.RefreshTokenContext;
+import io.github.vpavic.op.token.RefreshTokenStore;
 import io.github.vpavic.op.token.TokenService;
 
 /**
@@ -74,15 +76,18 @@ public class TokenEndpoint {
 
 	private final AuthenticationManager authenticationManager;
 
+	private final RefreshTokenStore refreshTokenStore;
+
 	public TokenEndpoint(ClientRepository clientRepository,
 			ClientAuthenticationVerifier<ClientRepository> clientAuthenticationVerifier,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
-			AuthenticationManager authenticationManager) {
+			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore) {
 		this.clientAuthenticationVerifier = Objects.requireNonNull(clientAuthenticationVerifier);
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authenticationManager = Objects.requireNonNull(authenticationManager);
+		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
 	}
 
 	@PostMapping
@@ -145,7 +150,7 @@ public class TokenEndpoint {
 			Scope scope = context.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken();
+			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, context.getNonce());
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
@@ -182,7 +187,7 @@ public class TokenEndpoint {
 			Scope scope = tokenRequest.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken();
+			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
 			Tokens tokens = new Tokens(accessToken, refreshToken);
 
 			tokenResponse = new AccessTokenResponse(tokens);
@@ -208,9 +213,29 @@ public class TokenEndpoint {
 
 			tokenResponse = new AccessTokenResponse(tokens);
 		}
+		// Refresh Token Grant Type
 		else if (authorizationGrant instanceof RefreshTokenGrant) {
-			// TODO
-			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+			ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+
+			if (clientAuthentication == null) {
+				throw InvalidClientException.BAD_SECRET;
+			}
+
+			Context<ClientRepository> context = new Context<>();
+			context.set(this.clientRepository);
+			this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
+
+			RefreshTokenGrant refreshTokenGrant = (RefreshTokenGrant) authorizationGrant;
+			RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
+			RefreshTokenContext refreshTokenContext = this.refreshTokenStore.load(refreshToken);
+			AuthenticatedPrincipal principal = refreshTokenContext.getPrincipal();
+			ClientID clientID = refreshTokenContext.getClientID();
+			Scope scope = refreshTokenContext.getScope();
+
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			Tokens tokens = new Tokens(accessToken, null);
+
+			tokenResponse = new AccessTokenResponse(tokens);
 		}
 		else {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
