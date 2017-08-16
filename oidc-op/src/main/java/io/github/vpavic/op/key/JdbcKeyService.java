@@ -7,8 +7,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -64,7 +63,7 @@ public class JdbcKeyService implements KeyService {
 	@Override
 	@Transactional
 	public void rotate() {
-		LocalDateTime expiry = LocalDateTime.now(ZoneOffset.UTC).plus(this.properties.getJwkRetentionPeriod());
+		Instant expiry = Instant.now().plus(this.properties.getJwkRetentionPeriod());
 		this.jdbcOperations.update(UPDATE_EXPIRY_STATEMENT, expiry);
 		JWK key = generateKey();
 		String content = key.toJSONString();
@@ -73,7 +72,7 @@ public class JdbcKeyService implements KeyService {
 
 	@Scheduled(cron = "0 0 * * * *")
 	public void purgeExpiredKeys() {
-		LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+		Instant now = Instant.now();
 		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, now);
 	}
 
