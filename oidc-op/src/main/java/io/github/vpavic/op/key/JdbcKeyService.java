@@ -6,6 +6,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
@@ -64,16 +65,20 @@ public class JdbcKeyService implements KeyService {
 	@Transactional
 	public void rotate() {
 		Instant expiry = Instant.now().plus(this.properties.getJwkRetentionPeriod());
-		this.jdbcOperations.update(UPDATE_EXPIRY_STATEMENT, expiry);
+
+		this.jdbcOperations.update(UPDATE_EXPIRY_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(expiry)));
+
 		JWK key = generateKey();
 		String content = key.toJSONString();
+
 		this.jdbcOperations.update(INSERT_STATEMENT, content);
 	}
 
 	@Scheduled(cron = "0 0 * * * *")
 	public void purgeExpiredKeys() {
 		Instant now = Instant.now();
-		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, now);
+
+		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(now)));
 	}
 
 	private JWK generateKey() {

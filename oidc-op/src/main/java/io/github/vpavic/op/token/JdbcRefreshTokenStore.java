@@ -66,13 +66,14 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	@Override
 	public void revoke(RefreshToken refreshToken) {
-		this.jdbcOperations.update(DELETE_STATEMENT, refreshToken.getValue());
+		this.jdbcOperations.update(DELETE_STATEMENT, ps -> ps.setString(1, refreshToken.getValue()));
 	}
 
 	@Scheduled(cron = "0 0 * * * *")
 	public void cleanExpiredTokens() {
 		Instant now = Instant.now();
-		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, now);
+
+		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(now)));
 	}
 
 	private static class RefreshTokenContextMapper implements RowMapper<RefreshTokenContext> {
