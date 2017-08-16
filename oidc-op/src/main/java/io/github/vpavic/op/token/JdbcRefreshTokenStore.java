@@ -14,6 +14,7 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -24,6 +25,8 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	private static final String SELECT_STATEMENT = "SELECT principal, client_id, scope, expiry FROM refresh_tokens WHERE token = ?";
 
 	private static final String DELETE_STATEMENT = "DELETE FROM refresh_tokens WHERE token = ?";
+
+	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM refresh_tokens WHERE expiry < ?";
 
 	private static final RefreshTokenContextMapper refreshTokenContextMapper = new RefreshTokenContextMapper();
 
@@ -47,8 +50,14 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	@Override
 	public RefreshTokenContext load(RefreshToken refreshToken) throws GeneralException {
 		try {
-			return this.jdbcOperations.queryForObject(SELECT_STATEMENT, refreshTokenContextMapper,
-					refreshToken.getValue());
+			RefreshTokenContext context = this.jdbcOperations.queryForObject(SELECT_STATEMENT,
+					refreshTokenContextMapper, refreshToken.getValue());
+
+			if (context.isExpired()) {
+				throw new GeneralException(OAuth2Error.INVALID_GRANT);
+			}
+
+			return context;
 		}
 		catch (EmptyResultDataAccessException e) {
 			throw new GeneralException(OAuth2Error.INVALID_GRANT);
@@ -58,6 +67,12 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	@Override
 	public void revoke(RefreshToken refreshToken) {
 		this.jdbcOperations.update(DELETE_STATEMENT, refreshToken.getValue());
+	}
+
+	@Scheduled(cron = "0 0 * * * *")
+	public void cleanExpiredTokens() {
+		Instant now = Instant.now();
+		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, now);
 	}
 
 	private static class RefreshTokenContextMapper implements RowMapper<RefreshTokenContext> {

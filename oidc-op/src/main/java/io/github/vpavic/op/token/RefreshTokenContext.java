@@ -41,4 +41,8 @@ public class RefreshTokenContext implements Serializable {
 		return this.expiry;
 	}
 
+	public boolean isExpired() {
+		return Instant.now().isAfter(this.expiry);
+	}
+
 }
