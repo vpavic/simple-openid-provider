@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
  * @see <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery 1.0</a>
  */
 @RestController
-@RequestMapping(path = "/.well-known/openid-configuration")
+@RequestMapping(path = DiscoveryEndpoint.PATH_MAPPING)
 public class DiscoveryEndpoint {
+
+	public static final String PATH_MAPPING = "/.well-known/openid-configuration";
 
 	private final OIDCProviderMetadata providerMetadata;
 

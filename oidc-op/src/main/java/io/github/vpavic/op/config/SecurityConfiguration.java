@@ -2,6 +2,12 @@ package io.github.vpavic.op.config;
 
 import java.util.Collections;
 
+import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
+import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
+import io.github.vpavic.op.endpoint.KeysEndpoint;
+import io.github.vpavic.op.endpoint.TokenEndpoint;
+import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +29,10 @@ import io.github.vpavic.op.key.KeyService;
 @Configuration
 public class SecurityConfiguration {
 
+	public static final String LOGIN_URL = "/login";
+
+	public static final String LOGOUT_URL = "/logout";
+
 	@Bean
 	public UserDetailsService userDetailsService(JdbcTemplate jdbcTemplate) {
 		JdbcDaoImpl userDetailsService = new JdbcDaoImpl();
@@ -39,7 +49,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/oauth2/keys", "/oauth2/token", "/.well-known/openid-configuration")
+					.antMatchers(KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING)
 					.and()
 				.csrf()
 					.disable()
@@ -61,7 +71,7 @@ public class SecurityConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.antMatcher("/oauth2/check-session")
+				.antMatcher(CheckSessionEndpoint.PATH_MAPPING)
 				.headers()
 					.frameOptions().disable()
 					.and()
@@ -81,10 +91,10 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/", "/login", "/logout", "/oauth2/authorize")
+					.antMatchers("/", LOGIN_URL, LOGOUT_URL, AuthorizationEndpoint.PATH_MAPPING)
 					.and()
 				.formLogin()
-					.loginPage("/login")
+					.loginPage(LOGIN_URL)
 					.permitAll()
 					.and()
 				.logout()
@@ -125,7 +135,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
-				.antMatcher("/oauth2/userinfo")
+				.antMatcher(UserInfoEndpoint.PATH_MAPPING)
 				.cors()
 					.and()
 				.sessionManagement()

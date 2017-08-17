@@ -53,7 +53,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(createURI(CheckSessionEndpoint.PATH_MAPPING));
-		providerMetadata.setEndSessionEndpointURI(createURI("/logout"));
+		providerMetadata.setEndSessionEndpointURI(createURI(SecurityConfiguration.LOGOUT_URL));
 		providerMetadata.setScopes(new Scope(OIDCScopeValue.OPENID));
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
