@@ -53,6 +53,25 @@ public class SecurityConfiguration {
 
 	}
 
+	@Order(-15)
+	@Configuration
+	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.antMatcher("/oauth2/check-session")
+				.headers()
+					.frameOptions().disable()
+					.and()
+				.authorizeRequests()
+					.anyRequest().permitAll();
+			// @formatter:on
+		}
+
+	}
+
 	@Order(-10)
 	@Configuration
 	static class LoginSecurityConfiguration extends WebSecurityConfigurerAdapter {

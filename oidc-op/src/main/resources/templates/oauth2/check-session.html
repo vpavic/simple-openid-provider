@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:th="http://www.thymeleaf.org"
+		th:lang="${#locale.language}">
+<head>
+	<meta charset="utf-8">
+
+	<script src="https://cdn.jsdelivr.net/crypto-js/3.1.2/components/core-min.js" th:src="@{/webjars/cryptojs/components/core-min.js}"></script>
+	<script src="https://cdn.jsdelivr.net/crypto-js/3.1.2/components/enc-base64-min.js" th:src="@{/webjars/cryptojs/components/enc-base64-min.js}"></script>
+	<script src="https://cdn.jsdelivr.net/crypto-js/3.1.2/components/sha256-min.js" th:src="@{/webjars/cryptojs/components/sha256-min.js}"></script>
+</head>
+<body>
+	<script th:inline="javascript">
+		//<![CDATA[
+		window.addEventListener("message", receiveMessage, false);
+
+		function receiveMessage(e) {
+			if (document.referrer.lastIndexOf(e.origin, 0) !== 0) {
+				return;
+			}
+
+			if (typeof e.data !== "string") {
+				postStatus(e, "error");
+				return;
+			}
+
+			var messageTokens = e.data.split(" ");
+			var clientId = messageTokens[0];
+			var sessionState = messageTokens[1];
+
+			if (typeof sessionState === "undefined") {
+				postStatus(e, "error");
+				return;
+			}
+
+			var salt = sessionState.split(".")[1];
+
+			if (typeof salt === "undefined") {
+				postStatus(e, "error");
+				return;
+			}
+
+			var calculatedSessionState = calculateSessionState(clientId, e.origin, salt);
+			var status = (sessionState === calculatedSessionState) ? "unchanged" : "changed";
+
+			postStatus(e, status);
+		}
+
+		function postStatus(e, stat) {
+			e.source.postMessage(stat, e.origin);
+		}
+
+		function calculateSessionState(clientId, origin, salt) {
+			var opBrowserState = getOpBrowserState();
+
+			return CryptoJS.SHA256(clientId + " " + origin + " " + opBrowserState + " " + salt) + "." + salt;
+		}
+
+		function getOpBrowserState() {
+			var cookie = getCookie("sid");
+			var sid = CryptoJS.enc.Base64.parse(cookie);
+
+			return CryptoJS.enc.Utf8.stringify(sid);
+		}
+
+		function getCookie(name) {
+			var nameWithSeparator = name + "=";
+			var decodedCookie = decodeURIComponent(document.cookie);
+			var cookies = decodedCookie.split(";");
+
+			for (var i = 0; i < cookies.length; i++) {
+				var cookie = cookies[i];
+
+				while (cookie.charAt(0) === " ") {
+					cookie = cookie.substring(1);
+				}
+
+				if (cookie.indexOf(nameWithSeparator) === 0) {
+					return cookie.substring(nameWithSeparator.length);
+				}
+			}
+
+			return "";
+		}
+		//]]>
+	</script>
+</body>
+</html>

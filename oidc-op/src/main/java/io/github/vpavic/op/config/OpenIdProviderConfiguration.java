@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
@@ -51,6 +52,8 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
+		providerMetadata.setCheckSessionIframeURI(createURI(CheckSessionEndpoint.PATH_MAPPING));
+		providerMetadata.setEndSessionEndpointURI(createURI("/logout"));
 		providerMetadata.setScopes(new Scope(OIDCScopeValue.OPENID));
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),

@@ -10,5 +10,6 @@ dependencies {
 	compile 'org.springframework.session:spring-session-data-redis'
 	compile 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4'
 	compile 'org.webjars:bootstrap'
+	compile 'org.webjars:cryptojs'
 	compile 'org.webjars:webjars-locator'
 }
