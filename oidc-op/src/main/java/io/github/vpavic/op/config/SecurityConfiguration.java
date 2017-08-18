@@ -55,13 +55,13 @@ public class SecurityConfiguration {
 				.requestMatchers()
 					.antMatchers(KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING)
 					.and()
+				.authorizeRequests()
+					.anyRequest().permitAll()
+					.and()
 				.csrf()
 					.disable()
 				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.NEVER)
-					.and()
-				.authorizeRequests()
-					.anyRequest().permitAll();
+					.sessionCreationPolicy(SessionCreationPolicy.NEVER);
 			// @formatter:on
 		}
 
@@ -76,11 +76,11 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.antMatcher(CheckSessionEndpoint.PATH_MAPPING)
-				.headers()
-					.frameOptions().disable()
-					.and()
 				.authorizeRequests()
-					.anyRequest().permitAll();
+					.anyRequest().permitAll()
+					.and()
+				.headers()
+					.frameOptions().disable();
 			// @formatter:on
 		}
 
@@ -147,15 +147,16 @@ public class SecurityConfiguration {
 
 			// @formatter:off
 			http
-				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
 				.antMatcher(UserInfoEndpoint.PATH_MAPPING)
+				.authorizeRequests()
+					.anyRequest().fullyAuthenticated()
+					.and()
 				.cors()
 					.and()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 					.and()
-				.authorizeRequests()
-					.anyRequest().fullyAuthenticated();
+				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
 			// @formatter:on
 		}
 
