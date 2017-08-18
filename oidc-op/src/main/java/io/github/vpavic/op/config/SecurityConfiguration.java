@@ -16,8 +16,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -90,6 +88,12 @@ public class SecurityConfiguration {
 	@Configuration
 	static class LoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+		private final OIDCLogoutSuccessHandler logoutSuccessHandler;
+
+		public LoginSecurityConfiguration(ObjectProvider<OIDCLogoutSuccessHandler> logoutSuccessHandler) {
+			this.logoutSuccessHandler = logoutSuccessHandler.getObject();
+		}
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
@@ -106,15 +110,8 @@ public class SecurityConfiguration {
 					.and()
 				.logout()
 					.logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_URL, HttpMethod.GET.name()))
-					.logoutSuccessHandler(logoutSuccessHandler());
+					.logoutSuccessHandler(this.logoutSuccessHandler);
 			// @formatter:on
-		}
-
-		private LogoutSuccessHandler logoutSuccessHandler() {
-			SimpleUrlLogoutSuccessHandler logoutSuccessHandler = new SimpleUrlLogoutSuccessHandler();
-			logoutSuccessHandler.setDefaultTargetUrl(LOGIN_URL + "?logout");
-			logoutSuccessHandler.setTargetUrlParameter("post_logout_redirect_uri");
-			return logoutSuccessHandler;
 		}
 
 	}

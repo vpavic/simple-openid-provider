@@ -2,6 +2,7 @@ package io.github.vpavic.op.client;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -19,7 +20,9 @@ public class JdbcClientRepository implements ClientRepository {
 
 	private static final String INSERT_STATEMENT = "INSERT INTO clients(id, content) VALUES (?, ?)";
 
-	private static final String SELECT_STATEMENT = "SELECT content FROM clients WHERE id = ?";
+	private static final String SELECT_BY_ID_STATEMENT = "SELECT content FROM clients WHERE id = ?";
+
+	private static final String SELECT_ALL_STATEMENT = "SELECT content FROM clients";
 
 	private static final String UPDATE_STATEMENT = "UPDATE clients SET content = ? WHERE id = ?";
 
@@ -56,11 +59,16 @@ public class JdbcClientRepository implements ClientRepository {
 		String id = clientID.getValue();
 
 		try {
-			return this.jdbcOperations.queryForObject(SELECT_STATEMENT, clientMapper, id);
+			return this.jdbcOperations.queryForObject(SELECT_BY_ID_STATEMENT, clientMapper, id);
 		}
 		catch (EmptyResultDataAccessException e) {
 			return null;
 		}
+	}
+
+	@Override
+	public List<OIDCClientInformation> findAll() {
+		return this.jdbcOperations.query(SELECT_ALL_STATEMENT, clientMapper);
 	}
 
 	@Override

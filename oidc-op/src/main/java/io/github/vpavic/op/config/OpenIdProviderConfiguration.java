@@ -67,6 +67,8 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
+		providerMetadata.setSupportsFrontChannelLogout(true);
+		providerMetadata.setSupportsFrontChannelLogoutSession(false);
 		return providerMetadata;
 	}
 
