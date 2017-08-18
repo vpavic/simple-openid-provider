@@ -2,16 +2,11 @@ package io.github.vpavic.op.config;
 
 import java.util.Collections;
 
-import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
-import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
-import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
-import io.github.vpavic.op.endpoint.KeysEndpoint;
-import io.github.vpavic.op.endpoint.TokenEndpoint;
-import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -21,17 +16,26 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
+import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
+import io.github.vpavic.op.endpoint.KeysEndpoint;
+import io.github.vpavic.op.endpoint.TokenEndpoint;
+import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
 
 @Configuration
 public class SecurityConfiguration {
 
-	public static final String LOGIN_URL = "/login";
+	static final String LOGIN_URL = "/login";
 
-	public static final String LOGOUT_URL = "/logout";
+	static final String LOGOUT_URL = "/logout";
 
 	@Bean
 	public UserDetailsService userDetailsService(JdbcTemplate jdbcTemplate) {
@@ -93,15 +97,24 @@ public class SecurityConfiguration {
 				.requestMatchers()
 					.antMatchers("/", LOGIN_URL, LOGOUT_URL, AuthorizationEndpoint.PATH_MAPPING)
 					.and()
+				.authorizeRequests()
+					.antMatchers(LOGIN_URL).permitAll()
+					.anyRequest().authenticated()
+					.and()
 				.formLogin()
 					.loginPage(LOGIN_URL)
-					.permitAll()
 					.and()
 				.logout()
-					.and()
-				.authorizeRequests()
-					.anyRequest().authenticated();
+					.logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_URL, HttpMethod.GET.name()))
+					.logoutSuccessHandler(logoutSuccessHandler());
 			// @formatter:on
+		}
+
+		private LogoutSuccessHandler logoutSuccessHandler() {
+			SimpleUrlLogoutSuccessHandler logoutSuccessHandler = new SimpleUrlLogoutSuccessHandler();
+			logoutSuccessHandler.setDefaultTargetUrl(LOGIN_URL + "?logout");
+			logoutSuccessHandler.setTargetUrlParameter("post_logout_redirect_uri");
+			return logoutSuccessHandler;
 		}
 
 	}
