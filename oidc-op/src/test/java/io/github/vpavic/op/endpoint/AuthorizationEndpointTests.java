@@ -5,8 +5,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
-import javax.servlet.http.HttpSession;
-
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
@@ -89,8 +87,7 @@ public class AuthorizationEndpointTests {
 	public void setUp() {
 		this.session = new MockHttpSession();
 
-		SecurityContext context = createSecurityContext(this.session);
-		TestSecurityContextHolder.setContext(context);
+		TestSecurityContextHolder.setContext(createSecurityContext());
 	}
 
 	@Test
@@ -101,7 +98,8 @@ public class AuthorizationEndpointTests {
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com");
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrl("http://example.com?code={code}&session_state={sessionState}",
 						authorizationCode.getValue(), this.session.getId()));
@@ -117,7 +115,7 @@ public class AuthorizationEndpointTests {
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&state="
-						+ state.getValue());
+						+ state.getValue()).session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrl("http://example.com?code={code}&state={state}&session_state={sessionState}",
 						authorizationCode.getValue(), state.getValue(), this.session.getId()));
@@ -130,7 +128,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com");
+				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -142,7 +141,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com");
+				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -154,7 +154,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=test&response_type=code&client_id=test-client&redirect_uri=http://example.com");
+				"/oauth2/authorize?scope=test&response_type=code&client_id=test-client&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -166,7 +167,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&redirect_uri=http://example.com");
+				"/oauth2/authorize?scope=openid&response_type=code&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -178,7 +180,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client");
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client").session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -190,7 +192,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com");
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -208,7 +211,8 @@ public class AuthorizationEndpointTests {
 				anyString(), any(Nonce.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&id_token={idToken}&token_type=Bearer&session_state={sessionState}",
 				accessToken.getValue(), idToken.serialize(), this.session.getId()));
@@ -223,7 +227,8 @@ public class AuthorizationEndpointTests {
 				anyString(), any(Nonce.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrl("http://example.com#id_token={idToken}&session_state={sessionState}",
 						idToken.serialize(), this.session.getId()));
@@ -244,7 +249,7 @@ public class AuthorizationEndpointTests {
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test&state="
-						+ state.getValue());
+						+ state.getValue()).session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&id_token={idToken}&state={state}&token_type=Bearer&session_state={sessionState}",
 				accessToken.getValue(), idToken.serialize(), state.getValue(), this.session.getId()));
@@ -258,7 +263,8 @@ public class AuthorizationEndpointTests {
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com");
+				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -271,7 +277,8 @@ public class AuthorizationEndpointTests {
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=id_token token&redirect_uri=http://example.com&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=id_token token&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -284,7 +291,8 @@ public class AuthorizationEndpointTests {
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -297,7 +305,8 @@ public class AuthorizationEndpointTests {
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com");
+				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -316,7 +325,8 @@ public class AuthorizationEndpointTests {
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&code={code}&id_token={idToken}&token_type=Bearer&session_state={sessionState}",
 				accessToken.getValue(), authorizationCode.getValue(), idToken.serialize(), this.session.getId()));
@@ -333,7 +343,8 @@ public class AuthorizationEndpointTests {
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=code id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(
 				redirectedUrl("http://example.com#code={code}&id_token={idToken}&session_state={sessionState}",
 						authorizationCode.getValue(), idToken.serialize(), this.session.getId()));
@@ -350,7 +361,8 @@ public class AuthorizationEndpointTests {
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code token&client_id=test-client&redirect_uri=http://example.com&nonce=test");
+				"/oauth2/authorize?scope=openid&response_type=code token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&code={code}&token_type=Bearer&session_state={sessionState}",
 				accessToken.getValue(), authorizationCode.getValue(), this.session.getId()));
@@ -372,7 +384,7 @@ public class AuthorizationEndpointTests {
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test&state="
-						+ state.getValue());
+						+ state.getValue()).session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl(
 				"http://example.com#access_token={accessToken}&code={code}&id_token={idToken}&state={state}&token_type=Bearer&session_state={sessionState}",
 				accessToken.getValue(), authorizationCode.getValue(), idToken.serialize(), state.getValue(),
@@ -386,7 +398,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code id_token token&redirect_uri=http://example.com");
+				"/oauth2/authorize?scope=openid&response_type=code id_token token&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -398,7 +411,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&state=");
+				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&state=")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
@@ -410,23 +424,21 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&client_id=test-client&redirect_uri=http://example.com");
+				"/oauth2/authorize?scope=openid&client_id=test-client&redirect_uri=http://example.com")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isBadRequest())
 				.andExpect(content().string(containsString(error.getCode())));
 	}
 
-	private static SecurityContext createSecurityContext(HttpSession session) {
+	private static SecurityContext createSecurityContext() {
 		String password = "password";
 		String[] authorities = { "ROLE_USER" };
 
 		User principal = new User("user", password, true, true, true, true,
 				AuthorityUtils.createAuthorityList(authorities));
 
-		MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
-		httpServletRequest.setSession(session);
-
 		TestingAuthenticationToken authentication = new TestingAuthenticationToken(principal, password, authorities);
-		authentication.setDetails(new OIDCAuthenticationDetails(httpServletRequest, Instant.EPOCH));
+		authentication.setDetails(new OIDCAuthenticationDetails(new MockHttpServletRequest(), Instant.EPOCH));
 
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
 		context.setAuthentication(authentication);

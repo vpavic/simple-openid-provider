@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.servlet.http.HttpSession;
+
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -71,7 +73,7 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public String authorize(HTTPRequest httpRequest, Authentication authentication) throws Exception {
+	public String authorize(HTTPRequest httpRequest, Authentication authentication, HttpSession session) throws Exception {
 		AuthenticationRequest request = AuthenticationRequest.parse(httpRequest);
 
 		validateRequest(request);
@@ -88,8 +90,8 @@ public class AuthorizationEndpoint {
 
 		String principal = authentication.getName();
 		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
-		String sessionId = authenticationDetails.getSessionId();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
+		String sessionId = session.getId();
 
 		AuthenticationSuccessResponse authResponse;
 
