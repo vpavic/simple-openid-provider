@@ -30,6 +30,7 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
@@ -101,7 +102,7 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
-			Nonce nonce) {
+			String sessionId, Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
 		JWK jwk = this.keyService.findActive();
@@ -117,6 +118,7 @@ public class TokenServiceImpl implements TokenService {
 				new Subject(principal), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
+		claimsSet.setSessionID(new SessionID(sessionId));
 		claimsSet.setAuthenticationTime(Date.from(authenticationTime));
 		claimsSet.setNonce(nonce);
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));

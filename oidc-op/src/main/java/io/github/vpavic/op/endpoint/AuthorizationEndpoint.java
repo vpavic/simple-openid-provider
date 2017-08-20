@@ -96,7 +96,7 @@ public class AuthorizationEndpoint {
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
 			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
-					authenticationTime, codeChallenge, codeChallengeMethod, nonce);
+					authenticationTime, sessionId, codeChallenge, codeChallengeMethod, nonce);
 
 			AuthorizationCode code = this.authorizationCodeService.create(context);
 			State sessionState = State.parse(sessionId);
@@ -106,7 +106,8 @@ public class AuthorizationEndpoint {
 		}
 		// Implicit Flow
 		else if (!responseType.contains(ResponseType.Value.CODE)) {
-			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, nonce);
+			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
+					nonce);
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
@@ -121,12 +122,13 @@ public class AuthorizationEndpoint {
 		// Hybrid Flow
 		else {
 			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
-					authenticationTime, codeChallenge, codeChallengeMethod, nonce);
+					authenticationTime, sessionId, codeChallenge, codeChallengeMethod, nonce);
 
 			JWT idToken = null;
 
 			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-				idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, nonce);
+				idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
+						nonce);
 			}
 
 			AccessToken accessToken = null;

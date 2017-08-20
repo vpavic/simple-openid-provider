@@ -47,24 +47,24 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 	private static final String LOGOUT_PAGE_IFRAME_TEMPLATE = "<iframe style=\"display:block; visibility:hidden\" "
 			+ "src=\"${clientLogoutUrl}\"></iframe>";
 
-	private final String defaultRedirectURI;
+	private final String issuer;
 
 	private final ClientRepository clientRepository;
 
 	public OIDCLogoutSuccessHandler(OpenIdProviderProperties properties, ClientRepository clientRepository) {
-		this.defaultRedirectURI = properties.getIssuer();
+		this.issuer = properties.getIssuer();
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 	}
 
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
 			throws IOException, ServletException {
-		String logoutPageHtml = generateLogoutPageHtml(request);
+		String logoutPageHtml = generateLogoutPageHtml(request, authentication);
 		response.setContentType("text/html;charset=UTF-8");
 		response.getWriter().write(logoutPageHtml);
 	}
 
-	private String generateLogoutPageHtml(HttpServletRequest request) {
+	private String generateLogoutPageHtml(HttpServletRequest request, Authentication authentication) {
 		String redirectURI = request.getParameter(REDIRECT_URI_PARAMETER);
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
@@ -92,11 +92,11 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 				}
 			}
 			else {
-				redirectURI = this.defaultRedirectURI;
+				redirectURI = this.issuer;
 			}
 		}
 		else {
-			redirectURI = this.defaultRedirectURI;
+			redirectURI = this.issuer;
 		}
 
 		StringBuilder iframes = new StringBuilder();
@@ -109,7 +109,18 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 				.collect(Collectors.toSet());
 		// @formatter:on
 
+		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
+		String sessionId = authenticationDetails.getSessionId();
+
 		for (String clientLogoutURI : logoutURIs) {
+			// @formatter:off
+			clientLogoutURI = UriComponentsBuilder.fromHttpUrl(clientLogoutURI)
+					.queryParam("iss", this.issuer)
+					.queryParam("sid", sessionId)
+					.build()
+					.toUriString();
+			// @formatter:on
+
 			iframes.append(LOGOUT_PAGE_IFRAME_TEMPLATE.replace(":clientLogoutUrl", clientLogoutURI));
 		}
 

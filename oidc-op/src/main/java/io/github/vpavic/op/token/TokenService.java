@@ -15,6 +15,7 @@ public interface TokenService {
 
 	RefreshToken createRefreshToken(String principal, ClientID clientID, Scope scope);
 
-	JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime, Nonce nonce);
+	JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime, String sessionId,
+			Nonce nonce);
 
 }

@@ -149,11 +149,13 @@ public class TokenEndpoint {
 			ClientID clientID = context.getClientID();
 			Scope scope = context.getScope();
 			Instant authenticationTime = context.getAuthenticationTime();
+			String sessionId = context.getSessionId();
 			Nonce nonce = context.getNonce();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
-			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, nonce);
+			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
+					nonce);
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
 			tokenResponse = new OIDCTokenResponse(tokens);

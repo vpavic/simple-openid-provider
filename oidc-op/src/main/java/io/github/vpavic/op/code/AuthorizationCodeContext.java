@@ -20,6 +20,8 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final Instant authenticationTime;
 
+	private final String sessionId;
+
 	private final CodeChallenge codeChallenge;
 
 	private final CodeChallengeMethod codeChallengeMethod;
@@ -27,11 +29,12 @@ public class AuthorizationCodeContext implements Serializable {
 	private final Nonce nonce;
 
 	public AuthorizationCodeContext(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
-			CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod, Nonce nonce) {
+			String sessionId, CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod, Nonce nonce) {
 		this.principal = Objects.requireNonNull(principal);
 		this.clientID = Objects.requireNonNull(clientID);
 		this.scope = Objects.requireNonNull(scope);
 		this.authenticationTime = Objects.requireNonNull(authenticationTime);
+		this.sessionId = Objects.requireNonNull(sessionId);
 		this.codeChallenge = codeChallenge;
 		this.codeChallengeMethod = codeChallengeMethod;
 		this.nonce = nonce;
@@ -51,6 +54,10 @@ public class AuthorizationCodeContext implements Serializable {
 
 	public Instant getAuthenticationTime() {
 		return this.authenticationTime;
+	}
+
+	public String getSessionId() {
+		return this.sessionId;
 	}
 
 	public CodeChallenge getCodeChallenge() {
