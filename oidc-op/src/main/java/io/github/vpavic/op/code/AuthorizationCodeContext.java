@@ -1,6 +1,7 @@
 package io.github.vpavic.op.code;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.Scope;
@@ -8,15 +9,16 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.openid.connect.sdk.Nonce;
-import org.springframework.security.core.Authentication;
 
 public class AuthorizationCodeContext implements Serializable {
 
-	private final Authentication authentication;
+	private final String principal;
 
 	private final ClientID clientID;
 
 	private final Scope scope;
+
+	private final Instant authenticationTime;
 
 	private final CodeChallenge codeChallenge;
 
@@ -24,18 +26,19 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final Nonce nonce;
 
-	public AuthorizationCodeContext(Authentication authentication, ClientID clientID, Scope scope,
+	public AuthorizationCodeContext(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
 			CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod, Nonce nonce) {
-		this.authentication = Objects.requireNonNull(authentication);
+		this.principal = Objects.requireNonNull(principal);
 		this.clientID = Objects.requireNonNull(clientID);
 		this.scope = Objects.requireNonNull(scope);
+		this.authenticationTime = Objects.requireNonNull(authenticationTime);
 		this.codeChallenge = codeChallenge;
 		this.codeChallengeMethod = codeChallengeMethod;
 		this.nonce = nonce;
 	}
 
-	public Authentication getAuthentication() {
-		return this.authentication;
+	public String getPrincipal() {
+		return this.principal;
 	}
 
 	public ClientID getClientID() {
@@ -44,6 +47,10 @@ public class AuthorizationCodeContext implements Serializable {
 
 	public Scope getScope() {
 		return this.scope;
+	}
+
+	public Instant getAuthenticationTime() {
+		return this.authenticationTime;
 	}
 
 	public CodeChallenge getCodeChallenge() {

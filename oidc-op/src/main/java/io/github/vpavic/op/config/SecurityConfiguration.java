@@ -1,5 +1,6 @@
 package io.github.vpavic.op.config;
 
+import java.time.Instant;
 import java.util.Collections;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -107,6 +108,7 @@ public class SecurityConfiguration {
 					.and()
 				.formLogin()
 					.loginPage(LOGIN_URL)
+					.authenticationDetailsSource(context -> new OIDCAuthenticationDetails(context, Instant.now()))
 					.and()
 				.logout()
 					.logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_URL, HttpMethod.GET.name()))

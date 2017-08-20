@@ -6,11 +6,10 @@ import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import org.springframework.security.core.AuthenticatedPrincipal;
 
 public class RefreshTokenContext implements Serializable {
 
-	private final AuthenticatedPrincipal principal;
+	private final String principal;
 
 	private final ClientID clientID;
 
@@ -18,14 +17,14 @@ public class RefreshTokenContext implements Serializable {
 
 	private final Instant expiry;
 
-	public RefreshTokenContext(AuthenticatedPrincipal principal, ClientID clientID, Scope scope, Instant expiry) {
+	public RefreshTokenContext(String principal, ClientID clientID, Scope scope, Instant expiry) {
 		this.principal = Objects.requireNonNull(principal);
 		this.clientID = Objects.requireNonNull(clientID);
 		this.scope = Objects.requireNonNull(scope);
 		this.expiry = Objects.requireNonNull(expiry);
 	}
 
-	public AuthenticatedPrincipal getPrincipal() {
+	public String getPrincipal() {
 		return this.principal;
 	}
 

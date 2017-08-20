@@ -30,7 +30,6 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
@@ -53,7 +52,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope) {
+	public AccessToken createAccessToken(String principal, ClientID clientID, Scope scope) {
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
@@ -69,7 +68,7 @@ public class TokenServiceImpl implements TokenService {
 		// @formatter:off
 		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
-				.subject(principal.getName())
+				.subject(principal)
 				.audience(this.properties.getIssuer())
 				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
@@ -89,7 +88,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public RefreshToken createRefreshToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope) {
+	public RefreshToken createRefreshToken(String principal, ClientID clientID, Scope scope) {
 		Instant issuedAt = Instant.now();
 		Duration refreshTokenValidityDuration = this.properties.getRefreshTokenValidityDuration();
 
@@ -101,7 +100,8 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public JWT createIdToken(AuthenticatedPrincipal principal, ClientID clientID, Scope scope, Nonce nonce) {
+	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
+			Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
 		JWK jwk = this.keyService.findActive();
@@ -114,9 +114,10 @@ public class TokenServiceImpl implements TokenService {
 		// @formatter:on
 
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
-				new Subject(principal.getName()), Audience.create(clientID.getValue()),
+				new Subject(principal), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
+		claimsSet.setAuthenticationTime(Date.from(authenticationTime));
 		claimsSet.setNonce(nonce);
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));

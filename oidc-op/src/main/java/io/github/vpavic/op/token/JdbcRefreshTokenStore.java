@@ -40,7 +40,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	public void save(RefreshToken refreshToken, RefreshTokenContext context) {
 		this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
 			ps.setString(1, refreshToken.getValue());
-			ps.setString(2, context.getPrincipal().getName());
+			ps.setString(2, context.getPrincipal());
 			ps.setString(3, context.getClientID().getValue());
 			ps.setString(4, context.getScope().toString());
 			ps.setTimestamp(5, Timestamp.from(context.getExpiry()));
@@ -85,7 +85,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 			String scope = rs.getString("scope");
 			Instant expiry = rs.getTimestamp("expiry").toInstant();
 
-			return new RefreshTokenContext(() -> principal, new ClientID(clientId), Scope.parse(scope), expiry);
+			return new RefreshTokenContext(principal, new ClientID(clientId), Scope.parse(scope), expiry);
 		}
 
 	}

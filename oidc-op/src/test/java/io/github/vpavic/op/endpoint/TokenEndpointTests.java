@@ -38,7 +38,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
@@ -54,6 +53,7 @@ import io.github.vpavic.op.token.RefreshTokenStore;
 import io.github.vpavic.op.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
@@ -104,16 +104,15 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(
-				new TestingAuthenticationToken(new User("test-secret", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"),
-				clientID, scope, null, null, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID, scope, Instant.now(), null,
+				null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				any(Scope.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(AuthenticatedPrincipal.class), any(ClientID.class), any(Scope.class),
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -133,16 +132,15 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
-				scope, null, null, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID, scope, Instant.now(), null,
+				null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				any(Scope.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(AuthenticatedPrincipal.class), any(ClientID.class), any(Scope.class),
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -166,16 +164,15 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
-				scope, codeChallenge, codeChallengeMethod, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID, scope, Instant.now(),
+				codeChallenge, codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				any(Scope.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(AuthenticatedPrincipal.class), any(ClientID.class), any(Scope.class),
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -199,16 +196,15 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri, codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(
-				new TestingAuthenticationToken(new User("test", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"), clientID,
-				scope, codeChallenge, codeChallengeMethod, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID, scope, Instant.now(),
+				codeChallenge, codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				any(Scope.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(AuthenticatedPrincipal.class), any(ClientID.class), any(Scope.class),
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
+				.willReturn(accessToken);
+		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -228,8 +224,7 @@ public class TokenEndpointTests {
 
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull())).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -249,8 +244,7 @@ public class TokenEndpointTests {
 
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull())).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -267,8 +261,7 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull())).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -286,8 +279,7 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class), isNull()))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull())).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -305,10 +297,10 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				any(Scope.class))).willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
+				.willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext(() -> "user", clientID, scope, Instant.now()));
+				.willReturn(new RefreshTokenContext("user", clientID, scope, Instant.now()));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -327,10 +319,10 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.tokenService.createAccessToken(any(AuthenticatedPrincipal.class), any(ClientID.class),
-				any(Scope.class))).willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
+				.willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext(() -> "user", clientID, scope, Instant.now()));
+				.willReturn(new RefreshTokenContext("user", clientID, scope, Instant.now()));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
