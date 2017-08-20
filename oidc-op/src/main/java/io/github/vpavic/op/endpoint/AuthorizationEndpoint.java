@@ -2,6 +2,7 @@ package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 
@@ -73,7 +74,8 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public String authorize(HTTPRequest httpRequest, Authentication authentication, HttpSession session) throws Exception {
+	public String authorize(HTTPRequest httpRequest, Authentication authentication, HttpSession session)
+			throws Exception {
 		AuthenticationRequest request = AuthenticationRequest.parse(httpRequest);
 
 		validateRequest(request);
@@ -186,15 +188,19 @@ public class AuthorizationEndpoint {
 	@ExceptionHandler(GeneralException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public String handleGeneralException(GeneralException e, Model model) {
+		model.addAttribute("timestamp", new Date());
+
 		ErrorObject error = e.getErrorObject();
 
 		if (error == null) {
 			error = OAuth2Error.INVALID_REQUEST;
 		}
 
-		model.addAttribute("code", error.getCode());
-		model.addAttribute("description", e.getMessage());
-		return "oauth2/error";
+		model.addAttribute("status", error.getHTTPStatusCode());
+		model.addAttribute("error", error.getCode());
+		model.addAttribute("message", e.getMessage());
+
+		return "error";
 	}
 
 }
