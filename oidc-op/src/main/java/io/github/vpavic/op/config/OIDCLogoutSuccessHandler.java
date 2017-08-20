@@ -31,17 +31,19 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 	// @formatter:off
 	private static final String LOGOUT_PAGE_HTML_TEMPLATE = "<!DOCTYPE html>"
-			+ "<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\">"
+			+ "<html>"
 			+ "<head>"
-			+ "</head>"
-			+ "<body>"
-			+ ":iframes"
+			+ "<title>end_session_endpoint</title>"
 			+ "<script>"
 			+ "window.onload = function() {"
 			+ "window.location.href = ':redirectURI';"
 			+ "}"
 			+ "</script>"
-			+ "</body>";
+			+ "</head>"
+			+ "<body>"
+			+ ":iframes"
+			+ "</body>"
+			+ "</html>";
 	// @formatter:on
 
 	private static final String LOGOUT_PAGE_IFRAME_TEMPLATE = "<iframe style=\"display:block; visibility:hidden\" "
