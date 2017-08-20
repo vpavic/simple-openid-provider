@@ -7,7 +7,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -19,12 +18,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
 import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
+import io.github.vpavic.op.endpoint.LogoutEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
@@ -32,9 +31,7 @@ import io.github.vpavic.op.key.KeyService;
 @Configuration
 public class SecurityConfiguration {
 
-	static final String LOGIN_URL = "/login";
-
-	static final String LOGOUT_URL = "/logout";
+	private static final String LOGIN_URL = "/login";
 
 	@Bean
 	public UserDetailsService userDetailsService(JdbcTemplate jdbcTemplate) {
@@ -100,7 +97,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/", LOGIN_URL, LOGOUT_URL, AuthorizationEndpoint.PATH_MAPPING)
+					.antMatchers("/", LOGIN_URL, LogoutEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
 					.antMatchers(LOGIN_URL).permitAll()
@@ -111,7 +108,6 @@ public class SecurityConfiguration {
 					.authenticationDetailsSource(context -> new OIDCAuthenticationDetails(context, Instant.now()))
 					.and()
 				.logout()
-					.logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_URL, HttpMethod.GET.name()))
 					.logoutSuccessHandler(this.logoutSuccessHandler);
 			// @formatter:on
 		}
