@@ -23,6 +23,7 @@ import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
 import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
+import io.github.vpavic.op.endpoint.LoginEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
@@ -30,8 +31,6 @@ import io.github.vpavic.op.key.KeyService;
 
 @Configuration
 public class SecurityConfiguration {
-
-	private static final String LOGIN_URL = "/login";
 
 	@Bean
 	public UserDetailsService userDetailsService(JdbcTemplate jdbcTemplate) {
@@ -97,14 +96,15 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/", LOGIN_URL, LogoutEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING)
+					.antMatchers("/", LoginEndpoint.PATH_MAPPING, LogoutEndpoint.PATH_MAPPING,
+							AuthorizationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
-					.antMatchers(LOGIN_URL).permitAll()
+					.antMatchers(LoginEndpoint.PATH_MAPPING).permitAll()
 					.anyRequest().authenticated()
 					.and()
 				.formLogin()
-					.loginPage(LOGIN_URL)
+					.loginPage(LoginEndpoint.PATH_MAPPING)
 					.authenticationDetailsSource(context -> new OIDCAuthenticationDetails(context, Instant.now()))
 					.and()
 				.logout()

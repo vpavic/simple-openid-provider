@@ -1,4 +1,4 @@
-package io.github.vpavic.op.login;
+package io.github.vpavic.op.endpoint;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.WebAttributes;
@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.SessionAttribute;
 
 @Controller
-@RequestMapping(path = "/login")
-public class LoginPageController {
+@RequestMapping(path = LoginEndpoint.PATH_MAPPING)
+public class LoginEndpoint {
+
+	public static final String PATH_MAPPING = "/login";
 
 	@GetMapping
 	public String login() {
