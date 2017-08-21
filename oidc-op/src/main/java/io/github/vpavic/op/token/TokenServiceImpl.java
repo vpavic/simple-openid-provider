@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -61,7 +60,6 @@ public class TokenServiceImpl implements TokenService {
 
 		// @formatter:off
 		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
-				.type(JOSEObjectType.JWT)
 				.keyID(jwk.getKeyID())
 				.build();
 		// @formatter:on
@@ -109,7 +107,6 @@ public class TokenServiceImpl implements TokenService {
 
 		// @formatter:off
 		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
-				.type(JOSEObjectType.JWT)
 				.keyID(jwk.getKeyID())
 				.build();
 		// @formatter:on
