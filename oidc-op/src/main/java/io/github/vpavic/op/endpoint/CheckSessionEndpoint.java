@@ -96,8 +96,14 @@ public class CheckSessionEndpoint {
 	}
 
 	private String generateCheckSessionPageHtml(HttpServletRequest request) {
-		String baseURI = UriComponentsBuilder.newInstance().scheme(request.getScheme()).host(request.getServerName())
-				.port(request.getServerPort()).path(request.getContextPath()).toUriString();
+		// @formatter:off
+		String baseURI = UriComponentsBuilder.newInstance()
+				.scheme(request.getScheme())
+				.host(request.getServerName())
+				.port(request.getServerPort())
+				.path(request.getContextPath())
+				.toUriString();
+		// @formatter:on
 
 		return CHECK_SESSION_PAGE_HTML_TEMPLATE.replace(":baseURI", baseURI);
 	}
