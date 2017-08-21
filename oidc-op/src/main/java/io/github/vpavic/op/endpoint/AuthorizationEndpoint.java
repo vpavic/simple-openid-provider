@@ -89,11 +89,16 @@ public class AuthorizationEndpoint {
 		CodeChallenge codeChallenge = request.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = request.getCodeChallengeMethod();
 		Nonce nonce = request.getNonce();
+		int maxAge = request.getMaxAge();
 
 		String principal = authentication.getName();
 		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
 		String sessionId = session.getId();
+
+		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
+			return "redirect:/login";
+		}
 
 		AuthenticationSuccessResponse authResponse;
 

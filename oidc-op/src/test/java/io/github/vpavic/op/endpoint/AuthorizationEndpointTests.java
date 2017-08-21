@@ -122,6 +122,31 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	public void authCode_withValidMaxAge_isSuccess() throws Exception {
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+
+		MockHttpServletRequestBuilder request = get(
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age="
+						+ Integer.MAX_VALUE).session(this.session);
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrl("http://example.com?code={code}&session_state={sessionState}",
+						authorizationCode.getValue(), this.session.getId()));
+	}
+
+	@Test
+	public void authCode_withExpiredMaxAge_isRequireLogin() throws Exception {
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+
+		MockHttpServletRequestBuilder request = get(
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=60")
+				.session(this.session);
+		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
 	public void authCode_withoutScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
