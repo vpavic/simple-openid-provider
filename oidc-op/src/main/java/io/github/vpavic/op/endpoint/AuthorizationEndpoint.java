@@ -34,11 +34,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.view.RedirectView;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
@@ -79,7 +81,7 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public String authorize(HttpServletRequest request, Authentication authentication) throws Exception {
+	public View authorize(HttpServletRequest request, Authentication authentication) throws Exception {
 		AuthenticationRequest authRequest = resolveRequest(request, authentication);
 
 		ResponseType responseType = authRequest.getResponseType();
@@ -97,7 +99,7 @@ public class AuthorizationEndpoint {
 		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
 			requestCache.saveRequest(request, null);
 
-			return "redirect:/login";
+			return new RedirectView("/login");
 		}
 
 		String principal = authentication.getName();
@@ -108,7 +110,7 @@ public class AuthorizationEndpoint {
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
 			requestCache.saveRequest(request, null);
 
-			return "redirect:/login";
+			return new RedirectView("/login");
 		}
 
 		AuthenticationSuccessResponse authResponse;
@@ -165,7 +167,7 @@ public class AuthorizationEndpoint {
 					sessionState, responseMode);
 		}
 
-		return "redirect:" + authResponse.toURI();
+		return new RedirectView(authResponse.toURI().toString());
 	}
 
 	private AuthenticationRequest resolveRequest(HttpServletRequest request, Authentication authentication)
@@ -214,8 +216,8 @@ public class AuthorizationEndpoint {
 	}
 
 	@ExceptionHandler(GeneralException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public String handleGeneralException(GeneralException e, Model model) {
+	public ModelAndView handleGeneralException(GeneralException e) {
+		ModelMap model = new ModelMap();
 		model.addAttribute("timestamp", new Date());
 
 		ErrorObject error = e.getErrorObject();
@@ -228,7 +230,7 @@ public class AuthorizationEndpoint {
 		model.addAttribute("error", error.getCode());
 		model.addAttribute("message", e.getMessage());
 
-		return "error";
+		return new ModelAndView("error", model, HttpStatus.valueOf(error.getHTTPStatusCode()));
 	}
 
 }
