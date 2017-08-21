@@ -95,31 +95,14 @@ public class TokenEndpoint {
 	public JSONObject handleTokenRequest(HTTPRequest httpRequest) throws Exception {
 		TokenRequest request = TokenRequest.parse(httpRequest);
 
+		validateRequest(request);
+
 		AuthorizationGrant authorizationGrant = request.getAuthorizationGrant();
 
 		AccessTokenResponse tokenResponse;
 
 		// Authorization Code Grant Type
 		if (authorizationGrant instanceof AuthorizationCodeGrant) {
-			ClientAuthentication clientAuthentication = request.getClientAuthentication();
-
-			if (clientAuthentication != null) {
-				Context<ClientRepository> context = new Context<>();
-				context.set(this.clientRepository);
-				this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
-			}
-			else {
-				OIDCClientInformation client = this.clientRepository.findByClientId(request.getClientID());
-
-				if (client == null) {
-					throw InvalidClientException.BAD_ID;
-				}
-
-				if (!ClientAuthenticationMethod.NONE.equals(client.getOIDCMetadata().getTokenEndpointAuthMethod())) {
-					throw InvalidClientException.NOT_REGISTERED_FOR_AUTH_METHOD;
-				}
-			}
-
 			AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) authorizationGrant;
 			AuthorizationCodeContext context = this.authorizationCodeService
 					.consume(authorizationCodeGrant.getAuthorizationCode());
@@ -162,16 +145,6 @@ public class TokenEndpoint {
 		}
 		// Resource Owner Password Credentials Grant Type
 		else if (authorizationGrant instanceof ResourceOwnerPasswordCredentialsGrant) {
-			ClientAuthentication clientAuthentication = request.getClientAuthentication();
-
-			if (clientAuthentication == null) {
-				throw InvalidClientException.BAD_SECRET;
-			}
-
-			Context<ClientRepository> context = new Context<>();
-			context.set(this.clientRepository);
-			this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
-
 			ResourceOwnerPasswordCredentialsGrant passwordCredentialsGrant = (ResourceOwnerPasswordCredentialsGrant) authorizationGrant;
 			String username = passwordCredentialsGrant.getUsername();
 			Secret password = passwordCredentialsGrant.getPassword();
@@ -187,7 +160,7 @@ public class TokenEndpoint {
 			}
 
 			String principal = authentication.getName();
-			ClientID clientID = clientAuthentication.getClientID();
+			ClientID clientID = request.getClientAuthentication().getClientID();
 			Scope scope = request.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
@@ -198,17 +171,7 @@ public class TokenEndpoint {
 		}
 		// Client Credentials Grant Type
 		else if (authorizationGrant instanceof ClientCredentialsGrant) {
-			ClientAuthentication clientAuthentication = request.getClientAuthentication();
-
-			if (clientAuthentication == null) {
-				throw InvalidClientException.BAD_SECRET;
-			}
-
-			Context<ClientRepository> context = new Context<>();
-			context.set(this.clientRepository);
-			this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
-
-			ClientID clientID = clientAuthentication.getClientID();
+			ClientID clientID = request.getClientAuthentication().getClientID();
 			String principal = clientID.getValue();
 			Scope scope = request.getScope();
 
@@ -219,16 +182,6 @@ public class TokenEndpoint {
 		}
 		// Refresh Token Grant Type
 		else if (authorizationGrant instanceof RefreshTokenGrant) {
-			ClientAuthentication clientAuthentication = request.getClientAuthentication();
-
-			if (clientAuthentication == null) {
-				throw InvalidClientException.BAD_SECRET;
-			}
-
-			Context<ClientRepository> verificationContext = new Context<>();
-			verificationContext.set(this.clientRepository);
-			this.clientAuthenticationVerifier.verify(clientAuthentication, null, verificationContext);
-
 			RefreshTokenGrant refreshTokenGrant = (RefreshTokenGrant) authorizationGrant;
 			RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
 			RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
@@ -246,6 +199,32 @@ public class TokenEndpoint {
 		}
 
 		return tokenResponse.toJSONObject();
+	}
+
+	private void validateRequest(TokenRequest request) throws Exception {
+		ClientAuthentication clientAuthentication = request.getClientAuthentication();
+
+		if (clientAuthentication != null) {
+			Context<ClientRepository> context = new Context<>();
+			context.set(this.clientRepository);
+			this.clientAuthenticationVerifier.verify(clientAuthentication, null, context);
+		}
+		else {
+			if (!(request.getAuthorizationGrant() instanceof AuthorizationCodeGrant)) {
+				throw InvalidClientException.BAD_SECRET;
+			}
+			else {
+				OIDCClientInformation client = this.clientRepository.findByClientId(request.getClientID());
+
+				if (client == null) {
+					throw InvalidClientException.BAD_ID;
+				}
+
+				if (!ClientAuthenticationMethod.NONE.equals(client.getOIDCMetadata().getTokenEndpointAuthMethod())) {
+					throw InvalidClientException.NOT_REGISTERED_FOR_AUTH_METHOD;
+				}
+			}
+		}
 	}
 
 	@ExceptionHandler(GeneralException.class)
