@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -16,7 +16,6 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
@@ -25,11 +24,15 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCError;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
+import com.nimbusds.openid.connect.sdk.Prompt;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -60,6 +63,8 @@ public class AuthorizationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/authorize";
 
+	private static final RequestCache requestCache = new HttpSessionRequestCache();
+
 	private final ClientRepository clientRepository;
 
 	private final AuthorizationCodeService authorizationCodeService;
@@ -74,29 +79,35 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public String authorize(HTTPRequest httpRequest, Authentication authentication, HttpSession session)
-			throws Exception {
-		AuthenticationRequest request = AuthenticationRequest.parse(httpRequest);
+	public String authorize(HttpServletRequest request, Authentication authentication) throws Exception {
+		AuthenticationRequest authRequest = resolveRequest(request, authentication);
 
-		validateRequest(request);
+		ResponseType responseType = authRequest.getResponseType();
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientID = authRequest.getClientID();
+		URI redirectionURI = authRequest.getRedirectionURI();
+		Scope scope = authRequest.getScope();
+		State state = authRequest.getState();
+		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
+		Nonce nonce = authRequest.getNonce();
+		Prompt prompt = authRequest.getPrompt();
+		int maxAge = authRequest.getMaxAge();
 
-		ResponseType responseType = request.getResponseType();
-		ResponseMode responseMode = request.impliedResponseMode();
-		ClientID clientID = request.getClientID();
-		URI redirectionURI = request.getRedirectionURI();
-		Scope scope = request.getScope();
-		State state = request.getState();
-		CodeChallenge codeChallenge = request.getCodeChallenge();
-		CodeChallengeMethod codeChallengeMethod = request.getCodeChallengeMethod();
-		Nonce nonce = request.getNonce();
-		int maxAge = request.getMaxAge();
+		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
+			requestCache.saveRequest(request, null);
+
+			return "redirect:/login";
+		}
 
 		String principal = authentication.getName();
 		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
-		String sessionId = session.getId();
+		String sessionId = request.getSession().getId();
 
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
+			requestCache.saveRequest(request, null);
+
 			return "redirect:/login";
 		}
 
@@ -157,11 +168,19 @@ public class AuthorizationEndpoint {
 		return "redirect:" + authResponse.toURI();
 	}
 
-	private void validateRequest(AuthenticationRequest request) throws GeneralException {
+	private AuthenticationRequest resolveRequest(HttpServletRequest request, Authentication authentication)
+			throws GeneralException {
+		AuthenticationRequest authRequest = AuthenticationRequest.parse(request.getQueryString());
+		validateRequest(authRequest, authentication);
+		return authRequest;
+	}
+
+	private void validateRequest(AuthenticationRequest request, Authentication authentication) throws GeneralException {
 		ResponseType responseType = request.getResponseType();
 		ClientID clientID = request.getClientID();
 		URI redirectionURI = request.getRedirectionURI();
 		Scope scope = request.getScope();
+		Prompt prompt = request.getPrompt();
 
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
@@ -187,6 +206,10 @@ public class AuthorizationEndpoint {
 
 		if (!clientMetadata.getResponseTypes().contains(responseType)) {
 			throw new GeneralException(OAuth2Error.UNAUTHORIZED_CLIENT);
+		}
+
+		if (prompt != null && prompt.contains(Prompt.Type.NONE) && authentication == null) {
+			throw new GeneralException(OIDCError.LOGIN_REQUIRED);
 		}
 	}
 

@@ -100,7 +100,7 @@ public class SecurityConfiguration {
 							AuthorizationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
-					.antMatchers(LoginEndpoint.PATH_MAPPING).permitAll()
+					.antMatchers(LoginEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
 					.anyRequest().authenticated()
 					.and()
 				.formLogin()
