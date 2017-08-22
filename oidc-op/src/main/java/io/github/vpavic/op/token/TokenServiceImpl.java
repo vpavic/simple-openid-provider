@@ -34,9 +34,12 @@ import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.key.KeyService;
+import io.github.vpavic.op.userinfo.ClaimsMapper;
 
 @Service
 public class TokenServiceImpl implements TokenService {
+
+	private static final String SCOPE_CLAIM = "scope";
 
 	private final OpenIdProviderProperties properties;
 
@@ -72,6 +75,7 @@ public class TokenServiceImpl implements TokenService {
 				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
 				.jwtID(UUID.randomUUID().toString())
+				.claim(SCOPE_CLAIM, scope.toString())
 				.build();
 		// @formatter:on
 
@@ -100,7 +104,7 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
-			String sessionId, Nonce nonce) {
+			String sessionId, Nonce nonce, ClaimsMapper claimsMapper) {
 		Instant issuedAt = Instant.now();
 
 		JWK jwk = this.keyService.findActive();
@@ -120,6 +124,10 @@ public class TokenServiceImpl implements TokenService {
 		claimsSet.setNonce(nonce);
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
+
+		if (claimsMapper != null) {
+			claimsMapper.map(claimsSet, scope);
+		}
 
 		try {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());

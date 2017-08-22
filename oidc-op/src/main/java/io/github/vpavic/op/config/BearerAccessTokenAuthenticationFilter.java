@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.github.vpavic.op.key.KeyService;
@@ -36,9 +36,9 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private static final String AUTHORIZATION_HEADER = "Authorization";
 
-	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
+	private static final String SCOPE_CLAIM = "scope";
 
-	private final WebAuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
+	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
 
 	private final String issuer;
 
@@ -78,9 +78,13 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 				throw new Exception("Access token has expired");
 			}
 
+			if (!StringUtils.hasText(claimsSet.getStringClaim(SCOPE_CLAIM))) {
+				throw new Exception("Invalid scope");
+			}
+
 			String username = claimsSet.getSubject();
 			PreAuthenticatedAuthenticationToken authToken = new PreAuthenticatedAuthenticationToken(username, "");
-			authToken.setDetails(this.authenticationDetailsSource.buildDetails(request));
+			authToken.setDetails(claimsSet);
 			Authentication authResult = this.authenticationManager.authenticate(authToken);
 			SecurityContextHolder.getContext().setAuthentication(authResult);
 		}
