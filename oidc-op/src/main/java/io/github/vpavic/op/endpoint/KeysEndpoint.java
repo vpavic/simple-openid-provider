@@ -31,8 +31,9 @@ public class KeysEndpoint {
 
 	@GetMapping(produces = JWKSet.MIME_TYPE)
 	public JSONObject getKeys() {
-		List<JWK> jwks = this.keyService.findAll();
-		return new JWKSet(jwks).toJSONObject();
+		List<JWK> keys = this.keyService.findAll();
+
+		return new JWKSet(keys).toJSONObject();
 	}
 
 }

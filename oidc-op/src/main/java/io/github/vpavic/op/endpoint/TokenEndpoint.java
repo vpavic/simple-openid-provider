@@ -23,6 +23,7 @@ import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
@@ -92,12 +94,10 @@ public class TokenEndpoint {
 	}
 
 	@PostMapping
-	public JSONObject handleTokenRequest(HTTPRequest httpRequest) throws Exception {
-		TokenRequest request = TokenRequest.parse(httpRequest);
+	public JSONObject handleTokenRequest(ServletWebRequest request) throws Exception {
+		TokenRequest tokenRequest = resolveTokenRequest(request);
 
-		validateRequest(request);
-
-		AuthorizationGrant authorizationGrant = request.getAuthorizationGrant();
+		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
 
 		AccessTokenResponse tokenResponse;
 
@@ -160,8 +160,8 @@ public class TokenEndpoint {
 			}
 
 			String principal = authentication.getName();
-			ClientID clientID = request.getClientAuthentication().getClientID();
-			Scope scope = request.getScope();
+			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
+			Scope scope = tokenRequest.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
@@ -171,9 +171,9 @@ public class TokenEndpoint {
 		}
 		// Client Credentials Grant Type
 		else if (authorizationGrant instanceof ClientCredentialsGrant) {
-			ClientID clientID = request.getClientAuthentication().getClientID();
+			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
 			String principal = clientID.getValue();
-			Scope scope = request.getScope();
+			Scope scope = tokenRequest.getScope();
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			Tokens tokens = new Tokens(accessToken, null);
@@ -199,6 +199,14 @@ public class TokenEndpoint {
 		}
 
 		return tokenResponse.toJSONObject();
+	}
+
+	private TokenRequest resolveTokenRequest(ServletWebRequest request) throws Exception {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
+		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
+		validateRequest(tokenRequest);
+
+		return tokenRequest;
 	}
 
 	private void validateRequest(TokenRequest request) throws Exception {

@@ -65,6 +65,10 @@ public class AuthorizationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/authorize";
 
+	private static final String LOGIN_URL = "/login";
+
+	private static final String ERROR_VIEW_NAME = "error";
+
 	private static final RequestCache requestCache = new HttpSessionRequestCache();
 
 	private final ClientRepository clientRepository;
@@ -99,7 +103,7 @@ public class AuthorizationEndpoint {
 		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
 			requestCache.saveRequest(request, null);
 
-			return new RedirectView("/login");
+			return new RedirectView(LOGIN_URL);
 		}
 
 		String principal = authentication.getName();
@@ -110,7 +114,7 @@ public class AuthorizationEndpoint {
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
 			requestCache.saveRequest(request, null);
 
-			return new RedirectView("/login");
+			return new RedirectView(LOGIN_URL);
 		}
 
 		AuthenticationSuccessResponse authResponse;
@@ -174,6 +178,7 @@ public class AuthorizationEndpoint {
 			throws GeneralException {
 		AuthenticationRequest authRequest = AuthenticationRequest.parse(request.getQueryString());
 		validateRequest(authRequest, authentication);
+
 		return authRequest;
 	}
 
@@ -230,7 +235,7 @@ public class AuthorizationEndpoint {
 		model.addAttribute("error", error.getCode());
 		model.addAttribute("message", e.getMessage());
 
-		return new ModelAndView("error", model, HttpStatus.valueOf(error.getHTTPStatusCode()));
+		return new ModelAndView(ERROR_VIEW_NAME, model, HttpStatus.valueOf(error.getHTTPStatusCode()));
 	}
 
 }

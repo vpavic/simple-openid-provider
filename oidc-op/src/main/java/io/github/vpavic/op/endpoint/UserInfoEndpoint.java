@@ -26,6 +26,7 @@ public class UserInfoEndpoint {
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
 	public JSONObject getUserInfo(Principal principal) throws Exception {
 		UserInfo userInfo = new UserInfo(new Subject(principal.getName()));
+
 		return userInfo.toJSONObject();
 	}
 
