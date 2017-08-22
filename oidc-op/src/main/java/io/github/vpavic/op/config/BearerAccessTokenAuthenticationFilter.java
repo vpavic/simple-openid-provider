@@ -1,6 +1,7 @@
 package io.github.vpavic.op.config;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,12 +20,9 @@ import com.nimbusds.jose.proc.SimpleSecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,15 +34,21 @@ import io.github.vpavic.op.key.KeyService;
 
 public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
+	private static final String AUTHORIZATION_HEADER = "Authorization";
+
 	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
 
-	private final AuthenticationDetailsSource<HttpServletRequest, ?> authenticationDetailsSource = new WebAuthenticationDetailsSource();
+	private final WebAuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
+
+	private final String issuer;
 
 	private final KeyService keyService;
 
 	private final AuthenticationManager authenticationManager;
 
-	public BearerAccessTokenAuthenticationFilter(KeyService keyService, AuthenticationManager authenticationManager) {
+	public BearerAccessTokenAuthenticationFilter(String issuer, KeyService keyService,
+			AuthenticationManager authenticationManager) {
+		this.issuer = Objects.requireNonNull(issuer);
 		this.keyService = Objects.requireNonNull(keyService);
 		this.authenticationManager = Objects.requireNonNull(authenticationManager);
 	}
@@ -52,10 +56,8 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-
 		try {
-			BearerAccessToken accessToken = BearerAccessToken.parse(httpRequest);
+			BearerAccessToken accessToken = BearerAccessToken.parse(request.getHeader(AUTHORIZATION_HEADER));
 			List<JWK> keys = this.keyService.findAll();
 
 			ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
@@ -64,6 +66,18 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(accessToken.getValue(), null);
 
+			if (!this.issuer.equals(claimsSet.getIssuer())) {
+				throw new Exception("Invalid issuer");
+			}
+
+			if (!claimsSet.getAudience().contains(this.issuer)) {
+				throw new Exception("Invalid audience");
+			}
+
+			if (Instant.now().isAfter(claimsSet.getExpirationTime().toInstant())) {
+				throw new Exception("Access token has expired");
+			}
+
 			String username = claimsSet.getSubject();
 			PreAuthenticatedAuthenticationToken authToken = new PreAuthenticatedAuthenticationToken(username, "");
 			authToken.setDetails(this.authenticationDetailsSource.buildDetails(request));
@@ -71,7 +85,7 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			SecurityContextHolder.getContext().setAuthentication(authResult);
 		}
 		catch (Exception e) {
-			logger.warn("Bearer authentication attempt failed: {}", e.getMessage());
+			logger.debug("Bearer authentication attempt failed: {}", e.getMessage());
 		}
 
 		filterChain.doFilter(request, response);

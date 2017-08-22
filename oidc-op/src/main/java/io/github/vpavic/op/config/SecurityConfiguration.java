@@ -118,12 +118,15 @@ public class SecurityConfiguration {
 	@Configuration
 	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+		private final OpenIdProviderProperties properties;
+
 		private final UserDetailsService userDetailsService;
 
 		private final KeyService keyService;
 
-		UserInfoSecurityConfiguration(ObjectProvider<UserDetailsService> userDetailsService,
-				ObjectProvider<KeyService> keyService) {
+		UserInfoSecurityConfiguration(OpenIdProviderProperties properties,
+				ObjectProvider<UserDetailsService> userDetailsService, ObjectProvider<KeyService> keyService) {
+			this.properties = properties;
 			this.userDetailsService = userDetailsService.getObject();
 			this.keyService = keyService.getObject();
 		}
@@ -138,7 +141,7 @@ public class SecurityConfiguration {
 					Collections.singletonList(authenticationProvider));
 
 			BearerAccessTokenAuthenticationFilter authenticationFilter = new BearerAccessTokenAuthenticationFilter(
-					this.keyService, authenticationManager);
+					this.properties.getIssuer(), this.keyService, authenticationManager);
 
 			// @formatter:off
 			http
