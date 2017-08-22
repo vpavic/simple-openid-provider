@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
+import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
 import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
@@ -85,10 +86,14 @@ public class SecurityConfiguration {
 	@Configuration
 	static class LoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-		private final OIDCLogoutSuccessHandler logoutSuccessHandler;
+		private final OpenIdProviderProperties properties;
 
-		public LoginSecurityConfiguration(ObjectProvider<OIDCLogoutSuccessHandler> logoutSuccessHandler) {
-			this.logoutSuccessHandler = logoutSuccessHandler.getObject();
+		private final ClientRepository clientRepository;
+
+		public LoginSecurityConfiguration(OpenIdProviderProperties properties,
+				ObjectProvider<ClientRepository> clientRepository) {
+			this.properties = properties;
+			this.clientRepository = clientRepository.getObject();
 		}
 
 		@Override
@@ -107,8 +112,8 @@ public class SecurityConfiguration {
 					.loginPage(LoginEndpoint.PATH_MAPPING)
 					.authenticationDetailsSource(context -> new OIDCAuthenticationDetails(context, Instant.now()))
 					.and()
-				.logout()
-					.logoutSuccessHandler(this.logoutSuccessHandler);
+				.logout().logoutSuccessHandler(
+						new OIDCLogoutSuccessHandler(this.properties.getIssuer(), this.clientRepository));
 			// @formatter:on
 		}
 

@@ -16,13 +16,11 @@ import javax.servlet.http.HttpServletResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.op.client.ClientRepository;
 
-@Component
 public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 	private static final String REDIRECT_URI_PARAMETER = "post_logout_redirect_uri";
@@ -53,8 +51,8 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 	private final ClientRepository clientRepository;
 
-	public OIDCLogoutSuccessHandler(OpenIdProviderProperties properties, ClientRepository clientRepository) {
-		this.issuer = properties.getIssuer();
+	public OIDCLogoutSuccessHandler(String issuer, ClientRepository clientRepository) {
+		this.issuer = Objects.requireNonNull(issuer);
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 	}
 
@@ -88,17 +86,16 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 					// @formatter:off
 					redirectURI = UriComponentsBuilder.fromHttpUrl(redirectURI)
 							.queryParam("state", state)
-							.build()
 							.toUriString();
 					// @formatter:on
 				}
 			}
 			else {
-				redirectURI = this.issuer;
+				redirectURI = defaultRedirectURI(request);
 			}
 		}
 		else {
-			redirectURI = this.issuer;
+			redirectURI = defaultRedirectURI(request);
 		}
 
 		StringBuilder iframes = new StringBuilder();
@@ -119,7 +116,6 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 			clientLogoutURI = UriComponentsBuilder.fromHttpUrl(clientLogoutURI)
 					.queryParam("iss", this.issuer)
 					.queryParam("sid", sessionId)
-					.build()
 					.toUriString();
 			// @formatter:on
 
@@ -127,6 +123,18 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 		}
 
 		return LOGOUT_PAGE_HTML_TEMPLATE.replace(":iframes", iframes.toString()).replace(":redirectURI", redirectURI);
+	}
+
+	private static String defaultRedirectURI(HttpServletRequest request) {
+		// @formatter:off
+		return UriComponentsBuilder.newInstance()
+				.scheme(request.getScheme())
+				.host(request.getServerName())
+				.port(request.getServerPort())
+				.pathSegment(request.getContextPath(), "login")
+				.query("logout")
+				.toUriString();
+		// @formatter:on
 	}
 
 }
