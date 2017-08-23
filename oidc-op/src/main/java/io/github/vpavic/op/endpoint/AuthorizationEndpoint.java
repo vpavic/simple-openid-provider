@@ -47,6 +47,7 @@ import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.config.OIDCAuthenticationDetails;
 import io.github.vpavic.op.token.TokenService;
+import io.github.vpavic.op.userinfo.UserInfoMapper;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Authorization Endpoint implementation.
@@ -77,11 +78,14 @@ public class AuthorizationEndpoint {
 
 	private final TokenService tokenService;
 
+	private final UserInfoMapper userInfoMapper;
+
 	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService) {
+			TokenService tokenService, UserInfoMapper userInfoMapper) {
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
+		this.userInfoMapper = Objects.requireNonNull(userInfoMapper);
 	}
 
 	@GetMapping
@@ -132,8 +136,10 @@ public class AuthorizationEndpoint {
 		}
 		// Implicit Flow
 		else if (!responseType.contains(ResponseType.Value.CODE)) {
+			UserInfoMapper userInfoMapper = (responseType.size() == 1) ? this.userInfoMapper : null;
+
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-					nonce);
+					nonce, userInfoMapper);
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
@@ -154,7 +160,7 @@ public class AuthorizationEndpoint {
 
 			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
 				idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-						nonce);
+						nonce, null);
 			}
 
 			AccessToken accessToken = null;
