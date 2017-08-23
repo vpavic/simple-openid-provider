@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -65,6 +66,7 @@ public class SecurityConfiguration {
 
 	@Order(-15)
 	@Configuration
+	@ConditionalOnProperty(prefix = "oidc.op", name = "session-management-enabled", havingValue = "true")
 	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
@@ -113,7 +115,7 @@ public class SecurityConfiguration {
 					.authenticationDetailsSource(context -> new OIDCAuthenticationDetails(context, Instant.now()))
 					.and()
 				.logout().logoutSuccessHandler(
-						new OIDCLogoutSuccessHandler(this.properties.getIssuer(), this.clientRepository));
+						new OIDCLogoutSuccessHandler(this.properties, this.clientRepository));
 			// @formatter:on
 		}
 

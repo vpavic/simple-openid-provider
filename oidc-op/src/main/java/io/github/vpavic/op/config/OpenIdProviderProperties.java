@@ -18,6 +18,10 @@ public class OpenIdProviderProperties {
 
 	private Period jwkRetentionPeriod = Period.ofDays(10);
 
+	private boolean sessionManagementEnabled = false;
+
+	private boolean frontChannelLogoutEnabled = false;
+
 	public String getIssuer() {
 		return this.issuer;
 	}
@@ -56,6 +60,26 @@ public class OpenIdProviderProperties {
 
 	public void setJwkRetentionPeriod(Period jwkRetentionPeriod) {
 		this.jwkRetentionPeriod = jwkRetentionPeriod;
+	}
+
+	public boolean isSessionManagementEnabled() {
+		return this.sessionManagementEnabled;
+	}
+
+	public void setSessionManagementEnabled(boolean sessionManagementEnabled) {
+		this.sessionManagementEnabled = sessionManagementEnabled;
+	}
+
+	public boolean isFrontChannelLogoutEnabled() {
+		return this.frontChannelLogoutEnabled;
+	}
+
+	public void setFrontChannelLogoutEnabled(boolean frontChannelLogoutEnabled) {
+		this.frontChannelLogoutEnabled = frontChannelLogoutEnabled;
+	}
+
+	public boolean isSessionManagementOrFrontChannelLogoutEnabled() {
+		return isSessionManagementEnabled() || isFrontChannelLogoutEnabled();
 	}
 
 }

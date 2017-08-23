@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
 @Controller
+@ConditionalOnProperty(prefix = "oidc.op", name = "session-management-enabled", havingValue = "true")
 @RequestMapping(path = CheckSessionEndpoint.PATH_MAPPING)
 public class CheckSessionEndpoint {
 

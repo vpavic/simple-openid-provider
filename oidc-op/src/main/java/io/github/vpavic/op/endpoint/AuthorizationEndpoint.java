@@ -46,6 +46,7 @@ import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.config.OIDCAuthenticationDetails;
+import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
@@ -73,6 +74,8 @@ public class AuthorizationEndpoint {
 
 	private static final RequestCache requestCache = new HttpSessionRequestCache();
 
+	private final OpenIdProviderProperties properties;
+
 	private final ClientRepository clientRepository;
 
 	private final AuthorizationCodeService authorizationCodeService;
@@ -83,8 +86,10 @@ public class AuthorizationEndpoint {
 
 	private final UserInfoMapper userInfoMapper;
 
-	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService, ClaimsMapper claimsMapper, UserInfoMapper userInfoMapper) {
+	public AuthorizationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+			AuthorizationCodeService authorizationCodeService, TokenService tokenService, ClaimsMapper claimsMapper,
+			UserInfoMapper userInfoMapper) {
+		this.properties = properties;
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
@@ -118,6 +123,7 @@ public class AuthorizationEndpoint {
 		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
 		String sessionId = request.getSession().getId();
+		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;
 
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
 			requestCache.saveRequest(request, null);
@@ -133,7 +139,6 @@ public class AuthorizationEndpoint {
 					authenticationTime, sessionId, codeChallenge, codeChallengeMethod, nonce);
 
 			AuthorizationCode code = this.authorizationCodeService.create(context);
-			State sessionState = State.parse(sessionId);
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
 					responseMode);
@@ -149,8 +154,6 @@ public class AuthorizationEndpoint {
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
 				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
 			}
-
-			State sessionState = State.parse(sessionId);
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
 					sessionState, responseMode);
@@ -174,8 +177,6 @@ public class AuthorizationEndpoint {
 			}
 
 			AuthorizationCode code = this.authorizationCodeService.create(context);
-
-			State sessionState = State.parse(sessionId);
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
 					sessionState, responseMode);

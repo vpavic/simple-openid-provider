@@ -47,12 +47,12 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 	private static final String LOGOUT_PAGE_IFRAME_TEMPLATE = "<iframe style=\"display:block; visibility:hidden\" "
 			+ "src=\"${clientLogoutUrl}\"></iframe>";
 
-	private final String issuer;
+	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
-	public OIDCLogoutSuccessHandler(String issuer, ClientRepository clientRepository) {
-		this.issuer = Objects.requireNonNull(issuer);
+	public OIDCLogoutSuccessHandler(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+		this.properties = properties;
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 	}
 
@@ -69,7 +69,7 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
-		if (StringUtils.hasText(redirectURI)) {
+		if (this.properties.isSessionManagementOrFrontChannelLogoutEnabled() && StringUtils.hasText(redirectURI)) {
 			// @formatter:off
 			Set<String> redirectURIs = clients.stream()
 					.flatMap(client -> Optional.ofNullable(client.getOIDCMetadata().getPostLogoutRedirectionURIs())
@@ -100,26 +100,28 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 		StringBuilder iframes = new StringBuilder();
 
-		// @formatter:off
-		Set<String> logoutURIs = clients.stream()
-				.map(client -> client.getOIDCMetadata().getFrontChannelLogoutURI())
-				.filter(Objects::nonNull)
-				.map(URI::toString)
-				.collect(Collectors.toSet());
-		// @formatter:on
-
-		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
-		String sessionId = authenticationDetails.getSessionId();
-
-		for (String clientLogoutURI : logoutURIs) {
+		if (this.properties.isFrontChannelLogoutEnabled()) {
 			// @formatter:off
-			clientLogoutURI = UriComponentsBuilder.fromHttpUrl(clientLogoutURI)
-					.queryParam("iss", this.issuer)
-					.queryParam("sid", sessionId)
-					.toUriString();
+			Set<String> logoutURIs = clients.stream()
+					.map(client -> client.getOIDCMetadata().getFrontChannelLogoutURI())
+					.filter(Objects::nonNull)
+					.map(URI::toString)
+					.collect(Collectors.toSet());
 			// @formatter:on
 
-			iframes.append(LOGOUT_PAGE_IFRAME_TEMPLATE.replace(":clientLogoutUrl", clientLogoutURI));
+			OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
+			String sessionId = authenticationDetails.getSessionId();
+
+			for (String clientLogoutURI : logoutURIs) {
+				// @formatter:off
+				clientLogoutURI = UriComponentsBuilder.fromHttpUrl(clientLogoutURI)
+						.queryParam("iss", this.properties.getIssuer())
+						.queryParam("sid", sessionId)
+						.toUriString();
+				// @formatter:on
+
+				iframes.append(LOGOUT_PAGE_IFRAME_TEMPLATE.replace(":clientLogoutUrl", clientLogoutURI));
+			}
 		}
 
 		return LOGOUT_PAGE_HTML_TEMPLATE.replace(":iframes", iframes.toString()).replace(":redirectURI", redirectURI);

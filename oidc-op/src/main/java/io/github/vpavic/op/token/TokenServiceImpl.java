@@ -128,11 +128,14 @@ public class TokenServiceImpl implements TokenService {
 				new Subject(principal), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
-		claimsSet.setSessionID(new SessionID(sessionId));
 		claimsSet.setAuthenticationTime(Date.from(authenticationTime));
 		claimsSet.setNonce(nonce);
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
+
+		if (this.properties.isFrontChannelLogoutEnabled()) {
+			claimsSet.setSessionID(new SessionID(sessionId));
+		}
 
 		if (userInfoMapper != null) {
 			UserInfo userInfo = userInfoMapper.map(principal, scope);
