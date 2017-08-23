@@ -51,6 +51,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.RefreshTokenContext;
 import io.github.vpavic.op.token.RefreshTokenStore;
 import io.github.vpavic.op.token.TokenService;
@@ -81,16 +82,20 @@ public class TokenEndpoint {
 
 	private final RefreshTokenStore refreshTokenStore;
 
+	private final ClaimsMapper claimsMapper;
+
 	public TokenEndpoint(ClientRepository clientRepository,
 			ClientAuthenticationVerifier<ClientRepository> clientAuthenticationVerifier,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
-			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore) {
+			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
+			ClaimsMapper claimsMapper) {
 		this.clientAuthenticationVerifier = Objects.requireNonNull(clientAuthenticationVerifier);
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authenticationManager = Objects.requireNonNull(authenticationManager);
 		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
+		this.claimsMapper = Objects.requireNonNull(claimsMapper);
 	}
 
 	@PostMapping
@@ -135,7 +140,8 @@ public class TokenEndpoint {
 			String sessionId = context.getSessionId();
 			Nonce nonce = context.getNonce();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
+					this.claimsMapper);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
 					nonce, null);
@@ -163,7 +169,8 @@ public class TokenEndpoint {
 			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
 			Scope scope = tokenRequest.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
+					this.claimsMapper);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
 			Tokens tokens = new Tokens(accessToken, refreshToken);
 
@@ -175,7 +182,7 @@ public class TokenEndpoint {
 			String principal = clientID.getValue();
 			Scope scope = tokenRequest.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope, null);
 			Tokens tokens = new Tokens(accessToken, null);
 
 			tokenResponse = new AccessTokenResponse(tokens);
@@ -189,7 +196,8 @@ public class TokenEndpoint {
 			ClientID clientID = context.getClientID();
 			Scope scope = context.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
+					this.claimsMapper);
 			Tokens tokens = new Tokens(accessToken, null);
 
 			tokenResponse = new AccessTokenResponse(tokens);

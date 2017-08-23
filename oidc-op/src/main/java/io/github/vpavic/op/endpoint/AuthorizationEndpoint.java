@@ -46,6 +46,7 @@ import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.config.OIDCAuthenticationDetails;
+import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
 
@@ -78,13 +79,16 @@ public class AuthorizationEndpoint {
 
 	private final TokenService tokenService;
 
+	private final ClaimsMapper claimsMapper;
+
 	private final UserInfoMapper userInfoMapper;
 
 	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService, UserInfoMapper userInfoMapper) {
+			TokenService tokenService, ClaimsMapper claimsMapper, UserInfoMapper userInfoMapper) {
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
+		this.claimsMapper = Objects.requireNonNull(claimsMapper);
 		this.userInfoMapper = Objects.requireNonNull(userInfoMapper);
 	}
 
@@ -143,7 +147,7 @@ public class AuthorizationEndpoint {
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
 			}
 
 			State sessionState = State.parse(sessionId);
@@ -166,7 +170,7 @@ public class AuthorizationEndpoint {
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
+				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
 			}
 
 			AuthorizationCode code = this.authorizationCodeService.create(context);

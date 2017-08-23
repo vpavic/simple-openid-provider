@@ -13,7 +13,7 @@ import io.github.vpavic.op.userinfo.UserInfoMapper;
 
 public interface TokenService {
 
-	AccessToken createAccessToken(String principal, ClientID clientID, Scope scope);
+	AccessToken createAccessToken(String principal, ClientID clientID, Scope scope, ClaimsMapper claimsMapper);
 
 	RefreshToken createRefreshToken(String principal, ClientID clientID, Scope scope);
 

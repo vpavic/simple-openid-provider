@@ -48,6 +48,7 @@ import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.config.OIDCAuthenticationDetails;
+import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
 
@@ -84,6 +85,9 @@ public class AuthorizationEndpointTests {
 
 	@MockBean
 	private TokenService tokenService;
+
+	@MockBean
+	private ClaimsMapper claimsMapper;
 
 	@MockBean
 	private UserInfoMapper userInfoMapper;
@@ -287,8 +291,8 @@ public class AuthorizationEndpointTests {
 		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				anyString(), any(Nonce.class), isNull())).willReturn(idToken);
 
@@ -326,8 +330,8 @@ public class AuthorizationEndpointTests {
 		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				anyString(), any(Nonce.class), isNull())).willReturn(idToken);
 
@@ -407,8 +411,8 @@ public class AuthorizationEndpointTests {
 
 		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				anyString(), any(Nonce.class), isNull())).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
@@ -447,8 +451,8 @@ public class AuthorizationEndpointTests {
 
 		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -468,8 +472,8 @@ public class AuthorizationEndpointTests {
 
 		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				anyString(), any(Nonce.class), isNull())).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);

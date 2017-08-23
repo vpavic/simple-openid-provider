@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -56,7 +57,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(String principal, ClientID clientID, Scope scope) {
+	public AccessToken createAccessToken(String principal, ClientID clientID, Scope scope, ClaimsMapper claimsMapper) {
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
@@ -69,16 +70,22 @@ public class TokenServiceImpl implements TokenService {
 		// @formatter:on
 
 		// @formatter:off
-		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+		JWTClaimsSet.Builder claimsSetBuiler = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
 				.subject(principal)
 				.audience(this.properties.getIssuer())
 				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
 				.issueTime(Date.from(issuedAt))
 				.jwtID(UUID.randomUUID().toString())
-				.claim(SCOPE_CLAIM, scope.toString())
-				.build();
+				.claim(SCOPE_CLAIM, scope.toString());
 		// @formatter:on
+
+		if (claimsMapper != null) {
+			Map<String, Object> claims = claimsMapper.map(principal);
+			claims.forEach(claimsSetBuiler::claim);
+		}
+
+		JWTClaimsSet claimsSet = claimsSetBuiler.build();
 
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
@@ -100,6 +107,7 @@ public class TokenServiceImpl implements TokenService {
 		Instant expiry = issuedAt.plus(refreshTokenValidityDuration);
 		RefreshTokenContext context = new RefreshTokenContext(principal, clientID, scope, expiry);
 		this.refreshTokenStore.save(refreshToken, context);
+
 		return refreshToken;
 	}
 
@@ -135,6 +143,7 @@ public class TokenServiceImpl implements TokenService {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());
 			RSASSASigner signer = new RSASSASigner((RSAKey) jwk);
 			idToken.sign(signer);
+
 			return idToken;
 		}
 		catch (ParseException | JOSEException e) {
