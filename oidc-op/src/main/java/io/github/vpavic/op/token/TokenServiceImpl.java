@@ -21,7 +21,6 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
-import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
@@ -30,11 +29,12 @@ import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.key.KeyService;
-import io.github.vpavic.op.userinfo.ClaimsMapper;
+import io.github.vpavic.op.userinfo.UserInfoMapper;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -47,11 +47,14 @@ public class TokenServiceImpl implements TokenService {
 
 	private final RefreshTokenStore refreshTokenStore;
 
+	private final UserInfoMapper userInfoMapper;
+
 	public TokenServiceImpl(OpenIdProviderProperties properties, KeyService keyService,
-			RefreshTokenStore refreshTokenStore) {
+			RefreshTokenStore refreshTokenStore, UserInfoMapper userInfoMapper) {
 		this.properties = properties;
 		this.keyService = Objects.requireNonNull(keyService);
 		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
+		this.userInfoMapper = Objects.requireNonNull(userInfoMapper);
 	}
 
 	@Override
@@ -104,7 +107,7 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
-			String sessionId, Nonce nonce, ClaimsMapper claimsMapper) {
+			String sessionId, Nonce nonce) {
 		Instant issuedAt = Instant.now();
 
 		JWK jwk = this.keyService.findActive();
@@ -115,8 +118,10 @@ public class TokenServiceImpl implements TokenService {
 				.build();
 		// @formatter:on
 
+		UserInfo userInfo = this.userInfoMapper.map(principal, scope);
+
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
-				new Subject(principal), Audience.create(clientID.getValue()),
+				userInfo.getSubject(), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
 
 		claimsSet.setSessionID(new SessionID(sessionId));
@@ -125,9 +130,7 @@ public class TokenServiceImpl implements TokenService {
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
 
-		if (claimsMapper != null) {
-			claimsMapper.map(claimsSet, scope);
-		}
+		userInfo.toJSONObject().forEach(claimsSet::setClaim);
 
 		try {
 			SignedJWT idToken = new SignedJWT(header, claimsSet.toJWTClaimsSet());

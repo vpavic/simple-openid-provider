@@ -138,7 +138,7 @@ public class TokenEndpoint {
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope);
 			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-					nonce, null);
+					nonce);
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
 			tokenResponse = new OIDCTokenResponse(tokens);

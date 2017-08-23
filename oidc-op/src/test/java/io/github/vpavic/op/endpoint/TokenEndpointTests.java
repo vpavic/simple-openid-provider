@@ -113,7 +113,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -141,7 +141,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -173,7 +173,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -205,7 +205,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class)))
 				.willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

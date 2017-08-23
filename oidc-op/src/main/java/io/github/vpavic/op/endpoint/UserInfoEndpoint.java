@@ -4,7 +4,6 @@ import java.util.Objects;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import net.minidev.json.JSONObject;
 import org.springframework.security.core.Authentication;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.vpavic.op.userinfo.ClaimsMapper;
+import io.github.vpavic.op.userinfo.UserInfoMapper;
 
 /**
  * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.
@@ -29,18 +28,19 @@ public class UserInfoEndpoint {
 
 	private static final String SCOPE_CLAIM = "scope";
 
-	private final ClaimsMapper claimsMapper;
+	private final UserInfoMapper userInfoMapper;
 
-	public UserInfoEndpoint(ClaimsMapper claimsMapper) {
-		this.claimsMapper = Objects.requireNonNull(claimsMapper);
+	public UserInfoEndpoint(UserInfoMapper userInfoMapper) {
+		this.userInfoMapper = Objects.requireNonNull(userInfoMapper);
 	}
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
 	public JSONObject getUserInfo(Authentication authentication) throws Exception {
-		JWTClaimsSet claims = (JWTClaimsSet) authentication.getDetails();
-		UserInfo userInfo = new UserInfo(new Subject(claims.getSubject()));
-		this.claimsMapper.map(userInfo, new Scope(claims.getStringClaim(SCOPE_CLAIM)));
+		String principal = authentication.getName();
+		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
+		Scope scope = new Scope(claimsSet.getStringClaim(SCOPE_CLAIM));
+		UserInfo userInfo = this.userInfoMapper.map(principal, scope);
 
 		return userInfo.toJSONObject();
 	}
