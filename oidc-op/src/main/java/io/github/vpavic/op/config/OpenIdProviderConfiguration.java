@@ -4,6 +4,8 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.ResponseMode;
@@ -18,6 +20,9 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.SubjectType;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,10 +39,15 @@ import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 @EnableConfigurationProperties(OpenIdProviderProperties.class)
 public class OpenIdProviderConfiguration {
 
+	private static final Logger logger = LoggerFactory.getLogger(OpenIdProviderConfiguration.class);
+
 	private final OpenIdProviderProperties properties;
 
-	public OpenIdProviderConfiguration(OpenIdProviderProperties properties) {
+	private final ObjectMapper objectMapper;
+
+	public OpenIdProviderConfiguration(OpenIdProviderProperties properties, ObjectProvider<ObjectMapper> objectMapper) {
 		this.properties = properties;
+		this.objectMapper = objectMapper.getObject();
 	}
 
 	@Bean
@@ -47,7 +57,7 @@ public class OpenIdProviderConfiguration {
 	}
 
 	@Bean
-	public OIDCProviderMetadata providerMetadata() {
+	public OIDCProviderMetadata providerMetadata() throws Exception {
 		OIDCProviderMetadata providerMetadata = new OIDCProviderMetadata(new Issuer(this.properties.getIssuer()),
 				Collections.singletonList(SubjectType.PUBLIC), createURI(KeysEndpoint.PATH_MAPPING));
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
@@ -73,6 +83,10 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
 		providerMetadata.setSupportsFrontChannelLogout(this.properties.isFrontChannelLogoutEnabled());
 		providerMetadata.setSupportsFrontChannelLogoutSession(this.properties.isFrontChannelLogoutEnabled());
+
+		logger.info("Initializing OpenID Provider with configuration:\n{}", this.objectMapper
+				.writer(SerializationFeature.INDENT_OUTPUT).writeValueAsString(providerMetadata.toJSONObject()));
+
 		return providerMetadata;
 	}
 
