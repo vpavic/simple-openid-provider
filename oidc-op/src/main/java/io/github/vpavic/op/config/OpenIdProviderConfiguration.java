@@ -80,7 +80,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setGrantTypes(Collections.singletonList(GrantType.AUTHORIZATION_CODE));
 		providerMetadata.setCodeChallengeMethods(Arrays.asList(CodeChallengeMethod.PLAIN, CodeChallengeMethod.S256));
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
-				ClientAuthenticationMethod.CLIENT_SECRET_POST));
+				ClientAuthenticationMethod.CLIENT_SECRET_POST, ClientAuthenticationMethod.NONE));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
 		providerMetadata
 				.setClaims(Arrays.asList("iss", "sub", "aud", "exp", "iat", "auth_time", "nonce", "amr", "azp"));
