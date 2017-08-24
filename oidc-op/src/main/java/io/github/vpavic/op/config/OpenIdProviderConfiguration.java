@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
-import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
+import io.github.vpavic.op.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
@@ -64,7 +64,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(
-				this.properties.isSessionManagementEnabled() ? createURI(CheckSessionEndpoint.PATH_MAPPING) : null);
+				this.properties.isSessionManagementEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);
 		providerMetadata.setEndSessionEndpointURI(this.properties.isSessionManagementOrFrontChannelLogoutEnabled()
 				? createURI(LogoutEndpoint.PATH_MAPPING)
 				: null);

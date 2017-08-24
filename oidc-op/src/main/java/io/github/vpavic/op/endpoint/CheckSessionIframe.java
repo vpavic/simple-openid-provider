@@ -19,8 +19,8 @@ import org.springframework.web.util.UriComponentsBuilder;
  */
 @Controller
 @ConditionalOnProperty(prefix = "oidc.op", name = "session-management-enabled", havingValue = "true")
-@RequestMapping(path = CheckSessionEndpoint.PATH_MAPPING)
-public class CheckSessionEndpoint {
+@RequestMapping(path = CheckSessionIframe.PATH_MAPPING)
+public class CheckSessionIframe {
 
 	public static final String PATH_MAPPING = "/oauth2/check-session";
 

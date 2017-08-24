@@ -22,7 +22,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
-import io.github.vpavic.op.endpoint.CheckSessionEndpoint;
+import io.github.vpavic.op.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LoginEndpoint;
@@ -73,7 +73,7 @@ public class SecurityConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.antMatcher(CheckSessionEndpoint.PATH_MAPPING)
+				.antMatcher(CheckSessionIframe.PATH_MAPPING)
 				.authorizeRequests()
 					.anyRequest().permitAll()
 					.and()
