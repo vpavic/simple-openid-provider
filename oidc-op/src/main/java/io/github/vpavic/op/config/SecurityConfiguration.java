@@ -1,6 +1,5 @@
 package io.github.vpavic.op.config;
 
-import java.time.Instant;
 import java.util.Collections;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -30,6 +29,9 @@ import io.github.vpavic.op.endpoint.LogoutEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
+import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
+import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
+import io.github.vpavic.op.security.web.authentication.logout.OpenIdLogoutSuccessHandler;
 
 @Configuration
 public class SecurityConfiguration {
@@ -112,10 +114,10 @@ public class SecurityConfiguration {
 					.and()
 				.formLogin()
 					.loginPage(LoginEndpoint.PATH_MAPPING)
-					.authenticationDetailsSource(context -> new OIDCAuthenticationDetails(context, Instant.now()))
+					.authenticationDetailsSource(OpenIdWebAuthenticationDetails::new)
 					.and()
 				.logout().logoutSuccessHandler(
-						new OIDCLogoutSuccessHandler(this.properties, this.clientRepository));
+						new OpenIdLogoutSuccessHandler(this.properties, this.clientRepository));
 			// @formatter:on
 		}
 

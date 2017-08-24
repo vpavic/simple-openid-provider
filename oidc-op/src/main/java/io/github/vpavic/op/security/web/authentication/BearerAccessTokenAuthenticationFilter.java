@@ -1,4 +1,4 @@
-package io.github.vpavic.op.config;
+package io.github.vpavic.op.security.web.authentication;
 
 import java.io.IOException;
 import java.time.Instant;

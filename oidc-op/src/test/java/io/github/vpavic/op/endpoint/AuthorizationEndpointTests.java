@@ -47,7 +47,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
-import io.github.vpavic.op.config.OIDCAuthenticationDetails;
+import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
@@ -532,7 +532,7 @@ public class AuthorizationEndpointTests {
 				AuthorityUtils.createAuthorityList(authorities));
 
 		TestingAuthenticationToken authentication = new TestingAuthenticationToken(principal, password, authorities);
-		authentication.setDetails(new OIDCAuthenticationDetails(new MockHttpServletRequest(), Instant.EPOCH));
+		authentication.setDetails(new OpenIdWebAuthenticationDetails(new MockHttpServletRequest()));
 
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
 		context.setAuthentication(authentication);

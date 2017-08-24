@@ -1,4 +1,4 @@
-package io.github.vpavic.op.config;
+package io.github.vpavic.op.security.web.authentication.logout;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,8 +20,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.op.client.ClientRepository;
+import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 
-public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
+public class OpenIdLogoutSuccessHandler implements LogoutSuccessHandler {
 
 	private static final String REDIRECT_URI_PARAMETER = "post_logout_redirect_uri";
 
@@ -51,7 +53,7 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 	private final ClientRepository clientRepository;
 
-	public OIDCLogoutSuccessHandler(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	public OpenIdLogoutSuccessHandler(OpenIdProviderProperties properties, ClientRepository clientRepository) {
 		this.properties = properties;
 		this.clientRepository = Objects.requireNonNull(clientRepository);
 	}
@@ -109,7 +111,7 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 					.collect(Collectors.toSet());
 			// @formatter:on
 
-			OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
+			OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication.getDetails();
 			String sessionId = authenticationDetails.getSessionId();
 
 			for (String clientLogoutURI : logoutURIs) {

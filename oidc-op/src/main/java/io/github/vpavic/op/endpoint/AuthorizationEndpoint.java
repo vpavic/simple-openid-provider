@@ -45,8 +45,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
-import io.github.vpavic.op.config.OIDCAuthenticationDetails;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
@@ -120,7 +120,7 @@ public class AuthorizationEndpoint {
 		}
 
 		String principal = authentication.getName();
-		OIDCAuthenticationDetails authenticationDetails = (OIDCAuthenticationDetails) authentication.getDetails();
+		OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication.getDetails();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
 		String sessionId = request.getSession().getId();
 		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;

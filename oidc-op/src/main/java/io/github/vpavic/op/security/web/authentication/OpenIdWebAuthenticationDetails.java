@@ -1,4 +1,4 @@
-package io.github.vpavic.op.config;
+package io.github.vpavic.op.security.web.authentication;
 
 import java.time.Instant;
 
@@ -6,13 +6,13 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
-public class OIDCAuthenticationDetails extends WebAuthenticationDetails {
+public class OpenIdWebAuthenticationDetails extends WebAuthenticationDetails {
 
 	private final Instant authenticationTime;
 
-	public OIDCAuthenticationDetails(HttpServletRequest request, Instant authenticationTime) {
+	public OpenIdWebAuthenticationDetails(HttpServletRequest request) {
 		super(request);
-		this.authenticationTime = authenticationTime;
+		this.authenticationTime = Instant.now();
 	}
 
 	public Instant getAuthenticationTime() {

@@ -34,6 +34,7 @@ import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
+import io.github.vpavic.op.oauth2.sdk.auth.verifier.ClientRepositoryClientCredentialsSelector;
 
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)

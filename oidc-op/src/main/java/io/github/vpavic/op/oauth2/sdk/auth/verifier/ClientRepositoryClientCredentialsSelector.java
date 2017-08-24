@@ -1,4 +1,4 @@
-package io.github.vpavic.op.config;
+package io.github.vpavic.op.oauth2.sdk.auth.verifier;
 
 import java.security.PublicKey;
 import java.util.Collections;
