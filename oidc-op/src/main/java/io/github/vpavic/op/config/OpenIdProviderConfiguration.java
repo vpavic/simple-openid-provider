@@ -82,6 +82,8 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
+		providerMetadata
+				.setClaims(Arrays.asList("iss", "sub", "aud", "exp", "iat", "auth_time", "nonce", "amr", "azp"));
 		providerMetadata.setSupportsFrontChannelLogout(this.properties.isFrontChannelLogoutEnabled());
 		providerMetadata.setSupportsFrontChannelLogoutSession(this.properties.isFrontChannelLogoutEnabled());
 
