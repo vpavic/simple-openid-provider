@@ -18,7 +18,6 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
-import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
@@ -80,9 +79,6 @@ public class TokenEndpointTests {
 	private ClientRepository clientRepository;
 
 	@MockBean
-	private ClientAuthenticationVerifier<ClientRepository> clientAuthenticationVerifier;
-
-	@MockBean
 	private AuthorizationCodeService authorizationCodeService;
 
 	@MockBean
@@ -113,6 +109,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -141,6 +139,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -154,9 +154,6 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkcePlain_isOk() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(ClientAuthenticationMethod.NONE));
-
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
@@ -173,6 +170,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientID, null, ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -186,9 +185,6 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkceS256_isOk() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
-				.willReturn(testClient(ClientAuthenticationMethod.NONE));
-
 		ClientID clientID = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
@@ -205,6 +201,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientID, null, ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -226,6 +224,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull(), any(ClaimsMapper.class)))
@@ -247,6 +247,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull(), any(ClaimsMapper.class)))
@@ -267,6 +269,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull(), isNull()))
 				.willReturn(accessToken);
 
@@ -286,6 +290,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull(), isNull()))
 				.willReturn(accessToken);
 
@@ -305,6 +311,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
@@ -327,6 +335,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
@@ -343,13 +353,12 @@ public class TokenEndpointTests {
 				.andExpect(status().isBadRequest());
 	}
 
-	private static OIDCClientInformation testClient(ClientAuthenticationMethod authMethod) {
-		ClientID clientID = new ClientID("test-client");
+	private static OIDCClientInformation client(ClientID clientID, Secret secret,
+			ClientAuthenticationMethod authMethod) {
 		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
 		clientMetadata.applyDefaults();
 		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
 		clientMetadata.setTokenEndpointAuthMethod(authMethod);
-		Secret secret = new Secret("test-secret");
 
 		return new OIDCClientInformation(clientID, new Date(), clientMetadata, secret);
 	}

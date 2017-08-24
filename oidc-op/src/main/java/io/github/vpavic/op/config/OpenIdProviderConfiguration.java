@@ -12,8 +12,6 @@ import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
-import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
-import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
@@ -27,14 +25,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
-import io.github.vpavic.op.oauth2.sdk.auth.verifier.ClientRepositoryClientCredentialsSelector;
 
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)
@@ -49,12 +45,6 @@ public class OpenIdProviderConfiguration {
 	public OpenIdProviderConfiguration(OpenIdProviderProperties properties, ObjectProvider<ObjectMapper> objectMapper) {
 		this.properties = properties;
 		this.objectMapper = objectMapper.getObject();
-	}
-
-	@Bean
-	public ClientAuthenticationVerifier<ClientRepository> clientAuthenticationVerifier() {
-		return new ClientAuthenticationVerifier<>(new ClientRepositoryClientCredentialsSelector(), null,
-				Collections.singleton(new Audience(this.properties.getIssuer())));
 	}
 
 	@Bean
