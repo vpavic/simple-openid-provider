@@ -179,8 +179,7 @@ public class AuthorizationEndpointTests {
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age="
-						+ Integer.MAX_VALUE).session(this.session);
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=60").session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrl("http://example.com?code={code}", authorizationCode.getValue()));
 	}
@@ -190,8 +189,10 @@ public class AuthorizationEndpointTests {
 		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
+		Thread.sleep(1000);
+
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=60")
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=1")
 						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound()).andExpect(redirectedUrl("/login"));
 	}
