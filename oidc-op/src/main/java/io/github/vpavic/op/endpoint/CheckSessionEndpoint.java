@@ -99,11 +99,8 @@ public class CheckSessionEndpoint {
 
 	private String generateCheckSessionPageHtml(HttpServletRequest request) {
 		// @formatter:off
-		String baseURI = UriComponentsBuilder.newInstance()
-				.scheme(request.getScheme())
-				.host(request.getServerName())
-				.port(request.getServerPort())
-				.path(request.getContextPath())
+		String baseURI = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString())
+				.replacePath(null)
 				.toUriString();
 		// @formatter:on
 

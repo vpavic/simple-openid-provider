@@ -129,11 +129,9 @@ public class OIDCLogoutSuccessHandler implements LogoutSuccessHandler {
 
 	private static String defaultRedirectURI(HttpServletRequest request) {
 		// @formatter:off
-		return UriComponentsBuilder.newInstance()
-				.scheme(request.getScheme())
-				.host(request.getServerName())
-				.port(request.getServerPort())
-				.pathSegment(request.getContextPath(), "login")
+		return UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString())
+				.replacePath(request.getContextPath())
+				.path("login")
 				.query("logout")
 				.toUriString();
 		// @formatter:on
