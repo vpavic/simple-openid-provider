@@ -160,6 +160,8 @@ public class SecurityConfiguration {
 					.and()
 				.cors()
 					.and()
+				.csrf()
+					.disable()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 					.and()
