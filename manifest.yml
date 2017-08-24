@@ -3,5 +3,5 @@ applications:
 - name: nimbus-oidc-provider
   random-route: true
   path: oidc-op/build/libs/oidc-op.jar
-  memory: 512M
+  memory: 384M
   disk_quota: 256M
