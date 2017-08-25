@@ -27,6 +27,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
@@ -58,6 +59,10 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public AccessToken createAccessToken(String principal, ClientID clientID, Scope scope, ClaimsMapper claimsMapper) {
+		Objects.requireNonNull(principal, "Principal must not be null");
+		Objects.requireNonNull(clientID, "ClientID must not be null");
+		Objects.requireNonNull(scope, "Scope must not be null");
+
 		Instant issuedAt = Instant.now();
 		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
 
@@ -100,6 +105,14 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public RefreshToken createRefreshToken(String principal, ClientID clientID, Scope scope) {
+		Objects.requireNonNull(principal, "Principal must not be null");
+		Objects.requireNonNull(clientID, "ClientID must not be null");
+		Objects.requireNonNull(scope, "Scope must not be null");
+
+		if (!scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OFFLINE_ACCESS + "' is required");
+		}
+
 		Instant issuedAt = Instant.now();
 		Duration refreshTokenValidityDuration = this.properties.getRefreshTokenValidityDuration();
 
@@ -114,6 +127,15 @@ public class TokenServiceImpl implements TokenService {
 	@Override
 	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
 			String sessionId, Nonce nonce, UserInfoMapper userInfoMapper) {
+		Objects.requireNonNull(principal, "Principal must not be null");
+		Objects.requireNonNull(clientID, "ClientID must not be null");
+		Objects.requireNonNull(scope, "Scope must not be null");
+		Objects.requireNonNull(authenticationTime, "Authentication time must not be null");
+
+		if (!scope.contains(OIDCScopeValue.OPENID)) {
+			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OPENID + "' is required");
+		}
+
 		Instant issuedAt = Instant.now();
 
 		JWK jwk = this.keyService.findActive();
