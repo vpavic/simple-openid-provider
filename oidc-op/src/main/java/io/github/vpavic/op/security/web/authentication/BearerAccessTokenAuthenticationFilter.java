@@ -20,7 +20,9 @@ import com.nimbusds.jose.proc.SimpleSecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,8 +35,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.github.vpavic.op.key.KeyService;
 
 public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
-
-	private static final String AUTHORIZATION_HEADER = "Authorization";
 
 	private static final String SCOPE_CLAIM = "scope";
 
@@ -57,14 +57,15 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		try {
-			BearerAccessToken accessToken = BearerAccessToken.parse(request.getHeader(AUTHORIZATION_HEADER));
+			HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
 			List<JWK> keys = this.keyService.findAll();
 
 			ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 			JWSKeySelector<SimpleSecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,
 					new ImmutableJWKSet<>(new JWKSet(keys)));
 			jwtProcessor.setJWSKeySelector(keySelector);
-			JWTClaimsSet claimsSet = jwtProcessor.process(accessToken.getValue(), null);
+			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
 
 			if (!this.issuer.equals(claimsSet.getIssuer())) {
 				throw new Exception("Invalid issuer");
