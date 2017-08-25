@@ -39,6 +39,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -149,7 +150,12 @@ public class TokenEndpoint {
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
 					this.claimsMapper);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
+			RefreshToken refreshToken = null;
+
+			if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+				refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
+			}
+
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
 					nonce, null);
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
@@ -178,7 +184,12 @@ public class TokenEndpoint {
 
 			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
 					this.claimsMapper);
-			RefreshToken refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
+			RefreshToken refreshToken = null;
+
+			if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+				refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
+			}
+
 			Tokens tokens = new Tokens(accessToken, refreshToken);
 
 			tokenResponse = new AccessTokenResponse(tokens);

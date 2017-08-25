@@ -220,7 +220,7 @@ public class TokenEndpointTests {
 
 		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
-				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")));
+				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")), new Scope("test"));
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
@@ -228,8 +228,8 @@ public class TokenEndpointTests {
 				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull(), any(ClaimsMapper.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -243,7 +243,7 @@ public class TokenEndpointTests {
 
 		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
-				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")));
+				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")), new Scope("test"));
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
@@ -251,8 +251,8 @@ public class TokenEndpointTests {
 				.willReturn(client(clientAuth.getClientID(), clientAuth.getClientSecret(), clientAuth.getMethod()));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), isNull(), any(ClaimsMapper.class)))
-				.willReturn(accessToken);
+		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
+				any(ClaimsMapper.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
