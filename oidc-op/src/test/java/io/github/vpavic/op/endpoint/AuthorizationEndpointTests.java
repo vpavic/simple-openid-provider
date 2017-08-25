@@ -60,6 +60,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -166,8 +167,8 @@ public class AuthorizationEndpointTests {
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&prompt=none")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString(error.getCode())));
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
 	}
 
 	@Test
@@ -179,7 +180,8 @@ public class AuthorizationEndpointTests {
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=60").session(this.session);
+				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=60")
+						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrl("http://example.com?code={code}", authorizationCode.getValue()));
 	}
@@ -207,8 +209,8 @@ public class AuthorizationEndpointTests {
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString(error.getCode())));
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
 	}
 
 	@Test
@@ -235,8 +237,8 @@ public class AuthorizationEndpointTests {
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=test&response_type=code&client_id=test-client&redirect_uri=http://example.com")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString(error.getCode())));
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
 	}
 
 	@Test
@@ -349,10 +351,10 @@ public class AuthorizationEndpointTests {
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
-				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com")
+				"/oauth2/authorize?response_type=id_token token&client_id=test-client&redirect_uri=http://example.com")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString(error.getCode())));
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
 	}
 
 	@Test
@@ -396,8 +398,8 @@ public class AuthorizationEndpointTests {
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString(error.getCode())));
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
 	}
 
 	@Test
@@ -521,8 +523,8 @@ public class AuthorizationEndpointTests {
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&client_id=test-client&redirect_uri=http://example.com")
 						.session(this.session);
-		this.mvc.perform(request).andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString(error.getCode())));
+		this.mvc.perform(request).andExpect(status().isFound())
+				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
 	}
 
 	private static SecurityContext createSecurityContext() {

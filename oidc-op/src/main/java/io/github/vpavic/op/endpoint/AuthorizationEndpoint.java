@@ -13,6 +13,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
@@ -21,6 +22,7 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.Nonce;
@@ -120,7 +122,8 @@ public class AuthorizationEndpoint {
 		}
 
 		String principal = authentication.getName();
-		OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication.getDetails();
+		OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication
+				.getDetails();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
 		String sessionId = request.getSession().getId();
 		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;
@@ -187,19 +190,27 @@ public class AuthorizationEndpoint {
 
 	private AuthenticationRequest resolveRequest(HttpServletRequest request, Authentication authentication)
 			throws GeneralException {
-		AuthenticationRequest authRequest = AuthenticationRequest.parse(request.getQueryString());
+		AuthenticationRequest authRequest;
+
+		try {
+			authRequest = AuthenticationRequest.parse(request.getQueryString());
+		}
+		catch (ParseException e) {
+			ClientID clientID = e.getClientID();
+			URI redirectionURI = e.getRedirectionURI();
+
+			OIDCClientInformation client = resolveClient(clientID);
+			validateRedirectionURI(redirectionURI, client);
+
+			throw e;
+		}
+
 		validateRequest(authRequest, authentication);
 
 		return authRequest;
 	}
 
-	private void validateRequest(AuthenticationRequest request, Authentication authentication) throws GeneralException {
-		ResponseType responseType = request.getResponseType();
-		ClientID clientID = request.getClientID();
-		URI redirectionURI = request.getRedirectionURI();
-		Scope scope = request.getScope();
-		Prompt prompt = request.getPrompt();
-
+	private OIDCClientInformation resolveClient(ClientID clientID) throws GeneralException {
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
 		if (client == null) {
@@ -207,46 +218,74 @@ public class AuthorizationEndpoint {
 					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"client_id\" parameter: " + clientID));
 		}
 
-		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
+		return client;
+	}
 
-		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
+	private void validateRedirectionURI(URI redirectionURI, OIDCClientInformation client) throws GeneralException {
+		Set<URI> registeredRedirectionURIs = client.getOIDCMetadata().getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectionURI)) {
 			throw new GeneralException(OAuth2Error.INVALID_REQUEST
 					.setDescription("Invalid \"redirect_uri\" parameter: " + redirectionURI));
 		}
+	}
+
+	private void validateRequest(AuthenticationRequest request, Authentication authentication) throws GeneralException {
+		ResponseType responseType = request.getResponseType();
+		ResponseMode responseMode = request.impliedResponseMode();
+		ClientID clientID = request.getClientID();
+		URI redirectionURI = request.getRedirectionURI();
+		Scope scope = request.getScope();
+		State state = request.getState();
+		Prompt prompt = request.getPrompt();
+
+		OIDCClientInformation client = resolveClient(clientID);
+		validateRedirectionURI(redirectionURI, client);
+		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
 		Scope registeredScope = clientMetadata.getScope();
 
 		if (registeredScope == null || !registeredScope.toStringList().containsAll(scope.toStringList())) {
-			throw new GeneralException(OAuth2Error.INVALID_SCOPE);
+			ErrorObject error = OAuth2Error.INVALID_SCOPE;
+			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
 
 		if (!clientMetadata.getResponseTypes().contains(responseType)) {
-			throw new GeneralException(OAuth2Error.UNAUTHORIZED_CLIENT);
+			ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
+			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
 
 		if (prompt != null && prompt.contains(Prompt.Type.NONE) && authentication == null) {
-			throw new GeneralException(OIDCError.LOGIN_REQUIRED);
+			ErrorObject error = OIDCError.LOGIN_REQUIRED;
+			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
 	}
 
 	@ExceptionHandler(GeneralException.class)
 	public ModelAndView handleGeneralException(GeneralException e) {
-		ModelMap model = new ModelMap();
-		model.addAttribute("timestamp", new Date());
+		URI redirectionURI = e.getRedirectionURI();
 
-		ErrorObject error = e.getErrorObject();
+		if (redirectionURI == null) {
+			ErrorObject error = e.getErrorObject();
 
-		if (error == null) {
-			error = OAuth2Error.INVALID_REQUEST;
+			if (error == null) {
+				error = OAuth2Error.INVALID_REQUEST;
+			}
+
+			ModelMap model = new ModelMap();
+			model.addAttribute("timestamp", new Date());
+			model.addAttribute("status", error.getHTTPStatusCode());
+			model.addAttribute("error", error.getCode());
+			model.addAttribute("message", e.getMessage());
+
+			return new ModelAndView(ERROR_VIEW_NAME, model, HttpStatus.valueOf(error.getHTTPStatusCode()));
 		}
+		else {
+			AuthenticationErrorResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
+					e.getErrorObject(), e.getState(), e.getResponseMode());
 
-		model.addAttribute("status", error.getHTTPStatusCode());
-		model.addAttribute("error", error.getCode());
-		model.addAttribute("message", e.getMessage());
-
-		return new ModelAndView(ERROR_VIEW_NAME, model, HttpStatus.valueOf(error.getHTTPStatusCode()));
+			return new ModelAndView("redirect:" + authResponse.toURI());
+		}
 	}
 
 }
