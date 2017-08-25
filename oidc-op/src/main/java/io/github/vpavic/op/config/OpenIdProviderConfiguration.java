@@ -67,7 +67,8 @@ public class OpenIdProviderConfiguration {
 				new ResponseType(ResponseType.Value.CODE, ResponseType.Value.TOKEN),
 				new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN)));
 		providerMetadata.setResponseModes(Arrays.asList(ResponseMode.QUERY, ResponseMode.FRAGMENT));
-		providerMetadata.setGrantTypes(Collections.singletonList(GrantType.AUTHORIZATION_CODE));
+		providerMetadata.setGrantTypes(Arrays.asList(GrantType.AUTHORIZATION_CODE, GrantType.IMPLICIT,
+				GrantType.REFRESH_TOKEN, GrantType.PASSWORD, GrantType.CLIENT_CREDENTIALS));
 		providerMetadata.setCodeChallengeMethods(Arrays.asList(CodeChallengeMethod.PLAIN, CodeChallengeMethod.S256));
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST, ClientAuthenticationMethod.NONE));
