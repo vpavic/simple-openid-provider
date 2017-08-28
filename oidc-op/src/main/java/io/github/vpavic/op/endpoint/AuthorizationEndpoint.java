@@ -41,8 +41,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.view.RedirectView;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
@@ -72,6 +70,8 @@ public class AuthorizationEndpoint {
 
 	private static final String LOGIN_URL = "/login";
 
+	private static final String FORM_POST_VIEW_NAME = "form-post";
+
 	private static final String ERROR_VIEW_NAME = "error";
 
 	private static final RequestCache requestCache = new HttpSessionRequestCache();
@@ -100,7 +100,7 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public View authorize(HttpServletRequest request, Authentication authentication) throws Exception {
+	public ModelAndView authorize(HttpServletRequest request, Authentication authentication) throws Exception {
 		AuthenticationRequest authRequest = resolveRequest(request, authentication);
 
 		ResponseType responseType = authRequest.getResponseType();
@@ -118,7 +118,7 @@ public class AuthorizationEndpoint {
 		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
 			requestCache.saveRequest(request, null);
 
-			return new RedirectView(LOGIN_URL);
+			return new ModelAndView("redirect:" + LOGIN_URL);
 		}
 
 		String principal = authentication.getName();
@@ -131,7 +131,7 @@ public class AuthorizationEndpoint {
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
 			requestCache.saveRequest(request, null);
 
-			return new RedirectView(LOGIN_URL);
+			return new ModelAndView("redirect:" + LOGIN_URL);
 		}
 
 		AuthenticationSuccessResponse authResponse;
@@ -184,7 +184,17 @@ public class AuthorizationEndpoint {
 					sessionState, responseMode);
 		}
 
-		return new RedirectView(authResponse.toURI().toString());
+		ModelAndView modelAndView;
+
+		if (!responseMode.equals(ResponseMode.FORM_POST)) {
+			modelAndView = new ModelAndView("redirect:" + authResponse.toURI());
+		}
+		else {
+			ModelMap model = new ModelMap("authResponse", authResponse);
+			modelAndView = new ModelAndView(FORM_POST_VIEW_NAME, model);
+		}
+
+		return modelAndView;
 	}
 
 	private AuthenticationRequest resolveRequest(HttpServletRequest request, Authentication authentication)
