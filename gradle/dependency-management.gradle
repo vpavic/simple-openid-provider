@@ -2,7 +2,7 @@ apply plugin: 'io.spring.dependency-management'
 
 dependencyManagement {
 	dependencies {
-		dependency 'com.nimbusds:nimbus-jose-jwt:4.41.1'
+		dependency 'com.nimbusds:nimbus-jose-jwt:5.1'
 		dependency 'com.nimbusds:oauth2-oidc-sdk:5.35'
 		dependency 'org.webjars:bootstrap:3.3.7-1'
 		dependency 'org.webjars:cryptojs:3.1.2'
