@@ -14,6 +14,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class JdbcClientRepository implements ClientRepository {
@@ -37,6 +38,7 @@ public class JdbcClientRepository implements ClientRepository {
 	}
 
 	@Override
+	@Transactional
 	public void save(OIDCClientInformation client) {
 		String id = client.getID().getValue();
 		String content = client.toJSONObject().toString();
@@ -55,6 +57,7 @@ public class JdbcClientRepository implements ClientRepository {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public OIDCClientInformation findByClientId(ClientID clientID) {
 		String id = clientID.getValue();
 
@@ -67,11 +70,13 @@ public class JdbcClientRepository implements ClientRepository {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<OIDCClientInformation> findAll() {
 		return this.jdbcOperations.query(SELECT_ALL_STATEMENT, clientMapper);
 	}
 
 	@Override
+	@Transactional
 	public void deleteByClientId(ClientID clientID) {
 		String id = clientID.getValue();
 

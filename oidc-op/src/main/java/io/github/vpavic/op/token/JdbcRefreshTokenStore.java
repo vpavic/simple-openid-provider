@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class JdbcRefreshTokenStore implements RefreshTokenStore {
@@ -37,6 +38,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	}
 
 	@Override
+	@Transactional
 	public void save(RefreshToken refreshToken, RefreshTokenContext context) {
 		this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
 			ps.setString(1, refreshToken.getValue());
@@ -48,6 +50,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public RefreshTokenContext load(RefreshToken refreshToken) throws GeneralException {
 		try {
 			RefreshTokenContext context = this.jdbcOperations.queryForObject(SELECT_STATEMENT,
@@ -65,6 +68,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	}
 
 	@Override
+	@Transactional
 	public void revoke(RefreshToken refreshToken) {
 		this.jdbcOperations.update(DELETE_STATEMENT, ps -> ps.setString(1, refreshToken.getValue()));
 	}
