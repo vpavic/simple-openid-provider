@@ -17,6 +17,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Audience;
@@ -29,7 +30,9 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
+import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
@@ -43,6 +46,8 @@ import io.github.vpavic.op.userinfo.UserInfoMapper;
 public class TokenServiceImpl implements TokenService {
 
 	private static final String SCOPE_CLAIM = "scope";
+
+	private static final JWSAlgorithm jwsAlgorithm = JWSAlgorithm.RS256;
 
 	private final OpenIdProviderProperties properties;
 
@@ -69,7 +74,7 @@ public class TokenServiceImpl implements TokenService {
 		JWK jwk = this.keyService.findActive();
 
 		// @formatter:off
-		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+		JWSHeader header = new JWSHeader.Builder(jwsAlgorithm)
 				.keyID(jwk.getKeyID())
 				.build();
 		// @formatter:on
@@ -126,7 +131,8 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
-			String sessionId, Nonce nonce, UserInfoMapper userInfoMapper) {
+			String sessionId, Nonce nonce, AccessToken accessToken, AuthorizationCode code,
+			UserInfoMapper userInfoMapper) {
 		Objects.requireNonNull(principal, "Principal must not be null");
 		Objects.requireNonNull(clientID, "ClientID must not be null");
 		Objects.requireNonNull(scope, "Scope must not be null");
@@ -141,7 +147,7 @@ public class TokenServiceImpl implements TokenService {
 		JWK jwk = this.keyService.findActive();
 
 		// @formatter:off
-		JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+		JWSHeader header = new JWSHeader.Builder(jwsAlgorithm)
 				.keyID(jwk.getKeyID())
 				.build();
 		// @formatter:on
@@ -157,6 +163,14 @@ public class TokenServiceImpl implements TokenService {
 
 		if (this.properties.isFrontChannelLogoutEnabled()) {
 			claimsSet.setSessionID(new SessionID(sessionId));
+		}
+
+		if (accessToken != null) {
+			claimsSet.setAccessTokenHash(AccessTokenHash.compute(accessToken, jwsAlgorithm));
+		}
+
+		if (code != null) {
+			claimsSet.setCodeHash(CodeHash.compute(code, jwsAlgorithm));
 		}
 
 		if (userInfoMapper != null) {

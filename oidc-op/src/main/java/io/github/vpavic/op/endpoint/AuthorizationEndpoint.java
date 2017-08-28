@@ -148,15 +148,14 @@ public class AuthorizationEndpoint {
 		}
 		// Implicit Flow
 		else if (!responseType.contains(ResponseType.Value.CODE)) {
-			UserInfoMapper userInfoMapper = (responseType.size() == 1) ? this.userInfoMapper : null;
-
-			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-					nonce, userInfoMapper);
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
 				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
 			}
+
+			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
+					nonce, accessToken, null, (responseType.size() == 1) ? this.userInfoMapper : null);
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
 					sessionState, responseMode);
@@ -166,12 +165,7 @@ public class AuthorizationEndpoint {
 			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
 					authenticationTime, sessionId, codeChallenge, codeChallengeMethod, nonce);
 
-			JWT idToken = null;
-
-			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-				idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-						nonce, null);
-			}
+			AuthorizationCode code = this.authorizationCodeService.create(context);
 
 			AccessToken accessToken = null;
 
@@ -179,7 +173,12 @@ public class AuthorizationEndpoint {
 				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
 			}
 
-			AuthorizationCode code = this.authorizationCodeService.create(context);
+			JWT idToken = null;
+
+			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
+				idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
+						nonce, accessToken, code, null);
+			}
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
 					sessionState, responseMode);

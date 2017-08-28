@@ -22,6 +22,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
@@ -115,7 +116,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull(), any(AccessToken.class), isNull(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -145,7 +146,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull(), any(AccessToken.class), isNull(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -176,7 +177,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull(), any(AccessToken.class), isNull(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -207,7 +208,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), isNull(), isNull())).willReturn(idToken);
+				anyString(), isNull(), any(AccessToken.class), isNull(), isNull())).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

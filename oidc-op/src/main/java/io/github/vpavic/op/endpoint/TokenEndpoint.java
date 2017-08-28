@@ -157,7 +157,7 @@ public class TokenEndpoint {
 			}
 
 			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-					nonce, null);
+					nonce, accessToken, null, null);
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
 			tokenResponse = new OIDCTokenResponse(tokens);

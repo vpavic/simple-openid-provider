@@ -3,6 +3,7 @@ package io.github.vpavic.op.token;
 import java.time.Instant;
 
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -18,6 +19,6 @@ public interface TokenService {
 	RefreshToken createRefreshToken(String principal, ClientID clientID, Scope scope);
 
 	JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime, String sessionId,
-			Nonce nonce, UserInfoMapper userInfoMapper);
+			Nonce nonce, AccessToken accessToken, AuthorizationCode code, UserInfoMapper userInfoMapper);
 
 }
