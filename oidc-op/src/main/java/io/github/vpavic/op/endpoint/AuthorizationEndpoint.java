@@ -208,8 +208,10 @@ public class AuthorizationEndpoint {
 			ClientID clientID = e.getClientID();
 			URI redirectionURI = e.getRedirectionURI();
 
-			OIDCClientInformation client = resolveClient(clientID);
-			validateRedirectionURI(redirectionURI, client);
+			if (clientID != null && redirectionURI != null) {
+				OIDCClientInformation client = resolveClient(clientID);
+				validateRedirectionURI(redirectionURI, client);
+			}
 
 			throw e;
 		}
