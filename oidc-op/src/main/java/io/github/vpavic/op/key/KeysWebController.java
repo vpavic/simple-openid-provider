@@ -33,19 +33,20 @@ public class KeysWebController {
 	@GetMapping
 	public String keys(Model model) throws JsonProcessingException {
 		JWK activeKey = this.keyService.findActive();
-		List<JWK> keys = this.keyService.findAll();
+		List<JWK> allKeys = this.keyService.findAll();
 
 		JSONObject activeKeyJson = activeKey.toPublicJWK().toJSONObject();
 
 		// @formatter:off
-		Set<JSONObject> keysJson = keys.stream()
+		Set<JSONObject> inactiveKeysJson = allKeys.stream()
+				.filter(key -> !key.getKeyID().equals(activeKey.getKeyID()))
 				.map(JWK::toPublicJWK)
 				.map(JWK::toJSONObject)
 				.collect(Collectors.toSet());
 		// @formatter:on
 
 		model.addAttribute("activeKey", this.objectWriter.writeValueAsString(activeKeyJson));
-		model.addAttribute("keys", this.objectWriter.writeValueAsString(keysJson));
+		model.addAttribute("inactiveKeys", this.objectWriter.writeValueAsString(inactiveKeysJson));
 
 		return "keys";
 	}

@@ -60,8 +60,8 @@
 		<h4>Active Key</h4>
 		<pre class="small" th:text="${activeKey}"></pre>
 
-		<h4>Keys</h4>
-		<pre class="small" th:text="${keys}"></pre>
+		<h4>Inactive Keys</h4>
+		<pre class="small" th:text="${inactiveKeys}"></pre>
 
 		<form action="#" method="post" class="form-horizontal" th:action="@{/web/keys/rotate}">
 			<button class="btn btn-warning">Rotate Keys</button>
