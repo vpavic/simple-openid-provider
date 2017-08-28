@@ -88,13 +88,13 @@ public class SecurityConfiguration {
 
 	@Order(-10)
 	@Configuration
-	static class LoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
+	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		private final OpenIdProviderProperties properties;
 
 		private final ClientRepository clientRepository;
 
-		public LoginSecurityConfiguration(OpenIdProviderProperties properties,
+		public WebSecurityConfiguration(OpenIdProviderProperties properties,
 				ObjectProvider<ClientRepository> clientRepository) {
 			this.properties = properties;
 			this.clientRepository = clientRepository.getObject();
@@ -106,10 +106,10 @@ public class SecurityConfiguration {
 			http
 				.requestMatchers()
 					.antMatchers("/", LoginEndpoint.PATH_MAPPING, LogoutEndpoint.PATH_MAPPING,
-							AuthorizationEndpoint.PATH_MAPPING)
+							AuthorizationEndpoint.PATH_MAPPING, "/web/**")
 					.and()
 				.authorizeRequests()
-					.antMatchers(LoginEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
+					.antMatchers("/", LoginEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
 					.anyRequest().authenticated()
 					.and()
 				.formLogin()
