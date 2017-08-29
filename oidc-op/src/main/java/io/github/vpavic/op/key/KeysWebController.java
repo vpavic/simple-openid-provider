@@ -40,8 +40,7 @@ public class KeysWebController {
 		// @formatter:off
 		Set<JSONObject> inactiveKeysJson = allKeys.stream()
 				.filter(key -> !key.getKeyID().equals(activeKey.getKeyID()))
-				.map(JWK::toPublicJWK)
-				.map(JWK::toJSONObject)
+				.map(jwk -> jwk.toPublicJWK().toJSONObject())
 				.collect(Collectors.toSet());
 		// @formatter:on
 
