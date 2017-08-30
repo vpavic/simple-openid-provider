@@ -16,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
@@ -102,6 +103,9 @@ public class SecurityConfiguration {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
+			SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
+			successHandler.setTargetUrlParameter("continue");
+
 			// @formatter:off
 			http
 				.requestMatchers()
@@ -115,6 +119,7 @@ public class SecurityConfiguration {
 				.formLogin()
 					.loginPage(LoginEndpoint.PATH_MAPPING)
 					.authenticationDetailsSource(OpenIdWebAuthenticationDetails::new)
+					.successHandler(successHandler)
 					.and()
 				.logout().logoutSuccessHandler(
 						new OpenIdLogoutSuccessHandler(this.properties, this.clientRepository));

@@ -3,10 +3,10 @@ package io.github.vpavic.op.endpoint;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.stream.Collectors;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -22,6 +22,7 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.util.URLUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
@@ -33,13 +34,13 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import io.github.vpavic.op.client.ClientRepository;
@@ -68,13 +69,15 @@ public class AuthorizationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/authorize";
 
-	private static final String LOGIN_URL = "/login";
+	static final String AUTH_REQUEST_URI_ATTRIBUTE = "continue";
+
+	private static final String PROMPT_PARAMETER = "prompt";
+
+	private static final String LOGIN_REDIRECT_URI = "redirect:/login";
 
 	private static final String FORM_POST_VIEW_NAME = "form-post";
 
 	private static final String ERROR_VIEW_NAME = "error";
-
-	private static final RequestCache requestCache = new HttpSessionRequestCache();
 
 	private final OpenIdProviderProperties properties;
 
@@ -100,7 +103,7 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public ModelAndView authorize(HttpServletRequest request, Authentication authentication) throws Exception {
+	public ModelAndView authorize(ServletWebRequest request, Authentication authentication) throws Exception {
 		AuthenticationRequest authRequest = resolveRequest(request, authentication);
 
 		ResponseType responseType = authRequest.getResponseType();
@@ -116,23 +119,22 @@ public class AuthorizationEndpoint {
 		int maxAge = authRequest.getMaxAge();
 
 		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
-			requestCache.saveRequest(request, null);
-
-			return new ModelAndView("redirect:" + LOGIN_URL);
+			return redirectToLoginPage(request, authRequest);
 		}
 
 		String principal = authentication.getName();
 		OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication
 				.getDetails();
 		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
-		String sessionId = request.getSession().getId();
-		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;
 
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
-			requestCache.saveRequest(request, null);
-
-			return new ModelAndView("redirect:" + LOGIN_URL);
+			return redirectToLoginPage(request, authRequest);
 		}
+
+		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
+
+		String sessionId = request.getSessionId();
+		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;
 
 		AuthenticationSuccessResponse authResponse;
 
@@ -197,12 +199,12 @@ public class AuthorizationEndpoint {
 		return modelAndView;
 	}
 
-	private AuthenticationRequest resolveRequest(HttpServletRequest request, Authentication authentication)
+	private AuthenticationRequest resolveRequest(ServletWebRequest request, Authentication authentication)
 			throws GeneralException {
 		AuthenticationRequest authRequest;
 
 		try {
-			authRequest = AuthenticationRequest.parse(request.getQueryString());
+			authRequest = AuthenticationRequest.parse(request.getRequest().getQueryString());
 		}
 		catch (ParseException e) {
 			ClientID clientID = e.getClientID();
@@ -270,6 +272,29 @@ public class AuthorizationEndpoint {
 			ErrorObject error = OIDCError.LOGIN_REQUIRED;
 			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
+	}
+
+	private ModelAndView redirectToLoginPage(ServletWebRequest request, AuthenticationRequest authRequest) {
+		Prompt prompt = authRequest.getPrompt();
+		String authRequestQuery;
+
+		if (prompt != null && prompt.contains(Prompt.Type.LOGIN)) {
+			// @formatter:off
+			Map<String, String> authRequestParams = authRequest.toParameters().entrySet().stream()
+					.filter(entry -> !entry.getKey().equals(PROMPT_PARAMETER))
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			// @formatter:on
+
+			authRequestQuery = URLUtils.serializeParameters(authRequestParams);
+		}
+		else {
+			authRequestQuery = authRequest.toQueryString();
+		}
+
+		String authRequestUri = PATH_MAPPING + "?" + authRequestQuery;
+		request.setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri, RequestAttributes.SCOPE_SESSION);
+
+		return new ModelAndView(LOGIN_REDIRECT_URI);
 	}
 
 	@ExceptionHandler(GeneralException.class)
