@@ -18,12 +18,12 @@
 			padding-top: 50px;
 		}
 
-		.content {
-			padding: 40px 15px;
+		pre {
+			white-space: pre-wrap;
 		}
 
-		pre.small {
-			white-space: pre-wrap;
+		.content {
+			padding: 40px 15px;
 		}
 	</style>
 </head>
@@ -65,7 +65,7 @@
 		<pre class="small" th:text="${activeKey}"></pre>
 
 		<h4>Inactive Keys</h4>
-		<pre class="small" th:text="${inactiveKeys}"></pre>
+		<pre class="small pre-scrollable" th:text="${inactiveKeys}"></pre>
 
 		<form action="#" method="post" class="form-horizontal" th:action="@{/web/keys/rotate}">
 			<button class="btn btn-warning">Rotate Keys</button>
