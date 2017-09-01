@@ -54,7 +54,10 @@ public class SecurityConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.antMatcher("/oauth2/**")
+				.requestMatchers()
+					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING,
+							RevocationEndpoint.PATH_MAPPING, RegistrationEndpoint.PATH_MAPPING)
+					.and()
 				.authorizeRequests()
 					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING).permitAll()
 					.antMatchers(TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING).permitAll()
