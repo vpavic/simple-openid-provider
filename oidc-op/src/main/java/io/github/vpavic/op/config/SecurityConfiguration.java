@@ -2,6 +2,7 @@ package io.github.vpavic.op.config;
 
 import java.util.Collections;
 
+import io.github.vpavic.op.endpoint.RevocationEndpoint;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -53,7 +54,8 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers(KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING)
+					.antMatchers(KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING,
+							DiscoveryEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
 					.anyRequest().permitAll()

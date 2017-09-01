@@ -1,12 +1,8 @@
 package io.github.vpavic.op.endpoint;
 
-import java.security.PublicKey;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -20,17 +16,9 @@ import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.Secret;
-import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
-import com.nimbusds.oauth2.sdk.auth.verifier.ClientCredentialsSelector;
-import com.nimbusds.oauth2.sdk.auth.verifier.Context;
-import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
-import com.nimbusds.oauth2.sdk.client.ClientType;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
-import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
@@ -41,7 +29,6 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
-import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.springframework.http.HttpStatus;
@@ -56,10 +43,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
-import io.github.vpavic.op.client.ClientRepository;
+import io.github.vpavic.op.client.ClientRequestValidator;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
-import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.RefreshTokenContext;
 import io.github.vpavic.op.token.RefreshTokenStore;
@@ -79,9 +65,7 @@ public class TokenEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/token";
 
-	private final OpenIdProviderProperties properties;
-
-	private final ClientRepository clientRepository;
+	private final ClientRequestValidator clientRequestValidator;
 
 	private final AuthorizationCodeService authorizationCodeService;
 
@@ -93,12 +77,11 @@ public class TokenEndpoint {
 
 	private final ClaimsMapper claimsMapper;
 
-	public TokenEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	public TokenEndpoint(ClientRequestValidator clientRequestValidator,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			ClaimsMapper claimsMapper) {
-		this.properties = properties;
-		this.clientRepository = Objects.requireNonNull(clientRepository);
+		this.clientRequestValidator = Objects.requireNonNull(clientRequestValidator);
 		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
 		this.tokenService = Objects.requireNonNull(tokenService);
 		this.authenticationManager = Objects.requireNonNull(authenticationManager);
@@ -230,34 +213,9 @@ public class TokenEndpoint {
 	private TokenRequest resolveTokenRequest(ServletWebRequest request) throws Exception {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
 		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
-		validateRequest(tokenRequest);
+		this.clientRequestValidator.validateRequest(tokenRequest);
 
 		return tokenRequest;
-	}
-
-	private void validateRequest(TokenRequest request) throws Exception {
-		ClientAuthentication clientAuthentication = request.getClientAuthentication();
-
-		OIDCClientInformation client = this.clientRepository.findByClientId(
-				(clientAuthentication != null) ? clientAuthentication.getClientID() : request.getClientID());
-
-		if (client == null) {
-			throw InvalidClientException.BAD_ID;
-		}
-
-		if (client.inferClientType() == ClientType.CONFIDENTIAL) {
-			if (clientAuthentication == null) {
-				throw InvalidClientException.BAD_SECRET;
-			}
-
-			ClientAuthenticationVerifier<OIDCClientInformation> verifier = new ClientAuthenticationVerifier<>(
-					new ClientInformationCredentialsSelector(), null,
-					Collections.singleton(new Audience(this.properties.getIssuer())));
-
-			Context<OIDCClientInformation> context = new Context<>();
-			context.set(client);
-			verifier.verify(clientAuthentication, null, context);
-		}
 	}
 
 	@ExceptionHandler(GeneralException.class)
@@ -270,31 +228,6 @@ public class TokenEndpoint {
 		}
 
 		return new TokenErrorResponse(error).toJSONObject();
-	}
-
-	private static class ClientInformationCredentialsSelector
-			implements ClientCredentialsSelector<OIDCClientInformation> {
-
-		@Override
-		public List<Secret> selectClientSecrets(ClientID claimedClientID, ClientAuthenticationMethod authMethod,
-				Context<OIDCClientInformation> context) throws InvalidClientException {
-			OIDCClientInformation client = context.get();
-			ClientAuthenticationMethod configuredAuthMethod = client.getOIDCMetadata().getTokenEndpointAuthMethod();
-
-			if (configuredAuthMethod != null && !configuredAuthMethod.equals(authMethod)) {
-				throw InvalidClientException.NOT_REGISTERED_FOR_AUTH_METHOD;
-			}
-
-			return Collections.singletonList(client.getSecret());
-		}
-
-		@Override
-		public List<? extends PublicKey> selectPublicKeys(ClientID claimedClientID,
-				ClientAuthenticationMethod authMethod, JWSHeader jwsHeader, boolean forceRefresh,
-				Context<OIDCClientInformation> context) throws InvalidClientException {
-			return Collections.emptyList();
-		}
-
 	}
 
 }
