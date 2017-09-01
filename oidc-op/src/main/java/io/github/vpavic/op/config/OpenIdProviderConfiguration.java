@@ -29,6 +29,7 @@ import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
+import io.github.vpavic.op.endpoint.RegistrationEndpoint;
 import io.github.vpavic.op.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
@@ -55,6 +56,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
+		providerMetadata.setRegistrationEndpointURI(createURI(RegistrationEndpoint.PATH_MAPPING));
 		providerMetadata.setRevocationEndpointURI(createURI(RevocationEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(
 				this.properties.isSessionManagementEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);

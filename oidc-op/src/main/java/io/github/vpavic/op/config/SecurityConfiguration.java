@@ -2,7 +2,6 @@ package io.github.vpavic.op.config;
 
 import java.util.Collections;
 
-import io.github.vpavic.op.endpoint.RevocationEndpoint;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +27,8 @@ import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LoginEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
+import io.github.vpavic.op.endpoint.RegistrationEndpoint;
+import io.github.vpavic.op.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
@@ -53,11 +54,11 @@ public class SecurityConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.requestMatchers()
-					.antMatchers(KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING,
-							DiscoveryEndpoint.PATH_MAPPING)
-					.and()
+				.antMatcher("/oauth2/**")
 				.authorizeRequests()
+					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING).permitAll()
+					.antMatchers(TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING).permitAll()
+					.antMatchers(RegistrationEndpoint.PATH_MAPPING).authenticated()
 					.anyRequest().permitAll()
 					.and()
 				.csrf()
@@ -130,7 +131,7 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(5)
+	@Order(-5)
 	@Configuration
 	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
