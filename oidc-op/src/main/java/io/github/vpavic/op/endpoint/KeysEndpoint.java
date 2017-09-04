@@ -5,7 +5,8 @@ import java.util.Objects;
 
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
-import net.minidev.json.JSONObject;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,17 +24,26 @@ public class KeysEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/keys";
 
+	private static final MediaType JWK_SET = MediaType.parseMediaType(JWKSet.MIME_TYPE);
+
 	private final KeyService keyService;
 
 	public KeysEndpoint(KeyService keyService) {
-		this.keyService = Objects.requireNonNull(keyService);
+		Objects.requireNonNull(keyService, "keyService must not be null");
+
+		this.keyService = keyService;
 	}
 
-	@GetMapping(produces = JWKSet.MIME_TYPE)
-	public JSONObject getKeys() {
+	@GetMapping
+	public ResponseEntity<String> getJwkSet() {
 		List<JWK> keys = this.keyService.findAll();
+		JWKSet jwkSet = new JWKSet(keys);
 
-		return new JWKSet(keys).toJSONObject();
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(JWK_SET)
+				.body(jwkSet.toJSONObject().toJSONString());
+		// @formatter:on
 	}
 
 }

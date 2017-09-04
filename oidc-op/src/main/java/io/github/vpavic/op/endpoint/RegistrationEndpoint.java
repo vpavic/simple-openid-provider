@@ -11,7 +11,8 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientRegistrationRequest;
-import net.minidev.json.JSONObject;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,12 +33,15 @@ public class RegistrationEndpoint {
 	private final ClientRepository clientRepository;
 
 	public RegistrationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
+
 		this.properties = properties;
-		this.clientRepository = Objects.requireNonNull(clientRepository);
+		this.clientRepository = clientRepository;
 	}
 
 	@PostMapping
-	public JSONObject handleRegistrationRequest(ServletWebRequest request) throws Exception {
+	public ResponseEntity<String> handleRegistrationRequest(ServletWebRequest request) throws Exception {
 		OIDCClientRegistrationRequest registrationRequest = resolveRegistrationRequest(request);
 
 		// @formatter:off
@@ -53,7 +57,11 @@ public class RegistrationEndpoint {
 
 		this.clientRepository.save(clientInformation);
 
-		return clientInformation.toJSONObject();
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(clientInformation.toJSONObject().toJSONString());
+		// @formatter:on
 	}
 
 	private OIDCClientRegistrationRequest resolveRegistrationRequest(ServletWebRequest request) throws Exception {

@@ -30,8 +30,8 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import net.minidev.json.JSONObject;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -39,7 +39,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
@@ -81,16 +80,23 @@ public class TokenEndpoint {
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			ClaimsMapper claimsMapper) {
-		this.clientRequestValidator = Objects.requireNonNull(clientRequestValidator);
-		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
-		this.tokenService = Objects.requireNonNull(tokenService);
-		this.authenticationManager = Objects.requireNonNull(authenticationManager);
-		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
-		this.claimsMapper = Objects.requireNonNull(claimsMapper);
+		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
+		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
+		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
+		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
+		Objects.requireNonNull(claimsMapper, "claimsMapper must not be null");
+
+		this.clientRequestValidator = clientRequestValidator;
+		this.authorizationCodeService = authorizationCodeService;
+		this.tokenService = tokenService;
+		this.authenticationManager = authenticationManager;
+		this.refreshTokenStore = refreshTokenStore;
+		this.claimsMapper = claimsMapper;
 	}
 
-	@PostMapping
-	public JSONObject handleTokenRequest(ServletWebRequest request) throws Exception {
+	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> handleTokenRequest(ServletWebRequest request) throws Exception {
 		TokenRequest tokenRequest = resolveTokenRequest(request);
 
 		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
@@ -207,7 +213,11 @@ public class TokenEndpoint {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 
-		return tokenResponse.toJSONObject();
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(tokenResponse.toJSONObject().toJSONString());
+		// @formatter:on
 	}
 
 	private TokenRequest resolveTokenRequest(ServletWebRequest request) throws Exception {
@@ -219,15 +229,20 @@ public class TokenEndpoint {
 	}
 
 	@ExceptionHandler(GeneralException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public JSONObject handleParseException(GeneralException e) {
+	public ResponseEntity<String> handleParseException(GeneralException e) {
 		ErrorObject error = e.getErrorObject();
 
 		if (error == null) {
 			error = OAuth2Error.INVALID_REQUEST.setDescription(e.getMessage());
 		}
 
-		return new TokenErrorResponse(error).toJSONObject();
+		TokenErrorResponse tokenResponse = new TokenErrorResponse(error);
+
+		// @formatter:off
+		return ResponseEntity.badRequest()
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(tokenResponse.toJSONObject().toJSONString());
+		// @formatter:on
 	}
 
 }

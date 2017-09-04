@@ -3,7 +3,8 @@ package io.github.vpavic.op.endpoint;
 import java.util.Objects;
 
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
-import net.minidev.json.JSONObject;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,15 +21,21 @@ public class DiscoveryEndpoint {
 
 	public static final String PATH_MAPPING = "/.well-known/openid-configuration";
 
-	private final OIDCProviderMetadata providerMetadata;
+	private final String providerMetadata;
 
 	public DiscoveryEndpoint(OIDCProviderMetadata providerMetadata) {
-		this.providerMetadata = Objects.requireNonNull(providerMetadata);
+		Objects.requireNonNull(providerMetadata, "providerMetadata must not be null");
+
+		this.providerMetadata = providerMetadata.toJSONObject().toJSONString();
 	}
 
 	@GetMapping
-	public JSONObject providerMetadata() {
-		return this.providerMetadata.toJSONObject();
+	public ResponseEntity<String> getProviderMetadata() {
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(this.providerMetadata);
+		// @formatter:on
 	}
 
 }

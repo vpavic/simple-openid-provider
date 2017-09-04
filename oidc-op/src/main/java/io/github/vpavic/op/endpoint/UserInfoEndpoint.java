@@ -5,7 +5,8 @@ import java.util.Objects;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
-import net.minidev.json.JSONObject;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,18 +32,24 @@ public class UserInfoEndpoint {
 	private final UserInfoMapper userInfoMapper;
 
 	public UserInfoEndpoint(UserInfoMapper userInfoMapper) {
-		this.userInfoMapper = Objects.requireNonNull(userInfoMapper);
+		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
+
+		this.userInfoMapper = userInfoMapper;
 	}
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public JSONObject getUserInfo(Authentication authentication) throws Exception {
+	public ResponseEntity<String> getUserInfo(Authentication authentication) throws Exception {
 		String principal = authentication.getName();
 		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
 		Scope scope = new Scope(claimsSet.getStringClaim(SCOPE_CLAIM));
 		UserInfo userInfo = this.userInfoMapper.map(principal, scope);
 
-		return userInfo.toJSONObject();
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(userInfo.toJSONObject().toJSONString());
+		// @formatter:on
 	}
 
 }
