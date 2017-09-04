@@ -1,35 +1,35 @@
-package io.github.vpavic.op.endpoint;
+package io.github.vpavic.op.logout;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 
 @Controller
-@RequestMapping(path = LogoutEndpoint.PATH_MAPPING)
-public class LogoutEndpoint {
+@RequestMapping(path = LogoutPromptController.PATH_MAPPING)
+public class LogoutPromptController {
 
 	public static final String PATH_MAPPING = "/logout";
 
-	private static final String LOGOUT_VIEW_NAME = "logout";
+	private static final String LOGOUT_VIEW_NAME = "logout/prompt";
 
 	private final OpenIdProviderProperties properties;
 
-	public LogoutEndpoint(OpenIdProviderProperties properties) {
+	public LogoutPromptController(OpenIdProviderProperties properties) {
+		Objects.requireNonNull(properties, "properties must not be null");
+
 		this.properties = properties;
 	}
 
 	@GetMapping
-	public ModelAndView logoutPrompt(HttpServletRequest request) throws ParseException {
-		ModelMap model = new ModelMap();
-
+	public String logoutConfirmation(ServletWebRequest request, Model model) throws ParseException {
 		if (this.properties.isSessionManagementOrFrontChannelLogoutEnabled()) {
 			LogoutRequest logoutRequest = resolveLogoutRequest(request);
 
@@ -39,13 +39,13 @@ public class LogoutEndpoint {
 			}
 		}
 
-		return new ModelAndView(LOGOUT_VIEW_NAME, model);
+		return LOGOUT_VIEW_NAME;
 	}
 
-	private LogoutRequest resolveLogoutRequest(HttpServletRequest request) throws ParseException {
-		String query = request.getQueryString();
+	private LogoutRequest resolveLogoutRequest(ServletWebRequest request) throws ParseException {
+		String query = request.getRequest().getQueryString();
 
-		return query != null ? LogoutRequest.parse(query) : null;
+		return (query != null) ? LogoutRequest.parse(query) : null;
 	}
 
 }

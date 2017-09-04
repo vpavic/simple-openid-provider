@@ -1,4 +1,4 @@
-package io.github.vpavic.op.endpoint;
+package io.github.vpavic.op.logout;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -22,8 +22,8 @@ import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 
 @Controller
-@RequestMapping(path = LogoutSuccessEndpoint.PATH_MAPPING)
-public class LogoutSuccessEndpoint {
+@RequestMapping(path = LogoutSuccessController.PATH_MAPPING)
+public class LogoutSuccessController {
 
 	public static final String PATH_MAPPING = "/logout/success";
 
@@ -33,13 +33,13 @@ public class LogoutSuccessEndpoint {
 
 	private static final String DEFAULT_POST_LOGOUT_REDIRECT_URI = "/login?logout";
 
-	private static final String LOGOUT_SUCCESS_VIEW_NAME = "logout-success";
+	private static final String LOGOUT_SUCCESS_VIEW_NAME = "logout/success";
 
 	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
-	public LogoutSuccessEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	public LogoutSuccessController(OpenIdProviderProperties properties, ClientRepository clientRepository) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "properties must not be null");
 

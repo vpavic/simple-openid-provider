@@ -68,7 +68,7 @@ public class AuthorizationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/authorize";
 
-	static final String AUTH_REQUEST_URI_ATTRIBUTE = "continue";
+	public static final String AUTH_REQUEST_URI_ATTRIBUTE = "continue";
 
 	private static final String PROMPT_PARAMETER = "prompt";
 

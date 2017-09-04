@@ -24,14 +24,14 @@ import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
-import io.github.vpavic.op.endpoint.LoginEndpoint;
-import io.github.vpavic.op.endpoint.LogoutEndpoint;
-import io.github.vpavic.op.endpoint.LogoutSuccessEndpoint;
 import io.github.vpavic.op.endpoint.RegistrationEndpoint;
 import io.github.vpavic.op.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
+import io.github.vpavic.op.login.LoginFormController;
+import io.github.vpavic.op.logout.LogoutPromptController;
+import io.github.vpavic.op.logout.LogoutSuccessController;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.op.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 
@@ -104,19 +104,19 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/", LoginEndpoint.PATH_MAPPING, LogoutEndpoint.PATH_MAPPING,
-							LogoutSuccessEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING, "/web/**")
+					.antMatchers("/", LoginFormController.PATH_MAPPING, LogoutPromptController.PATH_MAPPING,
+							LogoutSuccessController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING, "/web/**")
 					.and()
 				.authorizeRequests()
-					.antMatchers("/", LoginEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
+					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
 					.anyRequest().authenticated()
 					.and()
 				.formLogin()
-					.loginPage(LoginEndpoint.PATH_MAPPING)
+					.loginPage(LoginFormController.PATH_MAPPING)
 					.successHandler(successHandler)
 					.and()
 				.logout()
-					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutSuccessEndpoint.PATH_MAPPING));
+					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutSuccessController.PATH_MAPPING));
 			// @formatter:on
 		}
 
