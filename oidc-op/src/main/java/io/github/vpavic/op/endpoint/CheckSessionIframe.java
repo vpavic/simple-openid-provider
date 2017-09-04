@@ -18,7 +18,7 @@ public class CheckSessionIframe {
 
 	public static final String PATH_MAPPING = "/oauth2/check-session";
 
-	private static final String CHECK_SESSION_VIEW_NAME = "check-session";
+	private static final String CHECK_SESSION_VIEW_NAME = "oauth2/check-session";
 
 	@GetMapping
 	public String checkSession() {

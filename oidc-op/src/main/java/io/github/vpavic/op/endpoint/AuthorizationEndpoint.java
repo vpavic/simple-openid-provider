@@ -74,7 +74,7 @@ public class AuthorizationEndpoint {
 
 	private static final String LOGIN_REDIRECT_URI = "redirect:/login";
 
-	private static final String FORM_POST_VIEW_NAME = "form-post";
+	private static final String FORM_POST_VIEW_NAME = "oauth2/form-post";
 
 	private static final String ERROR_VIEW_NAME = "error";
 
