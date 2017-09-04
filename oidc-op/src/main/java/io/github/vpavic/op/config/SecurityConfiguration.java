@@ -20,20 +20,20 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
-import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.endpoint.KeysEndpoint;
 import io.github.vpavic.op.endpoint.LoginEndpoint;
 import io.github.vpavic.op.endpoint.LogoutEndpoint;
+import io.github.vpavic.op.endpoint.LogoutSuccessEndpoint;
 import io.github.vpavic.op.endpoint.RegistrationEndpoint;
 import io.github.vpavic.op.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
-import io.github.vpavic.op.security.web.authentication.logout.OpenIdLogoutSuccessHandler;
+import io.github.vpavic.op.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 
 @Configuration
 public class SecurityConfiguration {
@@ -96,16 +96,6 @@ public class SecurityConfiguration {
 	@Configuration
 	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-		private final OpenIdProviderProperties properties;
-
-		private final ClientRepository clientRepository;
-
-		public WebSecurityConfiguration(OpenIdProviderProperties properties,
-				ObjectProvider<ClientRepository> clientRepository) {
-			this.properties = properties;
-			this.clientRepository = clientRepository.getObject();
-		}
-
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
@@ -115,7 +105,7 @@ public class SecurityConfiguration {
 			http
 				.requestMatchers()
 					.antMatchers("/", LoginEndpoint.PATH_MAPPING, LogoutEndpoint.PATH_MAPPING,
-							AuthorizationEndpoint.PATH_MAPPING, "/web/**")
+							LogoutSuccessEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING, "/web/**")
 					.and()
 				.authorizeRequests()
 					.antMatchers("/", LoginEndpoint.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
@@ -125,8 +115,8 @@ public class SecurityConfiguration {
 					.loginPage(LoginEndpoint.PATH_MAPPING)
 					.successHandler(successHandler)
 					.and()
-				.logout().logoutSuccessHandler(
-						new OpenIdLogoutSuccessHandler(this.properties, this.clientRepository));
+				.logout()
+					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutSuccessEndpoint.PATH_MAPPING));
 			// @formatter:on
 		}
 

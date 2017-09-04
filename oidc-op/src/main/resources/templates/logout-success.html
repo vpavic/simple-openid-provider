@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>OIDC Provider</title>
+	<script data-th-inline="javascript">
+		window.onload = function() {
+			window.location.href = /*[[${postLogoutRedirectUri}]]*/ 'http://localhost:6432';
+		}
+	</script>
+</head>
+<body>
+<iframe style="display:block; visibility:hidden" data-th-src="${frontChannelLogoutUri}"
+		data-th-each="frontChannelLogoutUri : ${frontChannelLogoutUris}"></iframe>
+</body>
+</html>
