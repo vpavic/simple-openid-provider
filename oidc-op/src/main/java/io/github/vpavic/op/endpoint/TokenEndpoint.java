@@ -239,7 +239,7 @@ public class TokenEndpoint {
 		TokenErrorResponse tokenResponse = new TokenErrorResponse(error);
 
 		// @formatter:off
-		return ResponseEntity.badRequest()
+		return ResponseEntity.status(error.getHTTPStatusCode())
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.body(tokenResponse.toJSONObject().toJSONString());
 		// @formatter:on

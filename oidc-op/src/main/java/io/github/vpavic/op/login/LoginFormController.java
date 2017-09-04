@@ -19,7 +19,7 @@ public class LoginFormController {
 
 	private static final String ERROR_PARAMETER_NAME = "error";
 
-	private static final String LOGIN_VIEW_NAME = "login/form";
+	private static final String LOGIN_FORM_VIEW_NAME = "login/form";
 
 	private static final String DEFAULT_ERROR_MESSAGE = "Unable to authenticate";
 
@@ -32,7 +32,7 @@ public class LoginFormController {
 			model.addAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, continueUri);
 		}
 
-		return LOGIN_VIEW_NAME;
+		return LOGIN_FORM_VIEW_NAME;
 	}
 
 	@GetMapping(params = ERROR_PARAMETER_NAME)

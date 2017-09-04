@@ -2,11 +2,16 @@ package io.github.vpavic.op.endpoint;
 
 import java.util.Objects;
 
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.TokenRevocationRequest;
+import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,7 +43,7 @@ public class RevocationEndpoint {
 	}
 
 	@PostMapping
-	public void handleRevocationRequest(ServletWebRequest request) throws Exception {
+	public ResponseEntity<Void> handleRevocationRequest(ServletWebRequest request) throws Exception {
 		TokenRevocationRequest revocationRequest = resolveRevocationRequest(request);
 		Token token = revocationRequest.getToken();
 		RefreshToken refreshToken;
@@ -51,6 +56,11 @@ public class RevocationEndpoint {
 		}
 
 		this.refreshTokenStore.revoke(refreshToken);
+
+		// @formatter:off
+		return ResponseEntity.ok()
+				.build();
+		// @formatter:on
 	}
 
 	private TokenRevocationRequest resolveRevocationRequest(ServletWebRequest request) throws Exception {
@@ -59,6 +69,25 @@ public class RevocationEndpoint {
 		this.clientRequestValidator.validateRequest(revocationRequest);
 
 		return revocationRequest;
+	}
+
+	@ExceptionHandler(InvalidClientException.class)
+	public ResponseEntity<String> handleInvalidClientException(InvalidClientException e) {
+		ErrorObject error = e.getErrorObject();
+
+		// @formatter:off
+		return ResponseEntity.status(error.getHTTPStatusCode())
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(error.toJSONObject().toJSONString());
+		// @formatter:on
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<Void> handleException() {
+		// @formatter:off
+		return ResponseEntity.ok()
+				.build();
+		// @formatter:on
 	}
 
 }

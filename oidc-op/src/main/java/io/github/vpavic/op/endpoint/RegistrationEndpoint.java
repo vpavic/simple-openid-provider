@@ -28,7 +28,7 @@ public class RegistrationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/register";
 
-	private final OpenIdProviderProperties properties;
+	private final String clientIdSuffix;
 
 	private final ClientRepository clientRepository;
 
@@ -36,22 +36,20 @@ public class RegistrationEndpoint {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
-		this.properties = properties;
+		// @formatter:off
+		this.clientIdSuffix = UriComponentsBuilder.fromHttpUrl(properties.getIssuer())
+				.build()
+				.getHost();
+		// @formatter:on
+
 		this.clientRepository = clientRepository;
 	}
 
 	@PostMapping
 	public ResponseEntity<String> handleRegistrationRequest(ServletWebRequest request) throws Exception {
 		OIDCClientRegistrationRequest registrationRequest = resolveRegistrationRequest(request);
-
-		// @formatter:off
-		String host = UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer())
-				.build()
-				.getHost();
-		// @formatter:on
-
 		OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
-		ClientID clientID = new ClientID(UUID.randomUUID().toString() + "." + host);
+		ClientID clientID = new ClientID(UUID.randomUUID().toString() + "." + this.clientIdSuffix);
 		OIDCClientInformation clientInformation = new OIDCClientInformation(clientID, new Date(), clientMetadata,
 				new Secret());
 

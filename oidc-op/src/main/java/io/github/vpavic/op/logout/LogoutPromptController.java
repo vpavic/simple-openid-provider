@@ -18,7 +18,7 @@ public class LogoutPromptController {
 
 	public static final String PATH_MAPPING = "/logout";
 
-	private static final String LOGOUT_VIEW_NAME = "logout/prompt";
+	private static final String LOGOUT_PROMPT_VIEW_NAME = "logout/prompt";
 
 	private final OpenIdProviderProperties properties;
 
@@ -39,7 +39,7 @@ public class LogoutPromptController {
 			}
 		}
 
-		return LOGOUT_VIEW_NAME;
+		return LOGOUT_PROMPT_VIEW_NAME;
 	}
 
 	private LogoutRequest resolveLogoutRequest(ServletWebRequest request) throws ParseException {
