@@ -21,7 +21,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
-import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 
 public class OpenIdLogoutSuccessHandler implements LogoutSuccessHandler {
 
@@ -111,8 +110,7 @@ public class OpenIdLogoutSuccessHandler implements LogoutSuccessHandler {
 					.collect(Collectors.toSet());
 			// @formatter:on
 
-			OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication.getDetails();
-			String sessionId = authenticationDetails.getSessionId();
+			String sessionId = request.getSession().getId();
 
 			for (String clientLogoutURI : logoutURIs) {
 				// @formatter:off

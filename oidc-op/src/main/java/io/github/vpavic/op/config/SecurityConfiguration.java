@@ -33,7 +33,6 @@ import io.github.vpavic.op.endpoint.TokenEndpoint;
 import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.key.KeyService;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
-import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 import io.github.vpavic.op.security.web.authentication.logout.OpenIdLogoutSuccessHandler;
 
 @Configuration
@@ -124,7 +123,6 @@ public class SecurityConfiguration {
 					.and()
 				.formLogin()
 					.loginPage(LoginEndpoint.PATH_MAPPING)
-					.authenticationDetailsSource(OpenIdWebAuthenticationDetails::new)
 					.successHandler(successHandler)
 					.and()
 				.logout().logoutSuccessHandler(

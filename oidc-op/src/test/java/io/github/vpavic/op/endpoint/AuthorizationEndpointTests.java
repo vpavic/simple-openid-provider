@@ -33,14 +33,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.test.context.TestSecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -48,7 +42,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
-import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
@@ -102,10 +95,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_minimumParams_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
@@ -117,11 +110,11 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withState_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 		State state = new State();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
@@ -133,8 +126,8 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withPromptLogin_isRequireLogin() throws Exception {
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -144,10 +137,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withPromptNoneAndAuthentication_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
@@ -173,10 +166,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withValidMaxAge_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
@@ -188,8 +181,8 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withExpiredMaxAge_isRequireLogin() throws Exception {
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		Thread.sleep(1000);
@@ -201,10 +194,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withoutScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -215,10 +208,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withoutScopeWithInvalidRedirectUri_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -229,10 +222,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withInvalidScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -243,10 +236,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withoutClientId_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -257,10 +250,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withoutRedirectUri_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -270,10 +263,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void authCode_withInvalidRedirectUri_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -284,11 +277,11 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdTokenAndToken_minimumParams_isSuccess() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
@@ -306,10 +299,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdToken_minimumParams_isSuccess() throws Exception {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				anyString(), any(Nonce.class), isNull(), isNull(), any(UserInfoMapper.class))).willReturn(idToken);
@@ -322,12 +315,12 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdTokenAndToken_withState_isSuccess() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		State state = new State();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
@@ -344,10 +337,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
@@ -359,10 +352,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutClientId_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
@@ -374,10 +367,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
@@ -389,10 +382,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutNonce_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
@@ -404,12 +397,12 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void hybridWithIdTokenAndToken_minimumParams_isSuccess() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -427,11 +420,11 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void hybridWithIdToken_minimumParams_isSuccess() throws Exception {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
 		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
 				anyString(), any(Nonce.class), isNull(), any(AuthorizationCode.class), isNull())).willReturn(idToken);
@@ -446,11 +439,11 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void hybridWithToken_minimumParams_isSuccess() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithTokenClient());
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -465,13 +458,13 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void hybridWithIdTokenAndToken_withState_isSuccess() throws Exception {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 		State state = new State();
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
@@ -489,10 +482,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void hybridWithIdTokenAndToken_withoutClientId_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -503,10 +496,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void hybridWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -517,10 +510,10 @@ public class AuthorizationEndpointTests {
 	}
 
 	@Test
+	@WithMockUser
 	public void invalid_withoutResponseType_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		TestSecurityContextHolder.setContext(createSecurityContext());
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -528,22 +521,6 @@ public class AuthorizationEndpointTests {
 						.session(this.session);
 		this.mvc.perform(request).andExpect(status().isFound())
 				.andExpect(redirectedUrlPattern("http://example.com?error_description=*&error=" + error.getCode()));
-	}
-
-	private static SecurityContext createSecurityContext() {
-		String password = "password";
-		String[] authorities = { "ROLE_USER" };
-
-		User principal = new User("user", password, true, true, true, true,
-				AuthorityUtils.createAuthorityList(authorities));
-
-		TestingAuthenticationToken authentication = new TestingAuthenticationToken(principal, password, authorities);
-		authentication.setDetails(new OpenIdWebAuthenticationDetails(new MockHttpServletRequest()));
-
-		SecurityContext context = SecurityContextHolder.createEmptyContext();
-		context.setAuthentication(authentication);
-
-		return context;
 	}
 
 	private static OIDCClientInformation client(ResponseType responseType, Scope scope) {

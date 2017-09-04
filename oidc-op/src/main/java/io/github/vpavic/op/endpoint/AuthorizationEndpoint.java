@@ -47,7 +47,6 @@ import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
-import io.github.vpavic.op.security.web.authentication.OpenIdWebAuthenticationDetails;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
@@ -122,10 +121,7 @@ public class AuthorizationEndpoint {
 			return redirectToLoginPage(request, authRequest);
 		}
 
-		String principal = authentication.getName();
-		OpenIdWebAuthenticationDetails authenticationDetails = (OpenIdWebAuthenticationDetails) authentication
-				.getDetails();
-		Instant authenticationTime = authenticationDetails.getAuthenticationTime();
+		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
 			return redirectToLoginPage(request, authRequest);
@@ -133,6 +129,7 @@ public class AuthorizationEndpoint {
 
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
 
+		String principal = authentication.getName();
 		String sessionId = request.getSessionId();
 		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;
 
