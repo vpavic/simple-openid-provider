@@ -2,7 +2,6 @@ package io.github.vpavic.op.token;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -27,25 +26,29 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	private static final String DELETE_STATEMENT = "DELETE FROM refresh_tokens WHERE token = ?";
 
-	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM refresh_tokens WHERE expiry < ?";
+	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM refresh_tokens WHERE expiry > 0 AND expiry < ?";
 
 	private static final RefreshTokenContextMapper refreshTokenContextMapper = new RefreshTokenContextMapper();
 
 	private final JdbcOperations jdbcOperations;
 
 	public JdbcRefreshTokenStore(JdbcOperations jdbcOperations) {
-		this.jdbcOperations = Objects.requireNonNull(jdbcOperations);
+		Objects.requireNonNull(jdbcOperations, "jdbcOperations must not be null");
+
+		this.jdbcOperations = jdbcOperations;
 	}
 
 	@Override
 	@Transactional
 	public void save(RefreshToken refreshToken, RefreshTokenContext context) {
+		Instant expiry = context.getExpiry();
+
 		this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
 			ps.setString(1, refreshToken.getValue());
 			ps.setString(2, context.getPrincipal());
 			ps.setString(3, context.getClientID().getValue());
 			ps.setString(4, context.getScope().toString());
-			ps.setTimestamp(5, Timestamp.from(context.getExpiry()));
+			ps.setLong(5, (expiry != null) ? expiry.getEpochSecond() : 0);
 		});
 	}
 
@@ -77,7 +80,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	public void cleanExpiredTokens() {
 		Instant now = Instant.now();
 
-		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(now)));
+		this.jdbcOperations.update(DELETE_EXPIRED_STATEMENT, ps -> ps.setLong(1, now.getEpochSecond()));
 	}
 
 	private static class RefreshTokenContextMapper implements RowMapper<RefreshTokenContext> {
@@ -87,9 +90,10 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 			String principal = rs.getString("principal");
 			String clientId = rs.getString("client_id");
 			String scope = rs.getString("scope");
-			Instant expiry = rs.getTimestamp("expiry").toInstant();
+			long expiry = rs.getLong("expiry");
 
-			return new RefreshTokenContext(principal, new ClientID(clientId), Scope.parse(scope), expiry);
+			return new RefreshTokenContext(principal, new ClientID(clientId), Scope.parse(scope),
+					expiry > 0 ? Instant.ofEpochSecond(expiry) : null);
 		}
 
 	}

@@ -59,10 +59,9 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setRegistrationEndpointURI(createURI(RegistrationEndpoint.PATH_MAPPING));
 		providerMetadata.setRevocationEndpointURI(createURI(RevocationEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(
-				this.properties.isSessionManagementEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);
-		providerMetadata.setEndSessionEndpointURI(this.properties.isSessionManagementOrFrontChannelLogoutEnabled()
-				? createURI(LogoutPromptController.PATH_MAPPING)
-				: null);
+				this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);
+		providerMetadata.setEndSessionEndpointURI(
+				this.properties.isLogoutEnabled() ? createURI(LogoutPromptController.PATH_MAPPING) : null);
 		providerMetadata.setScopes(new Scope(OIDCScopeValue.OPENID));
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
@@ -79,8 +78,8 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
 		providerMetadata
 				.setClaims(Arrays.asList("iss", "sub", "aud", "exp", "iat", "auth_time", "nonce", "amr", "azp"));
-		providerMetadata.setSupportsFrontChannelLogout(this.properties.isFrontChannelLogoutEnabled());
-		providerMetadata.setSupportsFrontChannelLogoutSession(this.properties.isFrontChannelLogoutEnabled());
+		providerMetadata.setSupportsFrontChannelLogout(this.properties.getFrontChannelLogout().isEnabled());
+		providerMetadata.setSupportsFrontChannelLogoutSession(this.properties.getFrontChannelLogout().isEnabled());
 
 		logger.info("Initializing OpenID Provider with configuration:\n{}", this.objectMapper
 				.writer(SerializationFeature.INDENT_OUTPUT).writeValueAsString(providerMetadata.toJSONObject()));

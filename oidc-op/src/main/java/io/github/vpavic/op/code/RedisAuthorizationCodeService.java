@@ -1,5 +1,6 @@
 package io.github.vpavic.op.code;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -12,21 +13,32 @@ import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
+import io.github.vpavic.op.config.OpenIdProviderProperties;
+
 @Service
 public class RedisAuthorizationCodeService implements AuthorizationCodeService {
 
-	private static final String PREFIX = "oidc:op:codes";
+	private static final String PREFIX = "op:codes:";
+
+	private final OpenIdProviderProperties properties;
 
 	private final RedisOperations<String, Object> redisOperations;
 
-	public RedisAuthorizationCodeService(RedisConnectionFactory connectionFactory) {
-		this.redisOperations = createRedisOperations(connectionFactory);
+	public RedisAuthorizationCodeService(OpenIdProviderProperties properties,
+			RedisConnectionFactory redisConnectionFactory) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(redisConnectionFactory, "redisConnectionFactory must not be null");
+
+		this.properties = properties;
+		this.redisOperations = createRedisOperations(redisConnectionFactory);
 	}
 
 	@Override
 	public AuthorizationCode create(AuthorizationCodeContext context) {
 		AuthorizationCode code = new AuthorizationCode();
-		this.redisOperations.boundValueOps(getKey(code)).set(context, 10, TimeUnit.MINUTES);
+		this.redisOperations.boundValueOps(getKey(code)).set(context, this.properties.getCode().getLifetime(),
+				TimeUnit.SECONDS);
+
 		return code;
 	}
 
@@ -40,6 +52,7 @@ public class RedisAuthorizationCodeService implements AuthorizationCodeService {
 		}
 
 		this.redisOperations.delete(key);
+
 		return context;
 	}
 
@@ -53,6 +66,7 @@ public class RedisAuthorizationCodeService implements AuthorizationCodeService {
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
 		redisTemplate.setDefaultSerializer(new JdkSerializationRedisSerializer(getClass().getClassLoader()));
 		redisTemplate.afterPropertiesSet();
+
 		return redisTemplate;
 	}
 

@@ -1,26 +1,25 @@
 package io.github.vpavic.op.config;
 
-import java.time.Duration;
-import java.time.Period;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("oidc.op")
+@ConfigurationProperties("op")
 public class OpenIdProviderProperties {
 
 	private String issuer = "http://localhost:6432";
 
-	private Duration accessTokenValidityDuration = Duration.ofMinutes(30);
+	private final Jwk jwk = new Jwk();
 
-	private Duration refreshTokenValidityDuration = Duration.ofDays(30);
+	private final IdToken idToken = new IdToken();
 
-	private Duration idTokenValidityDuration = Duration.ofMinutes(30);
+	private final AuthorizationCode code = new AuthorizationCode();
 
-	private Period jwkRetentionPeriod = Period.ofDays(10);
+	private final AccessToken accessToken = new AccessToken();
 
-	private boolean sessionManagementEnabled = false;
+	private final RefreshToken refreshToken = new RefreshToken();
 
-	private boolean frontChannelLogoutEnabled = false;
+	private final SessionManagement sessionManagement = new SessionManagement();
+
+	private final FrontChannelLogout frontChannelLogout = new FrontChannelLogout();
 
 	public String getIssuer() {
 		return this.issuer;
@@ -30,56 +29,134 @@ public class OpenIdProviderProperties {
 		this.issuer = issuer;
 	}
 
-	public Duration getAccessTokenValidityDuration() {
-		return this.accessTokenValidityDuration;
+	public Jwk getJwk() {
+		return this.jwk;
 	}
 
-	public void setAccessTokenValidityDuration(Duration accessTokenValidityDuration) {
-		this.accessTokenValidityDuration = accessTokenValidityDuration;
+	public IdToken getIdToken() {
+		return this.idToken;
 	}
 
-	public Duration getRefreshTokenValidityDuration() {
-		return this.refreshTokenValidityDuration;
+	public AuthorizationCode getCode() {
+		return this.code;
 	}
 
-	public void setRefreshTokenValidityDuration(Duration refreshTokenValidityDuration) {
-		this.refreshTokenValidityDuration = refreshTokenValidityDuration;
+	public AccessToken getAccessToken() {
+		return this.accessToken;
 	}
 
-	public Duration getIdTokenValidityDuration() {
-		return this.idTokenValidityDuration;
+	public RefreshToken getRefreshToken() {
+		return this.refreshToken;
 	}
 
-	public void setIdTokenValidityDuration(Duration idTokenValidityDuration) {
-		this.idTokenValidityDuration = idTokenValidityDuration;
+	public SessionManagement getSessionManagement() {
+		return this.sessionManagement;
 	}
 
-	public Period getJwkRetentionPeriod() {
-		return this.jwkRetentionPeriod;
+	public FrontChannelLogout getFrontChannelLogout() {
+		return this.frontChannelLogout;
 	}
 
-	public void setJwkRetentionPeriod(Period jwkRetentionPeriod) {
-		this.jwkRetentionPeriod = jwkRetentionPeriod;
+	public boolean isLogoutEnabled() {
+		return this.sessionManagement.isEnabled() || this.frontChannelLogout.isEnabled();
 	}
 
-	public boolean isSessionManagementEnabled() {
-		return this.sessionManagementEnabled;
+	public class Jwk {
+
+		private int retentionPeriod = 30;
+
+		public int getRetentionPeriod() {
+			return this.retentionPeriod;
+		}
+
+		public void setRetentionPeriod(int retentionPeriod) {
+			this.retentionPeriod = retentionPeriod;
+		}
+
 	}
 
-	public void setSessionManagementEnabled(boolean sessionManagementEnabled) {
-		this.sessionManagementEnabled = sessionManagementEnabled;
+	public class IdToken {
+
+		private int lifetime = 900;
+
+		public int getLifetime() {
+			return this.lifetime;
+		}
+
+		public void setLifetime(int lifetime) {
+			this.lifetime = lifetime;
+		}
+
 	}
 
-	public boolean isFrontChannelLogoutEnabled() {
-		return this.frontChannelLogoutEnabled;
+	public class AuthorizationCode {
+
+		private int lifetime = 600;
+
+		public int getLifetime() {
+			return this.lifetime;
+		}
+
+		public void setLifetime(int lifetime) {
+			this.lifetime = lifetime;
+		}
+
 	}
 
-	public void setFrontChannelLogoutEnabled(boolean frontChannelLogoutEnabled) {
-		this.frontChannelLogoutEnabled = frontChannelLogoutEnabled;
+	public class AccessToken {
+
+		private int lifetime = 600;
+
+		public int getLifetime() {
+			return this.lifetime;
+		}
+
+		public void setLifetime(int lifetime) {
+			this.lifetime = lifetime;
+		}
+
 	}
 
-	public boolean isSessionManagementOrFrontChannelLogoutEnabled() {
-		return isSessionManagementEnabled() || isFrontChannelLogoutEnabled();
+	public class RefreshToken {
+
+		private int lifetime;
+
+		public int getLifetime() {
+			return this.lifetime;
+		}
+
+		public void setLifetime(int lifetime) {
+			this.lifetime = lifetime;
+		}
+
+	}
+
+	public class SessionManagement {
+
+		private boolean enabled;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+	}
+
+	public class FrontChannelLogout {
+
+		private boolean enabled;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
 	}
 
 }

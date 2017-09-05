@@ -30,7 +30,7 @@ public class LogoutPromptController {
 
 	@GetMapping
 	public String logoutConfirmation(ServletWebRequest request, Model model) throws ParseException {
-		if (this.properties.isSessionManagementOrFrontChannelLogoutEnabled()) {
+		if (this.properties.isLogoutEnabled()) {
 			LogoutRequest logoutRequest = resolveLogoutRequest(request);
 
 			if (logoutRequest != null) {

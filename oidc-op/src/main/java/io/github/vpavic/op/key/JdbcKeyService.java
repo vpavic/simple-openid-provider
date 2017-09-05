@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -45,8 +46,11 @@ public class JdbcKeyService implements KeyService {
 	private final JdbcOperations jdbcOperations;
 
 	public JdbcKeyService(OpenIdProviderProperties properties, JdbcOperations jdbcOperations) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(jdbcOperations, "jdbcOperations must not be null");
+
 		this.properties = properties;
-		this.jdbcOperations = Objects.requireNonNull(jdbcOperations);
+		this.jdbcOperations = jdbcOperations;
 	}
 
 	@Override
@@ -64,7 +68,7 @@ public class JdbcKeyService implements KeyService {
 	@Override
 	@Transactional
 	public void rotate() {
-		Instant expiry = Instant.now().plus(this.properties.getJwkRetentionPeriod());
+		Instant expiry = Instant.now().plus(this.properties.getJwk().getRetentionPeriod(), ChronoUnit.DAYS);
 
 		this.jdbcOperations.update(UPDATE_EXPIRY_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(expiry)));
 

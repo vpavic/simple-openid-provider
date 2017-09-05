@@ -53,8 +53,7 @@ public class LogoutSuccessController {
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
-		if (this.properties.isSessionManagementOrFrontChannelLogoutEnabled()
-				&& StringUtils.hasText(postLogoutRedirectUri)) {
+		if (this.properties.isLogoutEnabled() && StringUtils.hasText(postLogoutRedirectUri)) {
 			// @formatter:off
 			Set<String> postLogoutRedirectUris = clients.stream()
 					.flatMap(client -> Optional.ofNullable(client.getOIDCMetadata().getPostLogoutRedirectionURIs())
@@ -85,7 +84,7 @@ public class LogoutSuccessController {
 
 		model.addAttribute("postLogoutRedirectUri", postLogoutRedirectUri);
 
-		if (this.properties.isFrontChannelLogoutEnabled()) {
+		if (this.properties.getFrontChannelLogout().isEnabled()) {
 			List<String> frontChannelLogoutUris = new ArrayList<>();
 
 			// @formatter:off

@@ -280,7 +280,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), Instant.now()));
+				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -301,7 +301,7 @@ public class TokenEndpointTests {
 		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
 				any(ClaimsMapper.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), Instant.now()));
+				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

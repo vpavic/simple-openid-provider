@@ -21,7 +21,7 @@ public class RefreshTokenContext implements Serializable {
 		this.principal = Objects.requireNonNull(principal);
 		this.clientID = Objects.requireNonNull(clientID);
 		this.scope = Objects.requireNonNull(scope);
-		this.expiry = Objects.requireNonNull(expiry);
+		this.expiry = expiry;
 	}
 
 	public String getPrincipal() {
@@ -41,7 +41,7 @@ public class RefreshTokenContext implements Serializable {
 	}
 
 	public boolean isExpired() {
-		return Instant.now().isAfter(this.expiry);
+		return (this.expiry != null) && Instant.now().isAfter(this.expiry);
 	}
 
 }

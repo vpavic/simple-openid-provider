@@ -1,6 +1,5 @@
 package io.github.vpavic.op.token;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -57,9 +56,13 @@ public class TokenServiceImpl implements TokenService {
 
 	public TokenServiceImpl(OpenIdProviderProperties properties, KeyService keyService,
 			RefreshTokenStore refreshTokenStore) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(keyService, "keyService must not be null");
+		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
+
 		this.properties = properties;
-		this.keyService = Objects.requireNonNull(keyService);
-		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
+		this.keyService = keyService;
+		this.refreshTokenStore = refreshTokenStore;
 	}
 
 	@Override
@@ -69,7 +72,7 @@ public class TokenServiceImpl implements TokenService {
 		Objects.requireNonNull(scope, "Scope must not be null");
 
 		Instant issuedAt = Instant.now();
-		Duration accessTokenValidityDuration = this.properties.getAccessTokenValidityDuration();
+		int tokenLifetime = this.properties.getAccessToken().getLifetime();
 
 		JWK jwk = this.keyService.findActive();
 
@@ -80,11 +83,11 @@ public class TokenServiceImpl implements TokenService {
 		// @formatter:on
 
 		// @formatter:off
-		JWTClaimsSet.Builder claimsSetBuiler = new JWTClaimsSet.Builder()
+		JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
 				.subject(principal)
 				.audience(this.properties.getIssuer())
-				.expirationTime(Date.from(issuedAt.plus(accessTokenValidityDuration)))
+				.expirationTime(Date.from(issuedAt.plusSeconds(tokenLifetime)))
 				.issueTime(Date.from(issuedAt))
 				.jwtID(UUID.randomUUID().toString())
 				.claim(SCOPE_CLAIM, scope.toString());
@@ -92,16 +95,17 @@ public class TokenServiceImpl implements TokenService {
 
 		if (claimsMapper != null) {
 			Map<String, Object> claims = claimsMapper.map(principal);
-			claims.forEach(claimsSetBuiler::claim);
+			claims.forEach(claimsSetBuilder::claim);
 		}
 
-		JWTClaimsSet claimsSet = claimsSetBuiler.build();
+		JWTClaimsSet claimsSet = claimsSetBuilder.build();
 
 		try {
 			SignedJWT accessToken = new SignedJWT(header, claimsSet);
 			RSASSASigner signer = new RSASSASigner((RSAKey) jwk);
 			accessToken.sign(signer);
-			return new BearerAccessToken(accessToken.serialize(), accessTokenValidityDuration.getSeconds(), scope);
+
+			return new BearerAccessToken(accessToken.serialize(), tokenLifetime, scope);
 		}
 		catch (JOSEException e) {
 			throw new RuntimeException(e);
@@ -119,10 +123,10 @@ public class TokenServiceImpl implements TokenService {
 		}
 
 		Instant issuedAt = Instant.now();
-		Duration refreshTokenValidityDuration = this.properties.getRefreshTokenValidityDuration();
+		int tokenLifetime = this.properties.getRefreshToken().getLifetime();
 
 		RefreshToken refreshToken = new RefreshToken();
-		Instant expiry = issuedAt.plus(refreshTokenValidityDuration);
+		Instant expiry = (tokenLifetime > 0) ? issuedAt.plusSeconds(tokenLifetime) : null;
 		RefreshTokenContext context = new RefreshTokenContext(principal, clientID, scope, expiry);
 		this.refreshTokenStore.save(refreshToken, context);
 
@@ -154,14 +158,14 @@ public class TokenServiceImpl implements TokenService {
 
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
 				new Subject(principal), Audience.create(clientID.getValue()),
-				Date.from(issuedAt.plus(this.properties.getIdTokenValidityDuration())), Date.from(issuedAt));
+				Date.from(issuedAt.plusSeconds(this.properties.getIdToken().getLifetime())), Date.from(issuedAt));
 
 		claimsSet.setAuthenticationTime(Date.from(authenticationTime));
 		claimsSet.setNonce(nonce);
 		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
 
-		if (this.properties.isFrontChannelLogoutEnabled()) {
+		if (this.properties.getFrontChannelLogout().isEnabled()) {
 			claimsSet.setSessionID(new SessionID(sessionId));
 		}
 

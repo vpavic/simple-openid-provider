@@ -131,7 +131,7 @@ public class AuthorizationEndpoint {
 
 		String principal = authentication.getName();
 		String sessionId = request.getSessionId();
-		State sessionState = this.properties.isSessionManagementEnabled() ? State.parse(sessionId) : null;
+		State sessionState = this.properties.getSessionManagement().isEnabled() ? State.parse(sessionId) : null;
 
 		AuthenticationSuccessResponse authResponse;
 
