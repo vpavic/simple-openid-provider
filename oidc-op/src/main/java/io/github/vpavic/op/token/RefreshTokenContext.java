@@ -18,9 +18,13 @@ public class RefreshTokenContext implements Serializable {
 	private final Instant expiry;
 
 	public RefreshTokenContext(String principal, ClientID clientID, Scope scope, Instant expiry) {
-		this.principal = Objects.requireNonNull(principal);
-		this.clientID = Objects.requireNonNull(clientID);
-		this.scope = Objects.requireNonNull(scope);
+		Objects.requireNonNull(principal, "principal must not be null");
+		Objects.requireNonNull(clientID, "clientID must not be null");
+		Objects.requireNonNull(scope, "scope must not be null");
+
+		this.principal = principal;
+		this.clientID = clientID;
+		this.scope = scope;
 		this.expiry = expiry;
 	}
 

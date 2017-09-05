@@ -38,8 +38,11 @@ public class RevocationEndpoint {
 	private final RefreshTokenStore refreshTokenStore;
 
 	public RevocationEndpoint(ClientRequestValidator clientRequestValidator, RefreshTokenStore refreshTokenStore) {
-		this.clientRequestValidator = Objects.requireNonNull(clientRequestValidator);
-		this.refreshTokenStore = Objects.requireNonNull(refreshTokenStore);
+		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
+		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
+
+		this.clientRequestValidator = clientRequestValidator;
+		this.refreshTokenStore = refreshTokenStore;
 	}
 
 	@PostMapping

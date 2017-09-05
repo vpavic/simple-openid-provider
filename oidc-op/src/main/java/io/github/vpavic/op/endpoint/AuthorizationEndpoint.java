@@ -97,12 +97,19 @@ public class AuthorizationEndpoint {
 	public AuthorizationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService, ClaimsMapper claimsMapper,
 			UserInfoMapper userInfoMapper) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
+		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
+		Objects.requireNonNull(claimsMapper, "claimsMapper must not be null");
+		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
+
 		this.properties = properties;
-		this.clientRepository = Objects.requireNonNull(clientRepository);
-		this.tokenService = Objects.requireNonNull(tokenService);
-		this.authorizationCodeService = Objects.requireNonNull(authorizationCodeService);
-		this.claimsMapper = Objects.requireNonNull(claimsMapper);
-		this.userInfoMapper = Objects.requireNonNull(userInfoMapper);
+		this.clientRepository = clientRepository;
+		this.tokenService = tokenService;
+		this.authorizationCodeService = authorizationCodeService;
+		this.claimsMapper = claimsMapper;
+		this.userInfoMapper = userInfoMapper;
 	}
 
 	@GetMapping

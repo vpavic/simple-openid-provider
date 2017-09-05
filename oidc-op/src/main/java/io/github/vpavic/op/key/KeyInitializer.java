@@ -12,7 +12,9 @@ public class KeyInitializer implements CommandLineRunner {
 	private final KeyService keyService;
 
 	public KeyInitializer(KeyService keyService) {
-		this.keyService = Objects.requireNonNull(keyService);
+		Objects.requireNonNull(keyService, "keyService must not be null");
+
+		this.keyService = keyService;
 	}
 
 	@Override

@@ -48,9 +48,13 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	public BearerAccessTokenAuthenticationFilter(String issuer, KeyService keyService,
 			AuthenticationManager authenticationManager) {
-		this.issuer = Objects.requireNonNull(issuer);
-		this.keyService = Objects.requireNonNull(keyService);
-		this.authenticationManager = Objects.requireNonNull(authenticationManager);
+		Objects.requireNonNull(issuer, "issuer must not be null");
+		Objects.requireNonNull(keyService, "keyService must not be null");
+		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
+
+		this.issuer = issuer;
+		this.keyService = keyService;
+		this.authenticationManager = authenticationManager;
 	}
 
 	@Override

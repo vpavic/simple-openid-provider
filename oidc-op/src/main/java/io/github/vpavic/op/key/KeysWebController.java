@@ -26,8 +26,11 @@ public class KeysWebController {
 	private final ObjectWriter objectWriter;
 
 	public KeysWebController(KeyService keyService, ObjectMapper objectMapper) {
-		this.keyService = Objects.requireNonNull(keyService);
-		this.objectWriter = Objects.requireNonNull(objectMapper).writer(SerializationFeature.INDENT_OUTPUT);
+		Objects.requireNonNull(keyService, "keyService must not be null");
+		Objects.requireNonNull(objectMapper, "objectMapper must not be null");
+
+		this.keyService = keyService;
+		this.objectWriter = objectMapper.writer(SerializationFeature.INDENT_OUTPUT);
 	}
 
 	@GetMapping

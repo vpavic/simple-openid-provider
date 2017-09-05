@@ -34,7 +34,9 @@ public class JdbcClientRepository implements ClientRepository {
 	private final JdbcOperations jdbcOperations;
 
 	public JdbcClientRepository(JdbcOperations jdbcOperations) {
-		this.jdbcOperations = Objects.requireNonNull(jdbcOperations);
+		Objects.requireNonNull(jdbcOperations, "jdbcOperations must not be null");
+
+		this.jdbcOperations = jdbcOperations;
 	}
 
 	@Override

@@ -30,8 +30,11 @@ public class ClientRequestValidator {
 	private final ClientRepository clientRepository;
 
 	public ClientRequestValidator(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
+
 		this.properties = properties;
-		this.clientRepository = Objects.requireNonNull(clientRepository);
+		this.clientRepository = clientRepository;
 	}
 
 	public void validateRequest(AbstractOptionallyIdentifiedRequest request) throws Exception {
