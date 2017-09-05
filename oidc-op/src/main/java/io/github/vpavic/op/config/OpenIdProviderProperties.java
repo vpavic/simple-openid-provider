@@ -168,12 +168,22 @@ public class OpenIdProviderProperties {
 
 		private int lifetime;
 
+		private boolean update;
+
 		public int getLifetime() {
 			return this.lifetime;
 		}
 
 		public void setLifetime(int lifetime) {
 			this.lifetime = lifetime;
+		}
+
+		public boolean isUpdate() {
+			return this.update;
+		}
+
+		public void setUpdate(boolean update) {
+			this.update = update;
 		}
 
 	}

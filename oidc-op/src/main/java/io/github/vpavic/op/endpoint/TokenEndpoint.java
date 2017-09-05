@@ -47,6 +47,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import io.github.vpavic.op.client.ClientRequestValidator;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.token.AccessTokenRequest;
 import io.github.vpavic.op.token.ClaimsMapper;
 import io.github.vpavic.op.token.IdTokenRequest;
@@ -69,6 +70,8 @@ public class TokenEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/token";
 
+	private final OpenIdProviderProperties properties;
+
 	private final ClientRequestValidator clientRequestValidator;
 
 	private final AuthorizationCodeService authorizationCodeService;
@@ -81,10 +84,11 @@ public class TokenEndpoint {
 
 	private final ClaimsMapper claimsMapper;
 
-	public TokenEndpoint(ClientRequestValidator clientRequestValidator,
+	public TokenEndpoint(OpenIdProviderProperties properties, ClientRequestValidator clientRequestValidator,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			ClaimsMapper claimsMapper) {
+		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
@@ -92,6 +96,7 @@ public class TokenEndpoint {
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 		Objects.requireNonNull(claimsMapper, "claimsMapper must not be null");
 
+		this.properties = properties;
 		this.clientRequestValidator = clientRequestValidator;
 		this.authorizationCodeService = authorizationCodeService;
 		this.tokenService = tokenService;
@@ -209,6 +214,7 @@ public class TokenEndpoint {
 		else if (authorizationGrant instanceof RefreshTokenGrant) {
 			RefreshTokenGrant refreshTokenGrant = (RefreshTokenGrant) authorizationGrant;
 			RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
+
 			RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
 			String principal = context.getPrincipal();
 			ClientID clientID = context.getClientID();
@@ -216,7 +222,15 @@ public class TokenEndpoint {
 
 			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
 			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			Tokens tokens = new Tokens(accessToken, null);
+			RefreshToken updatedRefreshToken = null;
+
+			if (this.properties.getRefreshToken().isUpdate() && scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+				RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+				updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+				this.refreshTokenStore.revoke(refreshToken);
+			}
+
+			Tokens tokens = new Tokens(accessToken, updatedRefreshToken);
 
 			tokenResponse = new AccessTokenResponse(tokens);
 		}
