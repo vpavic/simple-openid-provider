@@ -1,5 +1,11 @@
 package io.github.vpavic.op.config;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("op")
@@ -10,6 +16,8 @@ public class OpenIdProviderProperties {
 	private final Jwk jwk = new Jwk();
 
 	private final IdToken idToken = new IdToken();
+
+	private final Authorization authorization = new Authorization();
 
 	private final AuthorizationCode code = new AuthorizationCode();
 
@@ -35,6 +43,10 @@ public class OpenIdProviderProperties {
 
 	public IdToken getIdToken() {
 		return this.idToken;
+	}
+
+	public Authorization getAuthorization() {
+		return this.authorization;
 	}
 
 	public AuthorizationCode getCode() {
@@ -85,6 +97,41 @@ public class OpenIdProviderProperties {
 
 		public void setLifetime(int lifetime) {
 			this.lifetime = lifetime;
+		}
+
+	}
+
+	public class Authorization {
+
+		private List<String> openidScopes = Arrays.asList(OIDCScopeValue.OPENID.getValue(),
+				OIDCScopeValue.OFFLINE_ACCESS.getValue());
+
+		private Map<String, String> resourceScopes = Collections.emptyMap();
+
+		private List<String> acrs = Collections.singletonList("1");
+
+		public List<String> getOpenidScopes() {
+			return this.openidScopes;
+		}
+
+		public void setOpenidScopes(List<String> openidScopes) {
+			this.openidScopes = openidScopes;
+		}
+
+		public Map<String, String> getResourceScopes() {
+			return this.resourceScopes;
+		}
+
+		public void setResourceScopes(Map<String, String> resourceScopes) {
+			this.resourceScopes = resourceScopes;
+		}
+
+		public List<String> getAcrs() {
+			return this.acrs;
+		}
+
+		public void setAcrs(List<String> acrs) {
+			this.acrs = acrs;
 		}
 
 	}

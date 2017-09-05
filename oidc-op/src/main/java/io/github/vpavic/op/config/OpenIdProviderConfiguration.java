@@ -3,6 +3,7 @@ package io.github.vpavic.op.config;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -15,8 +16,9 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
-import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.SubjectType;
+import com.nimbusds.openid.connect.sdk.claims.ACR;
+import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,8 @@ public class OpenIdProviderConfiguration {
 				this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);
 		providerMetadata.setEndSessionEndpointURI(
 				this.properties.isLogoutEnabled() ? createURI(LogoutPromptController.PATH_MAPPING) : null);
-		providerMetadata.setScopes(new Scope(OIDCScopeValue.OPENID));
+		providerMetadata
+				.setScopes(new Scope(this.properties.getAuthorization().getOpenidScopes().toArray(new String[0])));
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN),
@@ -73,11 +76,15 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setGrantTypes(Arrays.asList(GrantType.AUTHORIZATION_CODE, GrantType.IMPLICIT,
 				GrantType.REFRESH_TOKEN, GrantType.PASSWORD, GrantType.CLIENT_CREDENTIALS));
 		providerMetadata.setCodeChallengeMethods(Arrays.asList(CodeChallengeMethod.PLAIN, CodeChallengeMethod.S256));
+		providerMetadata.setACRs(
+				this.properties.getAuthorization().getAcrs().stream().map(ACR::new).collect(Collectors.toList()));
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST, ClientAuthenticationMethod.NONE));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
-		providerMetadata
-				.setClaims(Arrays.asList("iss", "sub", "aud", "exp", "iat", "auth_time", "nonce", "amr", "azp"));
+		providerMetadata.setClaims(Arrays.asList(IDTokenClaimsSet.ISS_CLAIM_NAME, IDTokenClaimsSet.SUB_CLAIM_NAME,
+				IDTokenClaimsSet.AUD_CLAIM_NAME, IDTokenClaimsSet.EXP_CLAIM_NAME, IDTokenClaimsSet.IAT_CLAIM_NAME,
+				IDTokenClaimsSet.AUTH_TIME_CLAIM_NAME, IDTokenClaimsSet.NONCE_CLAIM_NAME,
+				IDTokenClaimsSet.ACR_CLAIM_NAME, IDTokenClaimsSet.AMR_CLAIM_NAME, IDTokenClaimsSet.AZP_CLAIM_NAME));
 		providerMetadata.setSupportsFrontChannelLogout(this.properties.getFrontChannelLogout().isEnabled());
 		providerMetadata.setSupportsFrontChannelLogoutSession(this.properties.getFrontChannelLogout().isEnabled());
 
