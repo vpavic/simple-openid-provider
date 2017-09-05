@@ -29,6 +29,8 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
+import com.nimbusds.openid.connect.sdk.claims.ACR;
+import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,8 +47,11 @@ import org.springframework.web.context.request.ServletWebRequest;
 import io.github.vpavic.op.client.ClientRequestValidator;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.token.AccessTokenRequest;
 import io.github.vpavic.op.token.ClaimsMapper;
+import io.github.vpavic.op.token.IdTokenRequest;
 import io.github.vpavic.op.token.RefreshTokenContext;
+import io.github.vpavic.op.token.RefreshTokenRequest;
 import io.github.vpavic.op.token.RefreshTokenStore;
 import io.github.vpavic.op.token.TokenService;
 
@@ -134,19 +139,23 @@ public class TokenEndpoint {
 			ClientID clientID = context.getClientID();
 			Scope scope = context.getScope();
 			Instant authenticationTime = context.getAuthenticationTime();
+			ACR acr = context.getAcr();
+			AMR amr = context.getAmr();
 			String sessionId = context.getSessionId();
 			Nonce nonce = context.getNonce();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
-					this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			RefreshToken refreshToken = null;
 
 			if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-				refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
+				RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+				refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 			}
 
-			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-					nonce, accessToken, null, null);
+			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
+					sessionId, nonce, accessToken, null, null);
+			JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
 			tokenResponse = new OIDCTokenResponse(tokens);
@@ -171,12 +180,13 @@ public class TokenEndpoint {
 			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
 			Scope scope = tokenRequest.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
-					this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			RefreshToken refreshToken = null;
 
 			if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-				refreshToken = this.tokenService.createRefreshToken(principal, clientID, scope);
+				RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+				refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 			}
 
 			Tokens tokens = new Tokens(accessToken, refreshToken);
@@ -189,7 +199,8 @@ public class TokenEndpoint {
 			String principal = clientID.getValue();
 			Scope scope = tokenRequest.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope, null);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			Tokens tokens = new Tokens(accessToken, null);
 
 			tokenResponse = new AccessTokenResponse(tokens);
@@ -203,8 +214,8 @@ public class TokenEndpoint {
 			ClientID clientID = context.getClientID();
 			Scope scope = context.getScope();
 
-			AccessToken accessToken = this.tokenService.createAccessToken(principal, clientID, scope,
-					this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			Tokens tokens = new Tokens(accessToken, null);
 
 			tokenResponse = new AccessTokenResponse(tokens);

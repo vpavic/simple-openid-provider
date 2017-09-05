@@ -1,7 +1,6 @@
 package io.github.vpavic.op.endpoint;
 
 import java.net.URI;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
@@ -16,9 +15,7 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCError;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
@@ -42,14 +39,14 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
+import io.github.vpavic.op.token.AccessTokenRequest;
 import io.github.vpavic.op.token.ClaimsMapper;
+import io.github.vpavic.op.token.IdTokenRequest;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -284,10 +281,8 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
-				any(ClaimsMapper.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), any(Nonce.class), any(AccessToken.class), isNull(), isNull())).willReturn(idToken);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -304,8 +299,7 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
-		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), any(Nonce.class), isNull(), isNull(), any(UserInfoMapper.class))).willReturn(idToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -323,10 +317,8 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findByClientId(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
-				any(ClaimsMapper.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), any(Nonce.class), any(AccessToken.class), isNull(), isNull())).willReturn(idToken);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test&state="
@@ -404,11 +396,8 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
-				any(ClaimsMapper.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), any(Nonce.class), any(AccessToken.class), any(AuthorizationCode.class), isNull()))
-						.willReturn(idToken);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -426,8 +415,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
-		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), any(Nonce.class), isNull(), any(AuthorizationCode.class), isNull())).willReturn(idToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -445,8 +433,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
-				any(ClaimsMapper.class))).willReturn(accessToken);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -466,11 +453,8 @@ public class AuthorizationEndpointTests {
 		State state = new State();
 
 		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(anyString(), any(ClientID.class), any(Scope.class),
-				any(ClaimsMapper.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(anyString(), any(ClientID.class), any(Scope.class), any(Instant.class),
-				anyString(), any(Nonce.class), any(AccessToken.class), any(AuthorizationCode.class), isNull()))
-						.willReturn(idToken);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(

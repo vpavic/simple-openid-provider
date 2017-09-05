@@ -30,6 +30,8 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCError;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.Prompt;
+import com.nimbusds.openid.connect.sdk.claims.ACR;
+import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
@@ -47,7 +49,9 @@ import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.code.AuthorizationCodeContext;
 import io.github.vpavic.op.code.AuthorizationCodeService;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.token.AccessTokenRequest;
 import io.github.vpavic.op.token.ClaimsMapper;
+import io.github.vpavic.op.token.IdTokenRequest;
 import io.github.vpavic.op.token.TokenService;
 import io.github.vpavic.op.userinfo.UserInfoMapper;
 
@@ -130,6 +134,8 @@ public class AuthorizationEndpoint {
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
 
 		String principal = authentication.getName();
+		ACR acr = new ACR(this.properties.getAuthorization().getAcrs().get(0));
+		AMR amr = AMR.PWD;
 		String sessionId = request.getSessionId();
 		State sessionState = this.properties.getSessionManagement().isEnabled() ? State.parse(sessionId) : null;
 
@@ -138,7 +144,7 @@ public class AuthorizationEndpoint {
 		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
 			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
-					authenticationTime, sessionId, codeChallenge, codeChallengeMethod, nonce);
+					authenticationTime, acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 
 			AuthorizationCode code = this.authorizationCodeService.create(context);
 
@@ -150,11 +156,13 @@ public class AuthorizationEndpoint {
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
+				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+				accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			}
 
-			JWT idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-					nonce, accessToken, null, (responseType.size() == 1) ? this.userInfoMapper : null);
+			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
+					sessionId, nonce, accessToken, null, (responseType.size() == 1) ? this.userInfoMapper : null);
+			JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
 					sessionState, responseMode);
@@ -162,21 +170,23 @@ public class AuthorizationEndpoint {
 		// Hybrid Flow
 		else {
 			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
-					authenticationTime, sessionId, codeChallenge, codeChallengeMethod, nonce);
+					authenticationTime, acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 
 			AuthorizationCode code = this.authorizationCodeService.create(context);
 
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				accessToken = this.tokenService.createAccessToken(principal, clientID, scope, this.claimsMapper);
+				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+				accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			}
 
 			JWT idToken = null;
 
 			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-				idToken = this.tokenService.createIdToken(principal, clientID, scope, authenticationTime, sessionId,
-						nonce, accessToken, code, null);
+				IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr,
+						amr, sessionId, nonce, accessToken, code, null);
+				idToken = this.tokenService.createIdToken(idTokenRequest);
 			}
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,

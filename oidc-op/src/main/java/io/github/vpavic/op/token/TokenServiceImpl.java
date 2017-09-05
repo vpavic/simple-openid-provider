@@ -26,9 +26,7 @@ import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
-import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.AuthorizedParty;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
@@ -66,11 +64,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public AccessToken createAccessToken(String principal, ClientID clientID, Scope scope, ClaimsMapper claimsMapper) {
-		Objects.requireNonNull(principal, "Principal must not be null");
-		Objects.requireNonNull(clientID, "ClientID must not be null");
-		Objects.requireNonNull(scope, "Scope must not be null");
-
+	public AccessToken createAccessToken(AccessTokenRequest accessTokenRequest) {
 		Instant issuedAt = Instant.now();
 		int tokenLifetime = this.properties.getAccessToken().getLifetime();
 
@@ -82,6 +76,9 @@ public class TokenServiceImpl implements TokenService {
 				.build();
 		// @formatter:on
 
+		String principal = accessTokenRequest.getPrincipal();
+		Scope scope = accessTokenRequest.getScope();
+
 		// @formatter:off
 		JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
@@ -92,6 +89,8 @@ public class TokenServiceImpl implements TokenService {
 				.jwtID(UUID.randomUUID().toString())
 				.claim(SCOPE_CLAIM, scope.toString());
 		// @formatter:on
+
+		ClaimsMapper claimsMapper = accessTokenRequest.getClaimsMapper();
 
 		if (claimsMapper != null) {
 			Map<String, Object> claims = claimsMapper.map(principal);
@@ -113,10 +112,8 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public RefreshToken createRefreshToken(String principal, ClientID clientID, Scope scope) {
-		Objects.requireNonNull(principal, "Principal must not be null");
-		Objects.requireNonNull(clientID, "ClientID must not be null");
-		Objects.requireNonNull(scope, "Scope must not be null");
+	public RefreshToken createRefreshToken(RefreshTokenRequest refreshTokenRequest) {
+		Scope scope = refreshTokenRequest.getScope();
 
 		if (!scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
 			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OFFLINE_ACCESS + "' is required");
@@ -127,20 +124,16 @@ public class TokenServiceImpl implements TokenService {
 
 		RefreshToken refreshToken = new RefreshToken();
 		Instant expiry = (tokenLifetime > 0) ? issuedAt.plusSeconds(tokenLifetime) : null;
-		RefreshTokenContext context = new RefreshTokenContext(principal, clientID, scope, expiry);
+		RefreshTokenContext context = new RefreshTokenContext(refreshTokenRequest.getPrincipal(),
+				refreshTokenRequest.getClientID(), scope, expiry);
 		this.refreshTokenStore.save(refreshToken, context);
 
 		return refreshToken;
 	}
 
 	@Override
-	public JWT createIdToken(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
-			String sessionId, Nonce nonce, AccessToken accessToken, AuthorizationCode code,
-			UserInfoMapper userInfoMapper) {
-		Objects.requireNonNull(principal, "Principal must not be null");
-		Objects.requireNonNull(clientID, "ClientID must not be null");
-		Objects.requireNonNull(scope, "Scope must not be null");
-		Objects.requireNonNull(authenticationTime, "Authentication time must not be null");
+	public JWT createIdToken(IdTokenRequest idTokenRequest) {
+		Scope scope = idTokenRequest.getScope();
 
 		if (!scope.contains(OIDCScopeValue.OPENID)) {
 			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OPENID + "' is required");
@@ -156,26 +149,36 @@ public class TokenServiceImpl implements TokenService {
 				.build();
 		// @formatter:on
 
+		String principal = idTokenRequest.getPrincipal();
+		ClientID clientID = idTokenRequest.getClientID();
+
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(new Issuer(this.properties.getIssuer()),
 				new Subject(principal), Audience.create(clientID.getValue()),
 				Date.from(issuedAt.plusSeconds(this.properties.getIdToken().getLifetime())), Date.from(issuedAt));
 
-		claimsSet.setAuthenticationTime(Date.from(authenticationTime));
-		claimsSet.setNonce(nonce);
-		claimsSet.setAMR(Collections.singletonList(AMR.PWD));
+		claimsSet.setAuthenticationTime(Date.from(idTokenRequest.getAuthenticationTime()));
+		claimsSet.setNonce(idTokenRequest.getNonce());
+		claimsSet.setACR(idTokenRequest.getAcr());
+		claimsSet.setAMR(Collections.singletonList(idTokenRequest.getAmr()));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
 
 		if (this.properties.getFrontChannelLogout().isEnabled()) {
-			claimsSet.setSessionID(new SessionID(sessionId));
+			claimsSet.setSessionID(new SessionID(idTokenRequest.getSessionId()));
 		}
+
+		AccessToken accessToken = idTokenRequest.getAccessToken();
 
 		if (accessToken != null) {
 			claimsSet.setAccessTokenHash(AccessTokenHash.compute(accessToken, jwsAlgorithm));
 		}
 
+		AuthorizationCode code = idTokenRequest.getCode();
+
 		if (code != null) {
 			claimsSet.setCodeHash(CodeHash.compute(code, jwsAlgorithm));
 		}
+
+		UserInfoMapper userInfoMapper = idTokenRequest.getUserInfoMapper();
 
 		if (userInfoMapper != null) {
 			UserInfo userInfo = userInfoMapper.map(principal, scope);
