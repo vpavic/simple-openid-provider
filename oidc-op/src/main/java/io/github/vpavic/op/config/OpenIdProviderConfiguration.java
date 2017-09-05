@@ -27,14 +27,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
-import io.github.vpavic.op.endpoint.CheckSessionIframe;
-import io.github.vpavic.op.endpoint.KeysEndpoint;
-import io.github.vpavic.op.endpoint.RegistrationEndpoint;
-import io.github.vpavic.op.endpoint.RevocationEndpoint;
-import io.github.vpavic.op.endpoint.TokenEndpoint;
-import io.github.vpavic.op.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.logout.LogoutPromptController;
+import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
+import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.RegistrationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
 
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)

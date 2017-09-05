@@ -20,18 +20,18 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
-import io.github.vpavic.op.endpoint.AuthorizationEndpoint;
-import io.github.vpavic.op.endpoint.CheckSessionIframe;
-import io.github.vpavic.op.endpoint.DiscoveryEndpoint;
-import io.github.vpavic.op.endpoint.KeysEndpoint;
-import io.github.vpavic.op.endpoint.RegistrationEndpoint;
-import io.github.vpavic.op.endpoint.RevocationEndpoint;
-import io.github.vpavic.op.endpoint.TokenEndpoint;
-import io.github.vpavic.op.endpoint.UserInfoEndpoint;
-import io.github.vpavic.op.key.KeyService;
 import io.github.vpavic.op.login.LoginFormController;
 import io.github.vpavic.op.logout.LogoutPromptController;
 import io.github.vpavic.op.logout.LogoutSuccessController;
+import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
+import io.github.vpavic.op.oauth2.endpoint.DiscoveryEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.RegistrationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
+import io.github.vpavic.op.oauth2.key.KeyService;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.op.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 

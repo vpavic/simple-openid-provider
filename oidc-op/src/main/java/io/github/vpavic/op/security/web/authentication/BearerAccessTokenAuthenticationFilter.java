@@ -32,7 +32,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.vpavic.op.key.KeyService;
+import io.github.vpavic.op.oauth2.key.KeyService;
 
 public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 

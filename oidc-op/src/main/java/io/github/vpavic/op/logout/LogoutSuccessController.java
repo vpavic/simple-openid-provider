@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.github.vpavic.op.client.ClientRepository;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @Controller
 @RequestMapping(path = LogoutSuccessController.PATH_MAPPING)
