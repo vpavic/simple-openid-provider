@@ -116,7 +116,10 @@ public class SecurityConfiguration {
 					.successHandler(successHandler)
 					.and()
 				.logout()
-					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutSuccessController.PATH_MAPPING));
+					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutSuccessController.PATH_MAPPING))
+					.and()
+				.sessionManagement()
+					.sessionFixation().migrateSession();
 			// @formatter:on
 		}
 
