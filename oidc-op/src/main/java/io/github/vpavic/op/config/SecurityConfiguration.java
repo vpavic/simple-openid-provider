@@ -25,9 +25,9 @@ import io.github.vpavic.op.logout.LogoutPromptController;
 import io.github.vpavic.op.logout.LogoutSuccessController;
 import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
+import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.DiscoveryEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.RegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
@@ -55,18 +55,37 @@ public class SecurityConfiguration {
 			http
 				.requestMatchers()
 					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING,
-							RevocationEndpoint.PATH_MAPPING, RegistrationEndpoint.PATH_MAPPING)
+							RevocationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
-					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING).permitAll()
-					.antMatchers(TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING).permitAll()
-					.antMatchers(RegistrationEndpoint.PATH_MAPPING).authenticated()
 					.anyRequest().permitAll()
 					.and()
 				.csrf()
 					.disable()
 				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.NEVER);
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+			// @formatter:on
+		}
+
+	}
+
+	@Order(-20)
+	@Configuration
+	@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
+	static class RegistrationConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.antMatcher(ClientRegistrationEndpoint.PATH_MAPPING + "/**")
+				.authorizeRequests()
+					.anyRequest().permitAll()
+					.and()
+				.csrf()
+					.disable()
+				.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 			// @formatter:on
 		}
 

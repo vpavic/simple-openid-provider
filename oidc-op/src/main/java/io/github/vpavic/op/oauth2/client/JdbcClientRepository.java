@@ -1,15 +1,20 @@
 package io.github.vpavic.op.oauth2.client;
 
+import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import net.minidev.json.JSONObject;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
@@ -19,13 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public class JdbcClientRepository implements ClientRepository {
 
-	private static final String INSERT_STATEMENT = "INSERT INTO clients(id, content) VALUES (?, ?)";
+	private static final String INSERT_STATEMENT = "INSERT INTO clients(id, issue_date, metadata, secret, registration_uri, access_token) VALUES (?, ?, ?, ?, ?, ?)";
 
-	private static final String SELECT_BY_ID_STATEMENT = "SELECT content FROM clients WHERE id = ?";
+	private static final String SELECT_BY_ID_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM clients WHERE id = ?";
 
-	private static final String SELECT_ALL_STATEMENT = "SELECT content FROM clients";
+	private static final String SELECT_ALL_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM clients";
 
-	private static final String UPDATE_STATEMENT = "UPDATE clients SET content = ? WHERE id = ?";
+	private static final String UPDATE_STATEMENT = "UPDATE clients SET metadata = ?, secret = ?, access_token = ? WHERE id = ?";
 
 	private static final String DELETE_STATEMENT = "DELETE FROM clients WHERE id = ?";
 
@@ -41,19 +46,29 @@ public class JdbcClientRepository implements ClientRepository {
 
 	@Override
 	@Transactional
-	public void save(OIDCClientInformation client) {
-		String id = client.getID().getValue();
-		String content = client.toJSONObject().toString();
+	public void save(OIDCClientInformation clientInformation) {
+		ClientID id = clientInformation.getID();
+		Date issueDate = clientInformation.getIDIssueDate();
+		OIDCClientMetadata metadata = clientInformation.getOIDCMetadata();
+		Secret secret = clientInformation.getSecret();
+		URI registrationUri = clientInformation.getRegistrationURI();
+		BearerAccessToken accessToken = clientInformation.getRegistrationAccessToken();
 
 		int updatedCount = this.jdbcOperations.update(UPDATE_STATEMENT, ps -> {
-			ps.setString(1, content);
-			ps.setString(2, id);
+			ps.setString(1, metadata.toJSONObject().toJSONString());
+			ps.setString(2, (secret != null) ? secret.getValue() : null);
+			ps.setString(3, (accessToken != null) ? accessToken.getValue() : null);
+			ps.setString(4, id.getValue());
 		});
 
 		if (updatedCount == 0) {
 			this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
-				ps.setString(1, id);
-				ps.setString(2, content);
+				ps.setString(1, id.getValue());
+				ps.setTimestamp(2, Timestamp.from(issueDate.toInstant()));
+				ps.setString(3, metadata.toJSONObject().toJSONString());
+				ps.setString(4, (secret != null) ? secret.getValue() : null);
+				ps.setString(5, registrationUri.toString());
+				ps.setString(6, (accessToken != null) ? accessToken.getValue() : null);
 			});
 		}
 	}
@@ -90,8 +105,17 @@ public class JdbcClientRepository implements ClientRepository {
 		@Override
 		public OIDCClientInformation mapRow(ResultSet rs, int rowNum) throws SQLException {
 			try {
-				JSONObject jsonObject = JSONObjectUtils.parse(rs.getString(1));
-				return OIDCClientInformation.parse(jsonObject);
+				String id = rs.getString(1);
+				Date issueDate = rs.getTimestamp(2);
+				String metadata = rs.getString(3);
+				String secret = rs.getString(4);
+				String registrationUri = rs.getString(5);
+				String accessToken = rs.getString(6);
+
+				return new OIDCClientInformation(new ClientID(id), issueDate,
+						OIDCClientMetadata.parse(JSONObjectUtils.parse(metadata)),
+						(secret != null) ? new Secret(secret) : null, URI.create(registrationUri),
+						(accessToken != null) ? new BearerAccessToken(accessToken) : null);
 			}
 			catch (ParseException e) {
 				throw new RuntimeException(e);

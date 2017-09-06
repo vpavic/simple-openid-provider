@@ -30,8 +30,8 @@ import org.springframework.context.annotation.Configuration;
 import io.github.vpavic.op.logout.LogoutPromptController;
 import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
+import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.RegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
@@ -58,7 +58,9 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
-		providerMetadata.setRegistrationEndpointURI(createURI(RegistrationEndpoint.PATH_MAPPING));
+		providerMetadata.setRegistrationEndpointURI(
+				this.properties.getRegistration().isEnabled() ? createURI(ClientRegistrationEndpoint.PATH_MAPPING)
+						: null);
 		providerMetadata.setRevocationEndpointURI(createURI(RevocationEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(
 				this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);

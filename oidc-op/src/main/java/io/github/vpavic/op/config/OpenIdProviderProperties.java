@@ -15,6 +15,8 @@ public class OpenIdProviderProperties {
 
 	private final Jwk jwk = new Jwk();
 
+	private final Registration registration = new Registration();
+
 	private final IdToken idToken = new IdToken();
 
 	private final Authorization authorization = new Authorization();
@@ -39,6 +41,10 @@ public class OpenIdProviderProperties {
 
 	public Jwk getJwk() {
 		return this.jwk;
+	}
+
+	public Registration getRegistration() {
+		return this.registration;
 	}
 
 	public IdToken getIdToken() {
@@ -83,6 +89,40 @@ public class OpenIdProviderProperties {
 
 		public void setRetentionPeriod(int retentionPeriod) {
 			this.retentionPeriod = retentionPeriod;
+		}
+
+	}
+
+	public class Registration {
+
+		private boolean enabled;
+
+		private boolean updateSecret;
+
+		private boolean updateAccessToken;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public boolean isUpdateSecret() {
+			return this.updateSecret;
+		}
+
+		public void setUpdateSecret(boolean updateSecret) {
+			this.updateSecret = updateSecret;
+		}
+
+		public boolean isUpdateAccessToken() {
+			return this.updateAccessToken;
+		}
+
+		public void setUpdateAccessToken(boolean updateAccessToken) {
+			this.updateAccessToken = updateAccessToken;
 		}
 
 	}
