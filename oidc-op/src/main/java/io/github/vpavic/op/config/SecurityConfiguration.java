@@ -93,7 +93,7 @@ public class SecurityConfiguration {
 
 	@Order(-15)
 	@Configuration
-	@ConditionalOnProperty(prefix = "oidc.op", name = "session-management-enabled", havingValue = "true")
+	@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
 	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override

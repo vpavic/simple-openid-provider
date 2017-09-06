@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
 @Controller
-@ConditionalOnProperty(prefix = "oidc.op", name = "session-management-enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
 @RequestMapping(path = CheckSessionIframe.PATH_MAPPING)
 public class CheckSessionIframe {
 
