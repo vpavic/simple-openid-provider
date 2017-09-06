@@ -39,8 +39,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.op.oauth2.token.ClaimsMapper;
+import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.IdTokenRequest;
 import io.github.vpavic.op.oauth2.token.TokenService;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
@@ -79,7 +80,10 @@ public class AuthorizationEndpointTests {
 	private TokenService tokenService;
 
 	@MockBean
-	private ClaimsMapper claimsMapper;
+	private AccessTokenClaimsMapper accessTokenClaimsMapper;
+
+	@MockBean
+	private IdTokenClaimsMapper idTokenClaimsMapper;
 
 	@MockBean
 	private UserInfoMapper userInfoMapper;

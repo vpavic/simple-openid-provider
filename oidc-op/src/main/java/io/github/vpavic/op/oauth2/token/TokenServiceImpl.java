@@ -90,10 +90,10 @@ public class TokenServiceImpl implements TokenService {
 				.claim(SCOPE_CLAIM, scope.toString());
 		// @formatter:on
 
-		ClaimsMapper claimsMapper = accessTokenRequest.getClaimsMapper();
+		AccessTokenClaimsMapper accessTokenClaimsMapper = accessTokenRequest.getAccessTokenClaimsMapper();
 
-		if (claimsMapper != null) {
-			Map<String, Object> claims = claimsMapper.map(principal);
+		if (accessTokenClaimsMapper != null) {
+			Map<String, Object> claims = accessTokenClaimsMapper.map(principal);
 			claims.forEach(claimsSetBuilder::claim);
 		}
 
@@ -176,6 +176,13 @@ public class TokenServiceImpl implements TokenService {
 
 		if (code != null) {
 			claimsSet.setCodeHash(CodeHash.compute(code, jwsAlgorithm));
+		}
+
+		IdTokenClaimsMapper idTokenClaimsMapper = idTokenRequest.getIdTokenClaimsMapper();
+
+		if (idTokenClaimsMapper != null) {
+			Map<String, Object> claims = idTokenClaimsMapper.map(principal);
+			claims.forEach(claimsSet::setClaim);
 		}
 
 		UserInfoMapper userInfoMapper = idTokenRequest.getUserInfoMapper();

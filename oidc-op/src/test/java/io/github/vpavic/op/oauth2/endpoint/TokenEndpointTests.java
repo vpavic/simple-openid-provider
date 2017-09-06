@@ -45,8 +45,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.op.oauth2.token.ClaimsMapper;
+import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.IdTokenRequest;
 import io.github.vpavic.op.oauth2.token.RefreshTokenContext;
 import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
@@ -89,7 +90,10 @@ public class TokenEndpointTests {
 	private RefreshTokenStore refreshTokenStore;
 
 	@MockBean
-	private ClaimsMapper claimsMapper;
+	private AccessTokenClaimsMapper accessTokenClaimsMapper;
+
+	@MockBean
+	private IdTokenClaimsMapper idTokenClaimsMapper;
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {

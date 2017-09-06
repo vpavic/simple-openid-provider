@@ -48,8 +48,9 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.op.oauth2.token.ClaimsMapper;
+import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.IdTokenRequest;
 import io.github.vpavic.op.oauth2.token.RefreshTokenContext;
 import io.github.vpavic.op.oauth2.token.RefreshTokenRequest;
@@ -82,19 +83,22 @@ public class TokenEndpoint {
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	private final ClaimsMapper claimsMapper;
+	private final AccessTokenClaimsMapper accessTokenClaimsMapper;
+
+	private final IdTokenClaimsMapper idTokenClaimsMapper;
 
 	public TokenEndpoint(OpenIdProviderProperties properties, ClientRequestValidator clientRequestValidator,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
-			ClaimsMapper claimsMapper) {
+			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
-		Objects.requireNonNull(claimsMapper, "claimsMapper must not be null");
+		Objects.requireNonNull(accessTokenClaimsMapper, "claimsMapper must not be null");
+		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
 		this.properties = properties;
 		this.clientRequestValidator = clientRequestValidator;
@@ -102,7 +106,8 @@ public class TokenEndpoint {
 		this.tokenService = tokenService;
 		this.authenticationManager = authenticationManager;
 		this.refreshTokenStore = refreshTokenStore;
-		this.claimsMapper = claimsMapper;
+		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
+		this.idTokenClaimsMapper = idTokenClaimsMapper;
 	}
 
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -149,7 +154,8 @@ public class TokenEndpoint {
 			String sessionId = context.getSessionId();
 			Nonce nonce = context.getNonce();
 
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+					this.accessTokenClaimsMapper);
 			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			RefreshToken refreshToken = null;
 
@@ -159,7 +165,7 @@ public class TokenEndpoint {
 			}
 
 			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
-					sessionId, nonce, accessToken, null, null);
+					this.idTokenClaimsMapper, sessionId, nonce, accessToken, null, null);
 			JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
@@ -185,7 +191,8 @@ public class TokenEndpoint {
 			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
 			Scope scope = tokenRequest.getScope();
 
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+					this.accessTokenClaimsMapper);
 			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			RefreshToken refreshToken = null;
 
@@ -204,7 +211,8 @@ public class TokenEndpoint {
 			String principal = clientID.getValue();
 			Scope scope = tokenRequest.getScope();
 
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+					this.accessTokenClaimsMapper);
 			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			Tokens tokens = new Tokens(accessToken, null);
 
@@ -220,7 +228,8 @@ public class TokenEndpoint {
 			ClientID clientID = context.getClientID();
 			Scope scope = context.getScope();
 
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+					this.accessTokenClaimsMapper);
 			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			RefreshToken updatedRefreshToken = null;
 

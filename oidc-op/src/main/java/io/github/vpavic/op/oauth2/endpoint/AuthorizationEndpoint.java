@@ -49,8 +49,9 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.op.oauth2.token.ClaimsMapper;
+import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.IdTokenRequest;
 import io.github.vpavic.op.oauth2.token.TokenService;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
@@ -90,25 +91,30 @@ public class AuthorizationEndpoint {
 
 	private final TokenService tokenService;
 
-	private final ClaimsMapper claimsMapper;
+	private final AccessTokenClaimsMapper accessTokenClaimsMapper;
+
+	private final IdTokenClaimsMapper idTokenClaimsMapper;
 
 	private final UserInfoMapper userInfoMapper;
 
 	public AuthorizationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
-			AuthorizationCodeService authorizationCodeService, TokenService tokenService, ClaimsMapper claimsMapper,
+			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
+			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper,
 			UserInfoMapper userInfoMapper) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
-		Objects.requireNonNull(claimsMapper, "claimsMapper must not be null");
+		Objects.requireNonNull(accessTokenClaimsMapper, "accessTokenClaimsMapper must not be null");
+		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
 
 		this.properties = properties;
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
-		this.claimsMapper = claimsMapper;
+		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
+		this.idTokenClaimsMapper = idTokenClaimsMapper;
 		this.userInfoMapper = userInfoMapper;
 	}
 
@@ -163,12 +169,14 @@ public class AuthorizationEndpoint {
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+						this.accessTokenClaimsMapper);
 				accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			}
 
 			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
-					sessionId, nonce, accessToken, null, (responseType.size() == 1) ? this.userInfoMapper : null);
+					this.idTokenClaimsMapper, sessionId, nonce, accessToken, null,
+					(responseType.size() == 1) ? this.userInfoMapper : null);
 			JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 
 			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
@@ -184,7 +192,8 @@ public class AuthorizationEndpoint {
 			AccessToken accessToken = null;
 
 			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.claimsMapper);
+				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+						this.accessTokenClaimsMapper);
 				accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 			}
 
@@ -192,7 +201,7 @@ public class AuthorizationEndpoint {
 
 			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
 				IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr,
-						amr, sessionId, nonce, accessToken, code, null);
+						amr, this.idTokenClaimsMapper, sessionId, nonce, accessToken, code, null);
 				idToken = this.tokenService.createIdToken(idTokenRequest);
 			}
 

@@ -35,17 +35,20 @@ public final class IdTokenRequest {
 
 	private final AuthorizationCode code;
 
+	private final IdTokenClaimsMapper idTokenClaimsMapper;
+
 	private final UserInfoMapper userInfoMapper;
 
 	public IdTokenRequest(String principal, ClientID clientID, Scope scope, Instant authenticationTime, ACR acr,
-			AMR amr, String sessionId, Nonce nonce, AccessToken accessToken, AuthorizationCode code,
-			UserInfoMapper userInfoMapper) {
+			AMR amr, IdTokenClaimsMapper idTokenClaimsMapper, String sessionId, Nonce nonce, AccessToken accessToken,
+			AuthorizationCode code, UserInfoMapper userInfoMapper) {
 		Objects.requireNonNull(principal, "principal must not be null");
 		Objects.requireNonNull(clientID, "clientID must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
 		Objects.requireNonNull(amr, "amr must not be null");
+		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
 		this.principal = principal;
 		this.clientID = clientID;
@@ -53,6 +56,7 @@ public final class IdTokenRequest {
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
 		this.amr = amr;
+		this.idTokenClaimsMapper = idTokenClaimsMapper;
 		this.sessionId = sessionId;
 		this.nonce = nonce;
 		this.accessToken = accessToken;
@@ -82,6 +86,10 @@ public final class IdTokenRequest {
 
 	public AMR getAmr() {
 		return this.amr;
+	}
+
+	public IdTokenClaimsMapper getIdTokenClaimsMapper() {
+		return this.idTokenClaimsMapper;
 	}
 
 	public String getSessionId() {

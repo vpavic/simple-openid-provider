@@ -10,15 +10,16 @@ public final class AccessTokenRequest {
 
 	private final Scope scope;
 
-	private final ClaimsMapper claimsMapper;
+	private final AccessTokenClaimsMapper accessTokenClaimsMapper;
 
-	public AccessTokenRequest(String principal, Scope scope, ClaimsMapper claimsMapper) {
+	public AccessTokenRequest(String principal, Scope scope, AccessTokenClaimsMapper accessTokenClaimsMapper) {
 		Objects.requireNonNull(principal, "principal must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
+		Objects.requireNonNull(accessTokenClaimsMapper, "accessTokenClaimsMapper must not be null");
 
 		this.principal = principal;
 		this.scope = scope;
-		this.claimsMapper = claimsMapper;
+		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 	}
 
 	public String getPrincipal() {
@@ -29,8 +30,8 @@ public final class AccessTokenRequest {
 		return this.scope;
 	}
 
-	public ClaimsMapper getClaimsMapper() {
-		return this.claimsMapper;
+	public AccessTokenClaimsMapper getAccessTokenClaimsMapper() {
+		return this.accessTokenClaimsMapper;
 	}
 
 }
