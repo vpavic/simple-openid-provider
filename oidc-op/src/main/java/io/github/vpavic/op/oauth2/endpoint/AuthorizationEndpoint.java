@@ -120,13 +120,18 @@ public class AuthorizationEndpoint {
 
 	@GetMapping
 	public ModelAndView authorize(ServletWebRequest request, Authentication authentication) throws Exception {
-		AuthenticationRequest authRequest = resolveRequest(request, authentication);
+		AuthenticationRequest authRequest = resolveRequest(request);
+
+		ClientID clientID = authRequest.getClientID();
+		OIDCClientMetadata clientMetadata = resolveClientMetadata(clientID);
+
+		validateRequest(authRequest, authentication, clientMetadata);
+
+		Scope scope = resolveScope(authRequest, clientMetadata);
 
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
-		ClientID clientID = authRequest.getClientID();
 		URI redirectionURI = authRequest.getRedirectionURI();
-		Scope scope = authRequest.getScope();
 		State state = authRequest.getState();
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
@@ -222,8 +227,7 @@ public class AuthorizationEndpoint {
 		return modelAndView;
 	}
 
-	private AuthenticationRequest resolveRequest(ServletWebRequest request, Authentication authentication)
-			throws GeneralException {
+	private AuthenticationRequest resolveRequest(ServletWebRequest request) throws GeneralException {
 		AuthenticationRequest authRequest;
 
 		try {
@@ -234,19 +238,17 @@ public class AuthorizationEndpoint {
 			URI redirectionURI = e.getRedirectionURI();
 
 			if (clientID != null && redirectionURI != null) {
-				OIDCClientInformation client = resolveClient(clientID);
-				validateRedirectionURI(redirectionURI, client);
+				OIDCClientMetadata clientMetadata = resolveClientMetadata(clientID);
+				validateRedirectionURI(redirectionURI, clientMetadata);
 			}
 
 			throw e;
 		}
 
-		validateRequest(authRequest, authentication);
-
 		return authRequest;
 	}
 
-	private OIDCClientInformation resolveClient(ClientID clientID) throws GeneralException {
+	private OIDCClientMetadata resolveClientMetadata(ClientID clientID) throws GeneralException {
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
 		if (client == null) {
@@ -254,11 +256,11 @@ public class AuthorizationEndpoint {
 					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"client_id\" parameter: " + clientID));
 		}
 
-		return client;
+		return client.getOIDCMetadata();
 	}
 
-	private void validateRedirectionURI(URI redirectionURI, OIDCClientInformation client) throws GeneralException {
-		Set<URI> registeredRedirectionURIs = client.getOIDCMetadata().getRedirectionURIs();
+	private void validateRedirectionURI(URI redirectionURI, OIDCClientMetadata clientMetadata) throws GeneralException {
+		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectionURI)) {
 			throw new GeneralException(OAuth2Error.INVALID_REQUEST
@@ -266,25 +268,16 @@ public class AuthorizationEndpoint {
 		}
 	}
 
-	private void validateRequest(AuthenticationRequest request, Authentication authentication) throws GeneralException {
+	private void validateRequest(AuthenticationRequest request, Authentication authentication,
+			OIDCClientMetadata clientMetadata) throws GeneralException {
 		ResponseType responseType = request.getResponseType();
 		ResponseMode responseMode = request.impliedResponseMode();
 		ClientID clientID = request.getClientID();
 		URI redirectionURI = request.getRedirectionURI();
-		Scope scope = request.getScope();
 		State state = request.getState();
 		Prompt prompt = request.getPrompt();
 
-		OIDCClientInformation client = resolveClient(clientID);
-		validateRedirectionURI(redirectionURI, client);
-		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
-
-		Scope registeredScope = clientMetadata.getScope();
-
-		if (registeredScope == null || !registeredScope.toStringList().containsAll(scope.toStringList())) {
-			ErrorObject error = OAuth2Error.INVALID_SCOPE;
-			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
-		}
+		validateRedirectionURI(redirectionURI, clientMetadata);
 
 		if (!clientMetadata.getResponseTypes().contains(responseType)) {
 			ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
@@ -295,6 +288,21 @@ public class AuthorizationEndpoint {
 			ErrorObject error = OIDCError.LOGIN_REQUIRED;
 			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
+	}
+
+	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
+		Scope requestedScope = authRequest.getScope();
+		Scope registeredScope = clientMetadata.getScope();
+
+		Scope resolvedScope = new Scope();
+
+		for (Scope.Value scopeValue : requestedScope) {
+			if (registeredScope.contains(scopeValue)) {
+				resolvedScope.add(scopeValue);
+			}
+		}
+
+		return resolvedScope;
 	}
 
 	private ModelAndView redirectToLoginPage(ServletWebRequest request, AuthenticationRequest authRequest) {
