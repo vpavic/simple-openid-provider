@@ -293,12 +293,17 @@ public class AuthorizationEndpoint {
 	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
 		Scope requestedScope = authRequest.getScope();
 		Scope registeredScope = clientMetadata.getScope();
+		Set<String> resourceScopes = this.properties.getAuthorization().getResourceScopes().keySet();
 
 		Scope resolvedScope = new Scope();
 
-		for (Scope.Value scopeValue : requestedScope) {
-			if (registeredScope.contains(scopeValue)) {
-				resolvedScope.add(scopeValue);
+		for (Scope.Value scope : requestedScope) {
+			if (registeredScope.contains(scope)) {
+				resolvedScope.add(scope);
+			}
+
+			if (resourceScopes.contains(scope.getValue())) {
+				resolvedScope.add(scope);
 			}
 		}
 
