@@ -1,8 +1,10 @@
 package io.github.vpavic.op.oauth2.token;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -79,11 +81,22 @@ public class TokenServiceImpl implements TokenService {
 		String principal = accessTokenRequest.getPrincipal();
 		Scope scope = accessTokenRequest.getScope();
 
+		List<String> audience = new ArrayList<>();
+		audience.add(this.properties.getIssuer());
+
+		for (Scope.Value value : scope) {
+			String resource = this.properties.getAuthorization().getResourceScopes().get(value.getValue());
+
+			if (resource != null) {
+				audience.add(resource);
+			}
+		}
+
 		// @formatter:off
 		JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder()
 				.issuer(this.properties.getIssuer())
 				.subject(principal)
-				.audience(this.properties.getIssuer())
+				.audience(audience)
 				.expirationTime(Date.from(issuedAt.plusSeconds(tokenLifetime)))
 				.issueTime(Date.from(issuedAt))
 				.jwtID(UUID.randomUUID().toString())
