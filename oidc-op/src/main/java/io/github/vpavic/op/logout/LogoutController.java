@@ -9,12 +9,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -22,10 +26,10 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @Controller
-@RequestMapping(path = LogoutSuccessController.PATH_MAPPING)
-public class LogoutSuccessController {
+@RequestMapping(path = LogoutController.PATH_MAPPING)
+public class LogoutController {
 
-	public static final String PATH_MAPPING = "/logout/success";
+	public static final String PATH_MAPPING = "/logout";
 
 	private static final String POST_LOGOUT_REDIRECT_URI_PARAMETER = "post_logout_redirect_uri";
 
@@ -33,22 +37,38 @@ public class LogoutSuccessController {
 
 	private static final String DEFAULT_POST_LOGOUT_REDIRECT_URI = "/login?logout";
 
+	private static final String LOGOUT_PROMPT_VIEW_NAME = "logout/prompt";
+
 	private static final String LOGOUT_SUCCESS_VIEW_NAME = "logout/success";
 
 	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
-	public LogoutSuccessController(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	public LogoutController(OpenIdProviderProperties properties, ClientRepository clientRepository) {
 		Objects.requireNonNull(properties, "properties must not be null");
-		Objects.requireNonNull(clientRepository, "properties must not be null");
+		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
 		this.properties = properties;
 		this.clientRepository = clientRepository;
 	}
 
+	@GetMapping
+	public String getLogoutPrompt(ServletWebRequest request, Model model) throws ParseException {
+		if (this.properties.isLogoutEnabled()) {
+			LogoutRequest logoutRequest = resolveLogoutRequest(request);
+
+			if (logoutRequest != null) {
+				model.addAttribute("redirectURI", logoutRequest.getPostLogoutRedirectionURI());
+				model.addAttribute("state", logoutRequest.getState());
+			}
+		}
+
+		return LOGOUT_PROMPT_VIEW_NAME;
+	}
+
 	@PostMapping
-	public String logoutSuccess(WebRequest request, Model model) {
+	public String handleLogoutSuccess(WebRequest request, Model model) {
 		String postLogoutRedirectUri = request.getParameter(POST_LOGOUT_REDIRECT_URI_PARAMETER);
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
@@ -112,6 +132,12 @@ public class LogoutSuccessController {
 		}
 
 		return LOGOUT_SUCCESS_VIEW_NAME;
+	}
+
+	private LogoutRequest resolveLogoutRequest(ServletWebRequest request) throws ParseException {
+		String query = request.getRequest().getQueryString();
+
+		return (query != null) ? LogoutRequest.parse(query) : null;
 	}
 
 }

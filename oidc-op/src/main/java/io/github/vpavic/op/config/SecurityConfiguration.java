@@ -21,8 +21,7 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
 import io.github.vpavic.op.login.LoginFormController;
-import io.github.vpavic.op.logout.LogoutPromptController;
-import io.github.vpavic.op.logout.LogoutSuccessController;
+import io.github.vpavic.op.logout.LogoutController;
 import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
@@ -123,8 +122,8 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers("/", LoginFormController.PATH_MAPPING, LogoutPromptController.PATH_MAPPING,
-							LogoutSuccessController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING, "/web/**")
+					.antMatchers("/", LoginFormController.PATH_MAPPING, LogoutController.PATH_MAPPING,
+							AuthorizationEndpoint.PATH_MAPPING, "/web/**")
 					.and()
 				.authorizeRequests()
 					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
@@ -135,7 +134,7 @@ public class SecurityConfiguration {
 					.successHandler(successHandler)
 					.and()
 				.logout()
-					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutSuccessController.PATH_MAPPING))
+					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(LogoutController.PATH_MAPPING))
 					.and()
 				.sessionManagement()
 					.sessionFixation().migrateSession();
