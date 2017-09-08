@@ -2,6 +2,7 @@ package io.github.vpavic.op.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -146,7 +147,7 @@ public class OpenIdProviderProperties {
 		private List<String> openidScopes = Arrays.asList(OIDCScopeValue.OPENID.getValue(),
 				OIDCScopeValue.OFFLINE_ACCESS.getValue());
 
-		private Map<String, String> resourceScopes = Collections.emptyMap();
+		private Map<String, String> resourceScopes = new HashMap<>();
 
 		private List<String> acrs = Collections.singletonList("1");
 
