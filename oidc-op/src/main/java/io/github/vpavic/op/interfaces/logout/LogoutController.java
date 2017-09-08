@@ -1,4 +1,4 @@
-package io.github.vpavic.op.logout;
+package io.github.vpavic.op.interfaces.logout;
 
 import java.net.URI;
 import java.util.ArrayList;

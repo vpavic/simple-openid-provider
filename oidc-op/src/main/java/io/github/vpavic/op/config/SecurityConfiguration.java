@@ -20,8 +20,8 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
-import io.github.vpavic.op.login.LoginFormController;
-import io.github.vpavic.op.logout.LogoutController;
+import io.github.vpavic.op.interfaces.login.LoginFormController;
+import io.github.vpavic.op.interfaces.logout.LogoutController;
 import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;

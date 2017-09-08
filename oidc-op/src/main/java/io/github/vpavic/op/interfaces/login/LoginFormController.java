@@ -1,4 +1,4 @@
-package io.github.vpavic.op.login;
+package io.github.vpavic.op.interfaces.login;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.WebAttributes;
@@ -19,7 +19,7 @@ public class LoginFormController {
 
 	private static final String ERROR_PARAMETER_NAME = "error";
 
-	private static final String LOGIN_FORM_VIEW_NAME = "login/form";
+	private static final String LOGIN_FORM_VIEW_NAME = "login";
 
 	private static final String DEFAULT_ERROR_MESSAGE = "Unable to authenticate";
 
