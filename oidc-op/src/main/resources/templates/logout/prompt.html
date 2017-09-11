@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
-		xmlns:th="http://www.thymeleaf.org"
-		th:lang="${#locale.language}">
+<html>
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +8,7 @@
 	<title>Sign out</title>
 
 	<link href="https://cdn.jsdelivr.net/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
-			th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"/>
+			data-th-href="@{/webjars/bootstrap/css/bootstrap.min.css}"/>
 
 	<style>
 		body {
@@ -38,19 +36,19 @@
 		}
 	</style>
 </head>
-
 <body>
 <div class="container">
 	<div class="form-signout">
-		<form action="#" method="post" th:action="@{/logout}">
+		<form action="#" method="post" data-th-action="@{/logout}">
 			<h2 class="form-signout-heading">Sign out?</h2>
-			<input type="hidden" name="post_logout_redirect_uri" th:value="${redirectURI}" th:if="${redirectURI != null}">
-			<input type="hidden" name="state" th:value="${state}" th:if="${state != null}">
+			<input type="hidden" name="post_logout_redirect_uri" data-th-value="${redirectURI}"
+					data-th-if="${redirectURI != null}">
+			<input type="hidden" name="state" data-th-value="${state}" data-th-if="${state != null}">
 			<button class="btn btn-lg btn-primary btn-block">Yes</button>
-			<a href="#" class="btn btn-lg btn-default btn-block" th:href="@{/}">No</a>
+			<a href="#" class="btn btn-lg btn-default btn-block" data-th-href="@{/}">No</a>
 		</form>
 
-		<div class="alert alert-danger" role="alert" th:text="${error}" th:if="${error}">Error</div>
+		<div class="alert alert-danger" role="alert" data-th-text="${error}" data-th-if="${error}">Error</div>
 	</div>
 </div>
 </body>
