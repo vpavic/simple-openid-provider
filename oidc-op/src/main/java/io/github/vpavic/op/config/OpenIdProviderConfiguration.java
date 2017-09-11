@@ -27,10 +27,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.vpavic.op.interfaces.logout.LogoutController;
 import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
+import io.github.vpavic.op.oauth2.endpoint.EndSessionEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
@@ -65,7 +65,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setCheckSessionIframeURI(
 				this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);
 		providerMetadata.setEndSessionEndpointURI(
-				this.properties.isLogoutEnabled() ? createURI(LogoutController.PATH_MAPPING) : null);
+				this.properties.isLogoutEnabled() ? createURI(EndSessionEndpoint.PATH_MAPPING) : null);
 		providerMetadata
 				.setScopes(new Scope(this.properties.getAuthorization().getOpenidScopes().toArray(new String[0])));
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),

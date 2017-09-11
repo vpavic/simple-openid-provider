@@ -50,7 +50,9 @@
 					</a>
 					<ul class="dropdown-menu">
 						<li>
-							<a href="#" data-th-href="@{/logout}">Sign out</a>
+							<form method="post" class="navbar-form" data-th-action="@{/logout}">
+								<button type="submit" class="btn btn-default">Sign out</button>
+							</form>
 						</li>
 					</ul>
 				</li>

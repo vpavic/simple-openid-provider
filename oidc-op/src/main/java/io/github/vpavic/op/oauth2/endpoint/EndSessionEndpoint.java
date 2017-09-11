@@ -1,4 +1,4 @@
-package io.github.vpavic.op.interfaces.logout;
+package io.github.vpavic.op.oauth2.endpoint;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -26,10 +26,10 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @Controller
-@RequestMapping(path = LogoutController.PATH_MAPPING)
-public class LogoutController {
+@RequestMapping(path = EndSessionEndpoint.PATH_MAPPING)
+public class EndSessionEndpoint {
 
-	public static final String PATH_MAPPING = "/logout";
+	public static final String PATH_MAPPING = "/oauth2/logout";
 
 	private static final String POST_LOGOUT_REDIRECT_URI_PARAMETER = "post_logout_redirect_uri";
 
@@ -37,15 +37,15 @@ public class LogoutController {
 
 	private static final String DEFAULT_POST_LOGOUT_REDIRECT_URI = "/login?logout";
 
-	private static final String LOGOUT_PROMPT_VIEW_NAME = "logout/prompt";
+	private static final String LOGOUT_PROMPT_VIEW_NAME = "oauth2/logout-prompt";
 
-	private static final String LOGOUT_SUCCESS_VIEW_NAME = "logout/success";
+	private static final String LOGOUT_SUCCESS_VIEW_NAME = "oauth2/logout-success";
 
 	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
-	public LogoutController(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	public EndSessionEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
