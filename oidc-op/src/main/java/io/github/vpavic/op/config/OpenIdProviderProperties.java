@@ -163,10 +163,6 @@ public class OpenIdProviderProperties {
 			return this.resourceScopes;
 		}
 
-		public void setResourceScopes(Map<String, String> resourceScopes) {
-			this.resourceScopes = resourceScopes;
-		}
-
 		public List<String> getAcrs() {
 			return this.acrs;
 		}
