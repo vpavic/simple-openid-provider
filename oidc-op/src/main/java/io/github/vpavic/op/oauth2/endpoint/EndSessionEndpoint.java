@@ -20,9 +20,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.interfaces.login.LoginFormController;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @Controller
@@ -34,8 +36,6 @@ public class EndSessionEndpoint {
 	private static final String POST_LOGOUT_REDIRECT_URI_PARAMETER = "post_logout_redirect_uri";
 
 	private static final String STATE_PARAMETER = "state";
-
-	private static final String DEFAULT_POST_LOGOUT_REDIRECT_URI = "/login?logout";
 
 	private static final String LOGOUT_PROMPT_VIEW_NAME = "oauth2/logout-prompt";
 
@@ -95,11 +95,11 @@ public class EndSessionEndpoint {
 				}
 			}
 			else {
-				postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI;
+				postLogoutRedirectUri = resolveDefaultPostLogoutRedirectUri();
 			}
 		}
 		else {
-			postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI;
+			postLogoutRedirectUri = resolveDefaultPostLogoutRedirectUri();
 		}
 
 		model.addAttribute("postLogoutRedirectUri", postLogoutRedirectUri);
@@ -138,6 +138,10 @@ public class EndSessionEndpoint {
 		String query = request.getRequest().getQueryString();
 
 		return (query != null) ? LogoutRequest.parse(query) : null;
+	}
+
+	private String resolveDefaultPostLogoutRedirectUri() {
+		return MvcUriComponentsBuilder.fromController(LoginFormController.class).query("logout").toUriString();
 	}
 
 }
