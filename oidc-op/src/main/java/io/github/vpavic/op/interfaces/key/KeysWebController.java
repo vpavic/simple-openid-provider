@@ -50,7 +50,10 @@ public class KeysWebController {
 		// @formatter:on
 
 		model.addAttribute("activeKey", this.objectWriter.writeValueAsString(activeKeyJson));
-		model.addAttribute("inactiveKeys", this.objectWriter.writeValueAsString(inactiveKeysJson));
+
+		if (!inactiveKeysJson.isEmpty()) {
+			model.addAttribute("inactiveKeys", this.objectWriter.writeValueAsString(inactiveKeysJson));
+		}
 
 		return "keys";
 	}
