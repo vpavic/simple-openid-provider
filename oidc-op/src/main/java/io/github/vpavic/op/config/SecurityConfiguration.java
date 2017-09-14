@@ -59,7 +59,7 @@ public class SecurityConfiguration {
 		// @formatter:off
 		UserDetails user = User.withUsername(userProperties.getName())
 				.password(userProperties.getPassword())
-				.roles("USER")
+				.roles("USER", "ACTUATOR")
 				.build();
 		// @formatter:on
 
