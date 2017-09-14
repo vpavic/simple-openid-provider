@@ -1,7 +1,0 @@
-CREATE TABLE refresh_tokens (
-	token VARCHAR(50) PRIMARY KEY,
-	principal VARCHAR(30) NOT NULL,
-	client_id VARCHAR(30) NOT NULL,
-	scope VARCHAR(30) NOT NULL,
-	expiry TIMESTAMP NOT NULL
-);

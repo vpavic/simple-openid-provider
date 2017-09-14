@@ -29,15 +29,15 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 @Repository
 public class JdbcKeyService implements KeyService {
 
-	private static final String INSERT_STATEMENT = "INSERT INTO keys(content) VALUES (?)";
+	private static final String INSERT_STATEMENT = "INSERT INTO op_keys(jwk) VALUES (?)";
 
-	private static final String SELECT_ACTIVE_STATEMENT = "SELECT content FROM keys WHERE expiry IS NULL";
+	private static final String SELECT_ACTIVE_STATEMENT = "SELECT jwk FROM op_keys WHERE expiry IS NULL";
 
-	private static final String SELECT_ALL_STATEMENT = "SELECT content FROM keys";
+	private static final String SELECT_ALL_STATEMENT = "SELECT jwk FROM op_keys";
 
-	private static final String UPDATE_EXPIRY_STATEMENT = "UPDATE keys SET expiry = ? WHERE expiry IS NULL";
+	private static final String UPDATE_EXPIRY_STATEMENT = "UPDATE op_keys SET expiry = ? WHERE expiry IS NULL";
 
-	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM keys WHERE expiry < ?";
+	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM op_keys WHERE expiry < ?";
 
 	private static final JWKMapper jwkMapper = new JWKMapper();
 

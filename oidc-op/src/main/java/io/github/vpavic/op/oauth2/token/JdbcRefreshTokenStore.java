@@ -20,13 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
-	private static final String INSERT_STATEMENT = "INSERT INTO refresh_tokens(token, principal, client_id, scope, expiry) VALUES (?, ?, ?, ?, ?)";
+	private static final String INSERT_STATEMENT = "INSERT INTO op_refresh_tokens(token, principal, client_id, scope, expiry) VALUES (?, ?, ?, ?, ?)";
 
-	private static final String SELECT_STATEMENT = "SELECT principal, client_id, scope, expiry FROM refresh_tokens WHERE token = ?";
+	private static final String SELECT_STATEMENT = "SELECT principal, client_id, scope, expiry FROM op_refresh_tokens WHERE token = ?";
 
-	private static final String DELETE_STATEMENT = "DELETE FROM refresh_tokens WHERE token = ?";
+	private static final String DELETE_STATEMENT = "DELETE FROM op_refresh_tokens WHERE token = ?";
 
-	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM refresh_tokens WHERE expiry > 0 AND expiry < ?";
+	private static final String DELETE_EXPIRED_STATEMENT = "DELETE FROM op_refresh_tokens WHERE expiry > 0 AND expiry < ?";
 
 	private static final RefreshTokenContextMapper refreshTokenContextMapper = new RefreshTokenContextMapper();
 
@@ -87,10 +87,10 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 		@Override
 		public RefreshTokenContext mapRow(ResultSet rs, int rowNum) throws SQLException {
-			String principal = rs.getString("principal");
-			String clientId = rs.getString("client_id");
-			String scope = rs.getString("scope");
-			long expiry = rs.getLong("expiry");
+			String principal = rs.getString(1);
+			String clientId = rs.getString(2);
+			String scope = rs.getString(3);
+			long expiry = rs.getLong(4);
 
 			return new RefreshTokenContext(principal, new ClientID(clientId), Scope.parse(scope),
 					expiry > 0 ? Instant.ofEpochSecond(expiry) : null);

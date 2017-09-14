@@ -1,1 +1,0 @@
-ALTER TABLE refresh_tokens ALTER COLUMN scope TYPE VARCHAR(100);

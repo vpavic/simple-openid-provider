@@ -1,16 +1,21 @@
-CREATE TABLE users (
-	username VARCHAR(30) PRIMARY KEY,
-	password VARCHAR(30) NOT NULL,
-	enabled BOOLEAN NOT NULL
+CREATE TABLE op_keys (
+	jwk TEXT NOT NULL,
+	expiry TIMESTAMP
 );
 
-CREATE TABLE authorities (
-	username VARCHAR(30) REFERENCES users(username) ON DELETE CASCADE,
-	authority VARCHAR(30) NOT NULL,
-	PRIMARY KEY (username, authority)
+CREATE TABLE op_clients (
+	id VARCHAR(100) PRIMARY KEY,
+	issue_date TIMESTAMP NOT NULL,
+	metadata TEXT NOT NULL,
+	secret VARCHAR(43),
+	registration_uri VARCHAR(200),
+	access_token VARCHAR(43)
 );
 
-CREATE TABLE clients (
-	id VARCHAR(30) PRIMARY KEY,
-	content TEXT NOT NULL
+CREATE TABLE op_refresh_tokens (
+	token VARCHAR(43) PRIMARY KEY,
+	principal VARCHAR(30) NOT NULL,
+	client_id VARCHAR(100) NOT NULL,
+	scope VARCHAR(200) NOT NULL,
+	expiry BIGINT NOT NULL
 );

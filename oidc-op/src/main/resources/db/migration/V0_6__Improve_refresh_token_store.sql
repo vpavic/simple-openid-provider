@@ -1,3 +1,0 @@
-ALTER TABLE refresh_tokens DROP COLUMN expiry;
-ALTER TABLE refresh_tokens ADD COLUMN expiry BIGINT NOT NULL DEFAULT 0;
-ALTER TABLE refresh_tokens ALTER COLUMN expiry DROP DEFAULT;

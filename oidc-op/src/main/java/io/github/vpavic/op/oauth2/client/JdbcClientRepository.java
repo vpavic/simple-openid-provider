@@ -24,15 +24,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public class JdbcClientRepository implements ClientRepository {
 
-	private static final String INSERT_STATEMENT = "INSERT INTO clients(id, issue_date, metadata, secret, registration_uri, access_token) VALUES (?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_STATEMENT = "INSERT INTO op_clients(id, issue_date, metadata, secret, registration_uri, access_token) VALUES (?, ?, ?, ?, ?, ?)";
 
-	private static final String SELECT_BY_ID_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM clients WHERE id = ?";
+	private static final String SELECT_BY_ID_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM op_clients WHERE id = ?";
 
-	private static final String SELECT_ALL_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM clients";
+	private static final String SELECT_ALL_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM op_clients";
 
-	private static final String UPDATE_STATEMENT = "UPDATE clients SET metadata = ?, secret = ?, access_token = ? WHERE id = ?";
+	private static final String UPDATE_STATEMENT = "UPDATE op_clients SET metadata = ?, secret = ?, access_token = ? WHERE id = ?";
 
-	private static final String DELETE_STATEMENT = "DELETE FROM clients WHERE id = ?";
+	private static final String DELETE_STATEMENT = "DELETE FROM op_clients WHERE id = ?";
 
 	private static final ClientMapper clientMapper = new ClientMapper();
 
