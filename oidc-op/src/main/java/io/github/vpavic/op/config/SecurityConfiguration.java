@@ -2,20 +2,23 @@ package io.github.vpavic.op.config;
 
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
@@ -37,11 +40,33 @@ import io.github.vpavic.op.security.web.authentication.logout.ForwardLogoutSucce
 @Configuration
 public class SecurityConfiguration {
 
+	private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
+
+	private final OpenIdProviderProperties properties;
+
+	public SecurityConfiguration(OpenIdProviderProperties properties) {
+		this.properties = properties;
+	}
+
 	@Bean
-	public UserDetailsService userDetailsService(JdbcTemplate jdbcTemplate) {
-		JdbcDaoImpl userDetailsService = new JdbcDaoImpl();
-		userDetailsService.setJdbcTemplate(jdbcTemplate);
-		return userDetailsService;
+	public UserDetailsService userDetailsService() {
+		OpenIdProviderProperties.User userProperties = this.properties.getUser();
+
+		if (userProperties.isDefaultPassword()) {
+			logger.info(String.format("Using default security password:%n%n%s%n", userProperties.getPassword()));
+		}
+
+		// @formatter:off
+		UserDetails user = User.withUsername(userProperties.getName())
+				.password(userProperties.getPassword())
+				.roles("USER")
+				.build();
+		// @formatter:on
+
+		InMemoryUserDetailsManager userDetailsManager = new InMemoryUserDetailsManager();
+		userDetailsManager.createUser(user);
+
+		return userDetailsManager;
 	}
 
 	@Order(0)
