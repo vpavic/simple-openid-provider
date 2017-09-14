@@ -4,9 +4,11 @@ dependencies {
 	compile 'org.springframework.boot:spring-boot-starter-data-redis'
 	compile 'org.springframework.boot:spring-boot-starter-jdbc'
 
+	compile 'com.h2database:h2'
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
 	compile 'org.flywaydb:flyway-core'
+	compile 'org.mariadb.jdbc:mariadb-java-client'
 	compile 'org.postgresql:postgresql'
 	compile 'org.springframework.session:spring-session-data-redis'
 	compile 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4'
