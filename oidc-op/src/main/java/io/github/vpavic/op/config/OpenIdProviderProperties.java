@@ -87,7 +87,7 @@ public class OpenIdProviderProperties {
 		return this.sessionManagement.isEnabled() || this.frontChannelLogout.isEnabled();
 	}
 
-	public class Jwk {
+	public static class Jwk {
 
 		private int retentionPeriod = 30;
 
@@ -101,7 +101,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class Registration {
+	public static class Registration {
 
 		private boolean enabled;
 
@@ -135,7 +135,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class IdToken {
+	public static class IdToken {
 
 		private int lifetime = 900;
 
@@ -149,7 +149,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class Authorization {
+	public static class Authorization {
 
 		private List<String> openidScopes = Arrays.asList(OIDCScopeValue.OPENID.getValue(),
 				OIDCScopeValue.OFFLINE_ACCESS.getValue());
@@ -180,7 +180,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class AuthorizationCode {
+	public static class AuthorizationCode {
 
 		private int lifetime = 600;
 
@@ -194,7 +194,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class AccessToken {
+	public static class AccessToken {
 
 		private int lifetime = 600;
 
@@ -208,7 +208,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class RefreshToken {
+	public static class RefreshToken {
 
 		private int lifetime;
 
@@ -232,7 +232,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class SessionManagement {
+	public static class SessionManagement {
 
 		private boolean enabled;
 
@@ -246,7 +246,7 @@ public class OpenIdProviderProperties {
 
 	}
 
-	public class FrontChannelLogout {
+	public static class FrontChannelLogout {
 
 		private boolean enabled;
 
