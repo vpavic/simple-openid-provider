@@ -29,6 +29,7 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
 import io.github.vpavic.op.interfaces.login.LoginFormController;
+import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.DiscoveryEndpoint;
@@ -91,7 +92,8 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.authorizeRequests()
-					.antMatchers("/", LoginFormController.PATH_MAPPING).permitAll()
+					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING,
+							DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING).permitAll()
 					.antMatchers("/web/**").hasRole("USER")
 					.requestMatchers(EndpointRequest.to("health")).permitAll()
 					.requestMatchers(EndpointRequest.toAnyEndpoint()).authenticated()
@@ -121,8 +123,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING, TokenEndpoint.PATH_MAPPING,
-							RevocationEndpoint.PATH_MAPPING)
+					.antMatchers(TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
 					.anyRequest().permitAll()
@@ -169,7 +170,7 @@ public class SecurityConfiguration {
 			http
 				.antMatcher(UserInfoEndpoint.PATH_MAPPING)
 				.authorizeRequests()
-					.anyRequest().fullyAuthenticated()
+					.anyRequest().authenticated()
 					.and()
 				.cors()
 					.and()
