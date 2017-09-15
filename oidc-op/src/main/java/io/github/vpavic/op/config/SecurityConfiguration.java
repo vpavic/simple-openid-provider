@@ -5,7 +5,9 @@ import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.actuate.autoconfigure.security.EndpointRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.security.StaticResourceRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +29,6 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
 import io.github.vpavic.op.interfaces.login.LoginFormController;
-import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.DiscoveryEndpoint;
@@ -62,7 +63,7 @@ public class SecurityConfiguration {
 		// @formatter:off
 		UserDetails user = User.withUsername(userProperties.getName())
 				.password(userProperties.getPassword())
-				.roles("USER", "ACTUATOR")
+				.roles("USER")
 				.build();
 		// @formatter:on
 
@@ -78,7 +79,40 @@ public class SecurityConfiguration {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
 
-	@Order(0)
+	@Order(100)
+	@Configuration
+	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
+			successHandler.setTargetUrlParameter("continue");
+
+			// @formatter:off
+			http
+				.authorizeRequests()
+					.antMatchers("/", LoginFormController.PATH_MAPPING).permitAll()
+					.antMatchers("/web/**").hasRole("USER")
+					.requestMatchers(EndpointRequest.to("health")).permitAll()
+					.requestMatchers(EndpointRequest.toAnyEndpoint()).authenticated()
+					.requestMatchers(StaticResourceRequest.toCommonLocations()).permitAll()
+					.anyRequest().denyAll()
+					.and()
+				.formLogin()
+					.loginPage(LoginFormController.PATH_MAPPING)
+					.successHandler(successHandler)
+					.and()
+				.logout()
+					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(EndSessionEndpoint.PATH_MAPPING))
+					.and()
+				.sessionManagement()
+					.sessionFixation().migrateSession();
+			// @formatter:on
+		}
+
+	}
+
+	@Order(99)
 	@Configuration
 	static class EndpointSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -102,84 +136,7 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(-20)
-	@Configuration
-	@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
-	static class RegistrationConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.antMatcher(ClientRegistrationEndpoint.PATH_MAPPING + "/**")
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.csrf()
-					.disable()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			// @formatter:on
-		}
-
-	}
-
-	@Order(-15)
-	@Configuration
-	@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
-	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.antMatcher(CheckSessionIframe.PATH_MAPPING)
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.headers()
-					.frameOptions().disable();
-			// @formatter:on
-		}
-
-	}
-
-	@Order(-10)
-	@Configuration
-	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		private static final String LOGOUT_URL = "/logout";
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
-			successHandler.setTargetUrlParameter("continue");
-
-			// @formatter:off
-			http
-				.requestMatchers()
-					.antMatchers("/", LoginFormController.PATH_MAPPING, LOGOUT_URL, EndSessionEndpoint.PATH_MAPPING,
-							AuthorizationEndpoint.PATH_MAPPING, "/web/**")
-					.and()
-				.authorizeRequests()
-					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING).permitAll()
-					.anyRequest().authenticated()
-					.and()
-				.formLogin()
-					.loginPage(LoginFormController.PATH_MAPPING)
-					.successHandler(successHandler)
-					.and()
-				.logout()
-					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(EndSessionEndpoint.PATH_MAPPING))
-					.and()
-				.sessionManagement()
-					.sessionFixation().migrateSession();
-			// @formatter:on
-		}
-
-	}
-
-	@Order(-5)
+	@Order(98)
 	@Configuration
 	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -222,6 +179,48 @@ public class SecurityConfiguration {
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 					.and()
 				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
+			// @formatter:on
+		}
+
+	}
+
+	@Order(97)
+	@Configuration
+	@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
+	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.antMatcher(CheckSessionIframe.PATH_MAPPING)
+				.authorizeRequests()
+					.anyRequest().permitAll()
+					.and()
+				.headers()
+					.frameOptions().disable();
+			// @formatter:on
+		}
+
+	}
+
+	@Order(96)
+	@Configuration
+	@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
+	static class RegistrationConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.antMatcher(ClientRegistrationEndpoint.PATH_MAPPING + "/**")
+				.authorizeRequests()
+					.anyRequest().permitAll()
+					.and()
+				.csrf()
+					.disable()
+				.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 			// @formatter:on
 		}
 
