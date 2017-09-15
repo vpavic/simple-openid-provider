@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetailsByNameServiceWra
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
@@ -37,7 +38,6 @@ import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.op.oauth2.key.KeyService;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
-import io.github.vpavic.op.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 
 @Configuration
 @EnableConfigurationProperties(SecurityProperties.class)
