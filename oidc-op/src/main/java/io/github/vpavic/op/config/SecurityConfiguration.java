@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -38,19 +39,20 @@ import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenti
 import io.github.vpavic.op.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 
 @Configuration
+@EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfiguration {
 
 	private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
-	private final OpenIdProviderProperties properties;
+	private final SecurityProperties properties;
 
-	public SecurityConfiguration(OpenIdProviderProperties properties) {
+	public SecurityConfiguration(SecurityProperties properties) {
 		this.properties = properties;
 	}
 
 	@Bean
 	public UserDetailsService userDetailsService() {
-		OpenIdProviderProperties.User userProperties = this.properties.getUser();
+		SecurityProperties.User userProperties = this.properties.getUser();
 
 		if (userProperties.isDefaultPassword()) {
 			logger.info(String.format("Using default security password:%n%n%s%n", userProperties.getPassword()));

@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -32,8 +31,6 @@ public class OpenIdProviderProperties {
 	private final SessionManagement sessionManagement = new SessionManagement();
 
 	private final FrontChannelLogout frontChannelLogout = new FrontChannelLogout();
-
-	private final User user = new User();
 
 	public String getIssuer() {
 		return this.issuer;
@@ -77,10 +74,6 @@ public class OpenIdProviderProperties {
 
 	public FrontChannelLogout getFrontChannelLogout() {
 		return this.frontChannelLogout;
-	}
-
-	public User getUser() {
-		return this.user;
 	}
 
 	public boolean isLogoutEnabled() {
@@ -256,37 +249,6 @@ public class OpenIdProviderProperties {
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
-		}
-
-	}
-
-	public static class User {
-
-		private String name = "user";
-
-		private String password = UUID.randomUUID().toString().replace("-", "").substring(16);
-
-		private boolean defaultPassword = true;
-
-		public String getName() {
-			return this.name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getPassword() {
-			return this.password;
-		}
-
-		public void setPassword(String password) {
-			this.defaultPassword = false;
-			this.password = password;
-		}
-
-		public boolean isDefaultPassword() {
-			return this.defaultPassword;
 		}
 
 	}
