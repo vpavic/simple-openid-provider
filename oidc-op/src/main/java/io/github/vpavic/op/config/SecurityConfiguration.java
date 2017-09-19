@@ -105,6 +105,7 @@ public class SecurityConfiguration {
 				.logout()
 					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(EndSessionEndpoint.PATH_MAPPING))
 					.and()
+					.headers().and()
 				.sessionManagement()
 					.sessionFixation().migrateSession();
 			// @formatter:on
@@ -113,6 +114,25 @@ public class SecurityConfiguration {
 	}
 
 	@Order(99)
+	@Configuration
+	static class StaticResourcesSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.requestMatcher(StaticResourceRequest.toCommonLocations())
+				.authorizeRequests()
+					.anyRequest().permitAll()
+					.and()
+				.headers()
+					.cacheControl().disable();
+			// @formatter:on
+		}
+
+	}
+
+	@Order(98)
 	@Configuration
 	static class ActuatorSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -134,7 +154,7 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(98)
+	@Order(97)
 	@Configuration
 	static class EndpointSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -157,7 +177,7 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(97)
+	@Order(96)
 	@Configuration
 	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -205,7 +225,7 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(96)
+	@Order(95)
 	@Configuration
 	@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
 	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
@@ -225,7 +245,7 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(95)
+	@Order(94)
 	@Configuration
 	@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
 	static class RegistrationConfiguration extends WebSecurityConfigurerAdapter {
