@@ -15,6 +15,7 @@ dependencies {
 	compile 'org.flywaydb:flyway-core'
 	compile 'org.mariadb.jdbc:mariadb-java-client'
 	compile 'org.postgresql:postgresql'
+	compile 'org.springframework.boot:spring-boot-devtools'
 	compile 'org.springframework.session:spring-session-hazelcast'
 	compile 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4'
 	compile 'org.webjars:bootstrap'
