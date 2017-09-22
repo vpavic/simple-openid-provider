@@ -1,7 +1,7 @@
 ---
 applications:
-- name: nimbus-oidc-provider
+- name: simple-openid-provider
   random-route: true
-  path: oidc-op/build/libs/oidc-op.jar
+  path: openid-provider/build/libs/openid-provider.jar
   memory: 384M
   disk_quota: 256M

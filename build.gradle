@@ -20,7 +20,6 @@ apply plugin: 'com.github.ben-manes.versions'
 
 subprojects {
 	apply plugin: 'java'
-	apply plugin: 'org.springframework.boot'
 	apply from: "$rootDir/gradle/dependency-management.gradle"
 
 	sourceCompatibility = 1.8
@@ -29,16 +28,5 @@ subprojects {
 		mavenCentral()
 		maven { url 'https://repo.spring.io/milestone/' }
 		maven { url 'https://repo.spring.io/snapshot/' }
-	}
-
-	dependencies {
-		compile 'org.springframework.boot:spring-boot-starter-security'
-		compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
-		compile 'org.springframework.boot:spring-boot-starter-web'
-
-		compile 'org.springframework.boot:spring-boot-devtools'
-
-		testCompile 'org.springframework.boot:spring-boot-starter-test'
-		testCompile 'org.springframework.security:spring-security-test'
 	}
 }

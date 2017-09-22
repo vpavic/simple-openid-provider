@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class OpenIdRelyingPartyApplication {
+public class RelyingPartyApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(OpenIdRelyingPartyApplication.class, args);
+		SpringApplication.run(RelyingPartyApplication.class, args);
 	}
 
 }

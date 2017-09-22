@@ -1,4 +1,16 @@
-rootProject.name = 'nimbus-oidc-provider'
+rootProject.name = 'simple-openid-provider'
 
-include 'oidc-op'
-include 'oidc-rp'
+FileTree buildFiles = fileTree(rootDir) {
+	include '**/*.gradle'
+	exclude '/gradle', 'build.gradle', 'settings.gradle'
+}
+
+buildFiles.each { File buildFile ->
+	String projectName = buildFile.name.replace('.gradle', '')
+	String projectPath = ':' + projectName
+	include projectPath
+	def project = findProject("${projectPath}")
+	project.name = projectName
+	project.projectDir = buildFile.parentFile
+	project.buildFileName = buildFile.name
+}
