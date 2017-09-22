@@ -2,10 +2,6 @@ language: java
 
 jdk: oraclejdk8
 
-services:
-  - postgresql
-  - redis-server
-
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -16,9 +12,5 @@ cache:
     - $HOME/.gradle/wrapper/
 
 install: true
-
-before_script:
-  - psql -c "create user oidc_op with password 'oidc_op';" -U postgres
-  - psql -c "create database oidc_op with owner oidc_op;" -U postgres
 
 script: ./gradlew clean build --refresh-dependencies --no-daemon
