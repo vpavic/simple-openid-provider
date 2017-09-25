@@ -54,6 +54,12 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+			throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
+
+	@Bean
 	public UserDetailsService userDetailsService() {
 		SecurityProperties.User userProperties = this.properties.getUser();
 
@@ -74,12 +80,6 @@ public class SecurityConfiguration {
 		return userDetailsManager;
 	}
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-			throws Exception {
-		return authenticationConfiguration.getAuthenticationManager();
-	}
-
 	@Order(100)
 	@Configuration
 	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
@@ -93,9 +93,9 @@ public class SecurityConfiguration {
 			http
 				.authorizeRequests()
 					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING,
-							DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING).permitAll()
+							EndSessionEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING)
+						.permitAll()
 					.antMatchers("/web/**").hasRole("USER")
-					.requestMatchers(StaticResourceRequest.toCommonLocations()).permitAll()
 					.anyRequest().denyAll()
 					.and()
 				.formLogin()
@@ -105,7 +105,6 @@ public class SecurityConfiguration {
 				.logout()
 					.logoutSuccessHandler(new ForwardLogoutSuccessHandler(EndSessionEndpoint.PATH_MAPPING))
 					.and()
-					.headers().and()
 				.sessionManagement()
 					.sessionFixation().migrateSession();
 			// @formatter:on
