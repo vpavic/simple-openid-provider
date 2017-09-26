@@ -58,9 +58,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
-		providerMetadata.setRegistrationEndpointURI(
-				this.properties.getRegistration().isEnabled() ? createURI(ClientRegistrationEndpoint.PATH_MAPPING)
-						: null);
+		providerMetadata.setRegistrationEndpointURI(createURI(ClientRegistrationEndpoint.PATH_MAPPING));
 		providerMetadata.setRevocationEndpointURI(createURI(RevocationEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(
 				this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);

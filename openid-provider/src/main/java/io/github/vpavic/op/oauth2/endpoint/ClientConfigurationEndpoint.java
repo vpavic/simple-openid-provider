@@ -17,7 +17,6 @@ import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientUpdateRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +33,6 @@ import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @RestController
 @RequestMapping(path = ClientConfigurationEndpoint.PATH_MAPPING)
-@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
 public class ClientConfigurationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/register/{clientId:.*}";
@@ -61,7 +59,10 @@ public class ClientConfigurationEndpoint {
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(new ClientID(clientId));
 		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
 
-		if (registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken)) {
+		if (registrationAccessToken == null
+				|| !requestAccessToken
+						.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))
+				|| !requestAccessToken.equals(registrationAccessToken)) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 
@@ -83,7 +84,10 @@ public class ClientConfigurationEndpoint {
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
 		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
 
-		if (registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken)) {
+		if (registrationAccessToken == null
+				|| !requestAccessToken
+				.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))
+				|| !requestAccessToken.equals(registrationAccessToken)) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 
@@ -121,7 +125,10 @@ public class ClientConfigurationEndpoint {
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
 		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
 
-		if (registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken)) {
+		if (registrationAccessToken == null
+				|| !requestAccessToken
+				.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))
+				|| !requestAccessToken.equals(registrationAccessToken)) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 

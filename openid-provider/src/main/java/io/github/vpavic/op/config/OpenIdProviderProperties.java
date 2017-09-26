@@ -96,18 +96,28 @@ public class OpenIdProviderProperties {
 
 	public static class Registration {
 
-		private boolean enabled;
+		private boolean openRegistrationEnabled;
+
+		private String apiAccessToken;
 
 		private boolean updateSecret;
 
 		private boolean updateAccessToken;
 
-		public boolean isEnabled() {
-			return this.enabled;
+		public boolean isOpenRegistrationEnabled() {
+			return this.openRegistrationEnabled;
 		}
 
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
+		public void setOpenRegistrationEnabled(boolean openRegistrationEnabled) {
+			this.openRegistrationEnabled = openRegistrationEnabled;
+		}
+
+		public String getApiAccessToken() {
+			return this.apiAccessToken;
+		}
+
+		public void setApiAccessToken(String apiAccessToken) {
+			this.apiAccessToken = apiAccessToken;
 		}
 
 		public boolean isUpdateSecret() {

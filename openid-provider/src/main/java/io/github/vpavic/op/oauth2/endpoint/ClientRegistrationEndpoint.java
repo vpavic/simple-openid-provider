@@ -5,16 +5,18 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientRegistrationRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,26 +31,37 @@ import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @RestController
 @RequestMapping(path = ClientRegistrationEndpoint.PATH_MAPPING)
-@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
 public class ClientRegistrationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/register";
 
-	private final String clientIdSuffix;
+	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
+
+	private final String clientIdSuffix;
 
 	public ClientRegistrationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
-		this.clientIdSuffix = UriComponentsBuilder.fromHttpUrl(properties.getIssuer()).build().getHost();
+		this.properties = properties;
 		this.clientRepository = clientRepository;
+		this.clientIdSuffix = UriComponentsBuilder.fromHttpUrl(properties.getIssuer()).build().getHost();
 	}
 
 	@PostMapping
 	public ResponseEntity<String> handleRegistrationRequest(ServletWebRequest request) throws Exception {
 		OIDCClientRegistrationRequest registrationRequest = resolveRegistrationRequest(request);
+
+		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
+			AccessToken requestAccessToken = registrationRequest.getAccessToken();
+
+			if (requestAccessToken == null || !requestAccessToken
+					.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))) {
+				throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+			}
+		}
 
 		String id = UUID.randomUUID().toString() + "." + this.clientIdSuffix;
 		OIDCClientMetadata metadata = registrationRequest.getOIDCClientMetadata();
