@@ -3,6 +3,7 @@ package io.github.vpavic.op.config;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,19 +54,16 @@ public class OpenIdProviderConfiguration {
 
 	@Bean
 	public OIDCProviderMetadata providerMetadata() throws Exception {
-		OIDCProviderMetadata providerMetadata = new OIDCProviderMetadata(new Issuer(this.properties.getIssuer()),
+		OIDCProviderMetadata providerMetadata = new OIDCProviderMetadata(issuer(),
 				Collections.singletonList(SubjectType.PUBLIC), createURI(KeysEndpoint.PATH_MAPPING));
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
 		providerMetadata.setRegistrationEndpointURI(createURI(ClientRegistrationEndpoint.PATH_MAPPING));
 		providerMetadata.setRevocationEndpointURI(createURI(RevocationEndpoint.PATH_MAPPING));
-		providerMetadata.setCheckSessionIframeURI(
-				this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null);
-		providerMetadata.setEndSessionEndpointURI(
-				this.properties.isLogoutEnabled() ? createURI(EndSessionEndpoint.PATH_MAPPING) : null);
-		providerMetadata
-				.setScopes(new Scope(this.properties.getAuthorization().getOpenidScopes().toArray(new String[0])));
+		providerMetadata.setCheckSessionIframeURI(checkSessionIframeUri());
+		providerMetadata.setEndSessionEndpointURI(endSessionEndpointUri());
+		providerMetadata.setScopes(scopes());
 		providerMetadata.setResponseTypes(Arrays.asList(new ResponseType(ResponseType.Value.CODE),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
 				new ResponseType(OIDCResponseTypeValue.ID_TOKEN),
@@ -76,8 +74,7 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setGrantTypes(Arrays.asList(GrantType.AUTHORIZATION_CODE, GrantType.IMPLICIT,
 				GrantType.REFRESH_TOKEN, GrantType.PASSWORD, GrantType.CLIENT_CREDENTIALS));
 		providerMetadata.setCodeChallengeMethods(Arrays.asList(CodeChallengeMethod.PLAIN, CodeChallengeMethod.S256));
-		providerMetadata.setACRs(
-				this.properties.getAuthorization().getAcrs().stream().map(ACR::new).collect(Collectors.toList()));
+		providerMetadata.setACRs(acrs());
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST, ClientAuthenticationMethod.NONE));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
@@ -85,8 +82,8 @@ public class OpenIdProviderConfiguration {
 				IDTokenClaimsSet.AUD_CLAIM_NAME, IDTokenClaimsSet.EXP_CLAIM_NAME, IDTokenClaimsSet.IAT_CLAIM_NAME,
 				IDTokenClaimsSet.AUTH_TIME_CLAIM_NAME, IDTokenClaimsSet.NONCE_CLAIM_NAME,
 				IDTokenClaimsSet.ACR_CLAIM_NAME, IDTokenClaimsSet.AMR_CLAIM_NAME, IDTokenClaimsSet.AZP_CLAIM_NAME));
-		providerMetadata.setSupportsFrontChannelLogout(this.properties.getFrontChannelLogout().isEnabled());
-		providerMetadata.setSupportsFrontChannelLogoutSession(this.properties.getFrontChannelLogout().isEnabled());
+		providerMetadata.setSupportsFrontChannelLogout(supportsFrontChannelLogout());
+		providerMetadata.setSupportsFrontChannelLogoutSession(supportsFrontChannelLogoutSession());
 
 		logger.info("Initializing OpenID Provider with configuration:\n{}", this.objectMapper
 				.writer(SerializationFeature.INDENT_OUTPUT).writeValueAsString(providerMetadata.toJSONObject()));
@@ -94,8 +91,43 @@ public class OpenIdProviderConfiguration {
 		return providerMetadata;
 	}
 
+	private Issuer issuer() {
+		return new Issuer(this.properties.getIssuer());
+	}
+
 	private URI createURI(String path) {
 		return URI.create(this.properties.getIssuer() + path);
+	}
+
+	private URI checkSessionIframeUri() {
+		return this.properties.getSessionManagement().isEnabled() ? createURI(CheckSessionIframe.PATH_MAPPING) : null;
+	}
+
+	private URI endSessionEndpointUri() {
+		return this.properties.isLogoutEnabled() ? createURI(EndSessionEndpoint.PATH_MAPPING) : null;
+	}
+
+	private Scope scopes() {
+		Scope scope = new Scope();
+		for (String openidScope : this.properties.getAuthorization().getOpenidScopes()) {
+			scope.add(openidScope);
+		}
+		for (String resourceScope : this.properties.getAuthorization().getResourceScopes().keySet()) {
+			scope.add(resourceScope);
+		}
+		return scope;
+	}
+
+	private List<ACR> acrs() {
+		return this.properties.getAuthorization().getAcrs().stream().map(ACR::new).collect(Collectors.toList());
+	}
+
+	private boolean supportsFrontChannelLogout() {
+		return this.properties.getFrontChannelLogout().isEnabled();
+	}
+
+	private boolean supportsFrontChannelLogoutSession() {
+		return supportsFrontChannelLogout();
 	}
 
 }
