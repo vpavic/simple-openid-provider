@@ -246,7 +246,6 @@ public class SecurityConfiguration {
 
 	@Order(94)
 	@Configuration
-	@ConditionalOnProperty(prefix = "op.registration", name = "enabled", havingValue = "true")
 	static class RegistrationConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
