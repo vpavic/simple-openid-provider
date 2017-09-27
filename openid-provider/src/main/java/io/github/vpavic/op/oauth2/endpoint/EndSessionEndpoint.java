@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,7 +24,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.interfaces.login.LoginFormController;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 
@@ -41,21 +41,21 @@ public class EndSessionEndpoint {
 
 	private static final String LOGOUT_SUCCESS_VIEW_NAME = "oauth2/logout-success";
 
-	private final OpenIdProviderProperties properties;
+	private final OIDCProviderMetadata providerMetadata;
 
 	private final ClientRepository clientRepository;
 
-	public EndSessionEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
-		Objects.requireNonNull(properties, "properties must not be null");
+	public EndSessionEndpoint(OIDCProviderMetadata providerMetadata, ClientRepository clientRepository) {
+		Objects.requireNonNull(providerMetadata, "providerMetadata must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
-		this.properties = properties;
+		this.providerMetadata = providerMetadata;
 		this.clientRepository = clientRepository;
 	}
 
 	@GetMapping
 	public String getLogoutPrompt(ServletWebRequest request, Model model) throws ParseException {
-		if (this.properties.isLogoutEnabled()) {
+		if (this.providerMetadata.getEndSessionEndpointURI() != null) {
 			LogoutRequest logoutRequest = resolveLogoutRequest(request);
 
 			if (logoutRequest != null) {
@@ -73,7 +73,7 @@ public class EndSessionEndpoint {
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
-		if (this.properties.isLogoutEnabled() && StringUtils.hasText(postLogoutRedirectUri)) {
+		if (this.providerMetadata.getEndSessionEndpointURI() != null && StringUtils.hasText(postLogoutRedirectUri)) {
 			// @formatter:off
 			Set<String> postLogoutRedirectUris = clients.stream()
 					.flatMap(client -> Optional.ofNullable(client.getOIDCMetadata().getPostLogoutRedirectionURIs())
@@ -104,7 +104,7 @@ public class EndSessionEndpoint {
 
 		model.addAttribute("postLogoutRedirectUri", postLogoutRedirectUri);
 
-		if (this.properties.getFrontChannelLogout().isEnabled()) {
+		if (this.providerMetadata.supportsFrontChannelLogout()) {
 			List<String> frontChannelLogoutUris = new ArrayList<>();
 
 			// @formatter:off
@@ -120,7 +120,7 @@ public class EndSessionEndpoint {
 			for (String frontChannelLogoutUri : registeredFrontChannelLogoutUris) {
 				// @formatter:off
 				frontChannelLogoutUri = UriComponentsBuilder.fromHttpUrl(frontChannelLogoutUri)
-						.queryParam("iss", this.properties.getIssuer())
+						.queryParam("iss", this.providerMetadata.getIssuer())
 						.queryParam("sid", sessionId)
 						.toUriString();
 				// @formatter:on
