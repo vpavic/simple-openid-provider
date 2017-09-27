@@ -32,6 +32,7 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
@@ -45,7 +46,6 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
@@ -83,7 +83,7 @@ public class AuthorizationEndpoint {
 
 	private static final String ERROR_VIEW_NAME = "error";
 
-	private final OpenIdProviderProperties properties;
+	private final OIDCProviderMetadata providerMetadata;
 
 	private final ClientRepository clientRepository;
 
@@ -97,11 +97,11 @@ public class AuthorizationEndpoint {
 
 	private final UserInfoMapper userInfoMapper;
 
-	public AuthorizationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	public AuthorizationEndpoint(OIDCProviderMetadata providerMetadata, ClientRepository clientRepository,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper,
 			UserInfoMapper userInfoMapper) {
-		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(providerMetadata, "providerMetadata must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
@@ -109,7 +109,7 @@ public class AuthorizationEndpoint {
 		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
 
-		this.properties = properties;
+		this.providerMetadata = providerMetadata;
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
@@ -152,10 +152,10 @@ public class AuthorizationEndpoint {
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
 
 		String principal = authentication.getName();
-		ACR acr = new ACR(this.properties.getAuthorization().getAcrs().get(0));
+		ACR acr = this.providerMetadata.getACRs().get(0);
 		AMR amr = AMR.PWD;
 		String sessionId = request.getSessionId();
-		State sessionState = this.properties.getSessionManagement().isEnabled() ? State.parse(sessionId) : null;
+		State sessionState = (this.providerMetadata.getCheckSessionIframeURI() != null) ? State.parse(sessionId) : null;
 
 		AuthenticationSuccessResponse authResponse;
 
@@ -292,13 +292,20 @@ public class AuthorizationEndpoint {
 
 	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
 		Scope requestedScope = authRequest.getScope();
+		requestedScope.retainAll(this.providerMetadata.getScopes());
 		Scope registeredScope = clientMetadata.getScope();
+		Scope resolvedScope;
 
-		Scope resolvedScope = new Scope();
+		if (registeredScope == null || registeredScope.isEmpty()) {
+			resolvedScope = requestedScope;
+		}
+		else {
+			resolvedScope = new Scope();
 
-		for (Scope.Value scope : requestedScope) {
-			if (registeredScope.contains(scope)) {
-				resolvedScope.add(scope);
+			for (Scope.Value scope : requestedScope) {
+				if (registeredScope.contains(scope)) {
+					resolvedScope.add(scope);
+				}
 			}
 		}
 
