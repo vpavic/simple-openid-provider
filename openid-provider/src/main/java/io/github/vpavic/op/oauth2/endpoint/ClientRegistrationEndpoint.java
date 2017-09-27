@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.Secret;
@@ -19,6 +20,7 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientRegistrationRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -82,6 +84,17 @@ public class ClientRegistrationEndpoint {
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.body(clientInformation.toJSONObject().toJSONString());
+		// @formatter:on
+	}
+
+	@ExceptionHandler(GeneralException.class)
+	public ResponseEntity<String> handleGeneralException(GeneralException e) {
+		ErrorObject error = e.getErrorObject();
+
+		// @formatter:off
+		return ResponseEntity.status(error.getHTTPStatusCode())
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(error.toJSONObject().toJSONString());
 		// @formatter:on
 	}
 
