@@ -54,15 +54,14 @@ public class ClientConfigurationEndpoint {
 			throws Exception {
 		ClientReadRequest clientReadRequest = resolveReadRequest(request);
 
-		AccessToken requestAccessToken = clientReadRequest.getAccessToken();
-
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(new ClientID(clientId));
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
 
-		if (registrationAccessToken == null
-				|| !requestAccessToken
-						.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))
-				|| !requestAccessToken.equals(registrationAccessToken)) {
+		AccessToken requestAccessToken = clientReadRequest.getAccessToken();
+		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
+		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+
+		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
+				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 
@@ -78,16 +77,15 @@ public class ClientConfigurationEndpoint {
 			throws Exception {
 		OIDCClientUpdateRequest clientUpdateRequest = resolveUpdateRequest(request);
 
-		AccessToken requestAccessToken = clientUpdateRequest.getAccessToken();
-
 		ClientID id = new ClientID(clientId);
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
 
-		if (registrationAccessToken == null
-				|| !requestAccessToken
-				.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))
-				|| !requestAccessToken.equals(registrationAccessToken)) {
+		AccessToken requestAccessToken = clientUpdateRequest.getAccessToken();
+		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
+		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+
+		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
+				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 
@@ -119,16 +117,15 @@ public class ClientConfigurationEndpoint {
 			throws Exception {
 		ClientDeleteRequest clientDeleteRequest = resolveDeleteRequest(request);
 
-		AccessToken requestAccessToken = clientDeleteRequest.getAccessToken();
-
 		ClientID id = new ClientID(clientId);
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
 
-		if (registrationAccessToken == null
-				|| !requestAccessToken
-				.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))
-				|| !requestAccessToken.equals(registrationAccessToken)) {
+		AccessToken requestAccessToken = clientDeleteRequest.getAccessToken();
+		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
+		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+
+		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
+				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 

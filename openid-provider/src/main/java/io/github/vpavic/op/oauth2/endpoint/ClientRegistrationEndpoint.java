@@ -58,9 +58,10 @@ public class ClientRegistrationEndpoint {
 
 		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
 			AccessToken requestAccessToken = registrationRequest.getAccessToken();
+			String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
 
-			if (requestAccessToken == null || !requestAccessToken
-					.equals(new BearerAccessToken(this.properties.getRegistration().getApiAccessToken()))) {
+			if (requestAccessToken == null || apiAccessToken == null
+					|| !requestAccessToken.equals(new BearerAccessToken(apiAccessToken))) {
 				throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 			}
 		}
