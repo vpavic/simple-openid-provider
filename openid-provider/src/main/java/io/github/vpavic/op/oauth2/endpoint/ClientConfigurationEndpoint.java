@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
+import com.nimbusds.oauth2.sdk.ProtectedResourceRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.client.ClientDeleteRequest;
@@ -56,14 +57,7 @@ public class ClientConfigurationEndpoint {
 
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(new ClientID(clientId));
 
-		AccessToken requestAccessToken = clientReadRequest.getAccessToken();
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
-		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
-
-		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
-				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
-			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
-		}
+		validateAccessToken(clientReadRequest, clientInformation);
 
 		// @formatter:off
 		return ResponseEntity.ok()
@@ -80,14 +74,7 @@ public class ClientConfigurationEndpoint {
 		ClientID id = new ClientID(clientId);
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
 
-		AccessToken requestAccessToken = clientUpdateRequest.getAccessToken();
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
-		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
-
-		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
-				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
-			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
-		}
+		validateAccessToken(clientUpdateRequest, clientInformation);
 
 		OIDCClientMetadata metadata = clientUpdateRequest.getOIDCClientMetadata();
 		metadata.applyDefaults();
@@ -99,7 +86,7 @@ public class ClientConfigurationEndpoint {
 
 		BearerAccessToken accessToken = this.properties.getRegistration().isUpdateAccessToken()
 				? new BearerAccessToken()
-				: registrationAccessToken;
+				: clientInformation.getRegistrationAccessToken();
 
 		clientInformation = new OIDCClientInformation(id, clientInformation.getIDIssueDate(), metadata, secret,
 				clientInformation.getRegistrationURI(), accessToken);
@@ -120,14 +107,7 @@ public class ClientConfigurationEndpoint {
 		ClientID id = new ClientID(clientId);
 		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
 
-		AccessToken requestAccessToken = clientDeleteRequest.getAccessToken();
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
-		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
-
-		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
-				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
-			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
-		}
+		validateAccessToken(clientDeleteRequest, clientInformation);
 
 		this.clientRepository.deleteByClientId(id);
 
@@ -164,6 +144,18 @@ public class ClientConfigurationEndpoint {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
 
 		return ClientDeleteRequest.parse(httpRequest);
+	}
+
+	private void validateAccessToken(ProtectedResourceRequest request, OIDCClientInformation clientInformation)
+			throws GeneralException {
+		AccessToken requestAccessToken = request.getAccessToken();
+		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
+		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+
+		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
+				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
 	}
 
 }

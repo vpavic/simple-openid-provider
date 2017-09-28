@@ -56,15 +56,7 @@ public class ClientRegistrationEndpoint {
 	public ResponseEntity<String> handleRegistrationRequest(ServletWebRequest request) throws Exception {
 		OIDCClientRegistrationRequest registrationRequest = resolveRegistrationRequest(request);
 
-		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
-			AccessToken requestAccessToken = registrationRequest.getAccessToken();
-			String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
-
-			if (requestAccessToken == null || apiAccessToken == null
-					|| !requestAccessToken.equals(new BearerAccessToken(apiAccessToken))) {
-				throw new GeneralException(BearerTokenError.INVALID_TOKEN);
-			}
-		}
+		validateAccessToken(registrationRequest);
 
 		String id = UUID.randomUUID().toString() + "." + this.clientIdSuffix;
 		OIDCClientMetadata metadata = registrationRequest.getOIDCClientMetadata();
@@ -103,6 +95,18 @@ public class ClientRegistrationEndpoint {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
 
 		return OIDCClientRegistrationRequest.parse(httpRequest);
+	}
+
+	private void validateAccessToken(OIDCClientRegistrationRequest request) throws GeneralException {
+		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
+			AccessToken requestAccessToken = request.getAccessToken();
+			String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+
+			if (requestAccessToken == null || apiAccessToken == null
+					|| !requestAccessToken.equals(new BearerAccessToken(apiAccessToken))) {
+				throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+			}
+		}
 	}
 
 }
