@@ -1,6 +1,5 @@
-CREATE TABLE op_keys (
-	jwk TEXT NOT NULL,
-	expiry TIMESTAMP
+CREATE TABLE op_jwk_set (
+	jwk_set TEXT NOT NULL
 );
 
 CREATE TABLE op_clients (

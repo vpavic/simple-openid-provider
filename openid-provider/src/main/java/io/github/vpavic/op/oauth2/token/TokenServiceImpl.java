@@ -12,8 +12,13 @@ import java.util.UUID;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKMatcher;
+import com.nimbusds.jose.jwk.JWKSelector;
+import com.nimbusds.jose.jwk.KeyType;
+import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -38,7 +43,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
-import io.github.vpavic.op.oauth2.key.KeyService;
+import io.github.vpavic.op.oauth2.jwk.JwkSetService;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 
 @Service
@@ -50,18 +55,18 @@ public class TokenServiceImpl implements TokenService {
 
 	private final OpenIdProviderProperties properties;
 
-	private final KeyService keyService;
+	private final JwkSetService jwkSetService;
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	public TokenServiceImpl(OpenIdProviderProperties properties, KeyService keyService,
+	public TokenServiceImpl(OpenIdProviderProperties properties, JwkSetService jwkSetService,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(properties, "properties must not be null");
-		Objects.requireNonNull(keyService, "keyService must not be null");
+		Objects.requireNonNull(jwkSetService, "jwkSetService must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
 		this.properties = properties;
-		this.keyService = keyService;
+		this.jwkSetService = jwkSetService;
 		this.refreshTokenStore = refreshTokenStore;
 	}
 
@@ -70,7 +75,7 @@ public class TokenServiceImpl implements TokenService {
 		Instant issuedAt = Instant.now();
 		int tokenLifetime = this.properties.getAccessToken().getLifetime();
 
-		JWK jwk = this.keyService.findActive();
+		JWK jwk = resolveJwk();
 
 		// @formatter:off
 		JWSHeader header = new JWSHeader.Builder(jwsAlgorithm)
@@ -154,7 +159,7 @@ public class TokenServiceImpl implements TokenService {
 
 		Instant issuedAt = Instant.now();
 
-		JWK jwk = this.keyService.findActive();
+		JWK jwk = resolveJwk();
 
 		// @formatter:off
 		JWSHeader header = new JWSHeader.Builder(jwsAlgorithm)
@@ -215,6 +220,28 @@ public class TokenServiceImpl implements TokenService {
 		catch (ParseException | JOSEException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private JWK resolveJwk() {
+		// @formatter:off
+		JWKMatcher jwkMatcher = new JWKMatcher.Builder()
+				.keyType(KeyType.RSA)
+				.keyUse(KeyUse.SIGNATURE)
+				.algorithm(JWSAlgorithm.RS256)
+				.build();
+		// @formatter:on
+
+		JWKSelector jwkSelector = new JWKSelector(jwkMatcher);
+		List<JWK> jwks;
+
+		try {
+			jwks = this.jwkSetService.get(jwkSelector, null);
+		}
+		catch (KeySourceException e) {
+			throw new RuntimeException(e);
+		}
+
+		return jwks.iterator().next();
 	}
 
 }

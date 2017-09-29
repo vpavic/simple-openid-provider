@@ -2,7 +2,6 @@ package io.github.vpavic.op.security.web.authentication;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.FilterChain;
@@ -11,12 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SimpleSecurityContext;
+import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
@@ -32,7 +28,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.vpavic.op.oauth2.key.KeyService;
+import io.github.vpavic.op.oauth2.jwk.JwkSetService;
 
 public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -42,18 +38,18 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private final String issuer;
 
-	private final KeyService keyService;
+	private final JwkSetService jwkSetService;
 
 	private final AuthenticationManager authenticationManager;
 
-	public BearerAccessTokenAuthenticationFilter(String issuer, KeyService keyService,
+	public BearerAccessTokenAuthenticationFilter(String issuer, JwkSetService jwkSetService,
 			AuthenticationManager authenticationManager) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
-		Objects.requireNonNull(keyService, "keyService must not be null");
+		Objects.requireNonNull(jwkSetService, "jwkSetService must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 
 		this.issuer = issuer;
-		this.keyService = keyService;
+		this.jwkSetService = jwkSetService;
 		this.authenticationManager = authenticationManager;
 	}
 
@@ -63,11 +59,10 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 		try {
 			HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
-			List<JWK> keys = this.keyService.findAll();
 
-			ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
-			JWSKeySelector<SimpleSecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,
-					new ImmutableJWKSet<>(new JWKSet(keys)));
+			ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
+			JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,
+					this.jwkSetService);
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
 

@@ -61,25 +61,8 @@
 </nav>
 <div class="container">
 	<div class="content">
-		<ul class="nav nav-tabs" role="tablist">
-			<li role="presentation" class="active">
-				<a href="#active-key" aria-controls="active-key" role="tab" data-toggle="tab">Active Key</a>
-			</li>
-			<li role="presentation">
-				<a href="#inactive-keys" aria-controls="inactive-keys" role="tab" data-toggle="tab">Inactive Keys</a>
-			</li>
-		</ul>
-
-		<div class="tab-content">
-			<div role="tabpanel" class="tab-pane active" id="active-key">
-				<pre class="small" data-th-text="${activeKey}"></pre>
-			</div>
-			<div role="tabpanel" class="tab-pane" id="inactive-keys">
-				<pre class="small pre-scrollable" data-th-text="${inactiveKeys}"
-						data-th-if="${inactiveKeys != null}"></pre>
-				<small class="text-muted" data-th-if="${inactiveKeys == null}">There are no inactive keys</small>
-			</div>
-		</div>
+		<h4>Keys</h4>
+		<pre class="small" data-th-text="${keys}"></pre>
 
 		<form action="#" method="post" class="form-horizontal" data-th-action="@{/web/keys/rotate}">
 			<button class="btn btn-warning">Rotate Keys</button>
