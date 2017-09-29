@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
@@ -28,11 +27,13 @@ import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class DefaultJwkSetService implements JwkSetService {
+public class DefaultJwkSetService implements JwkSetService, ApplicationRunner {
 
 	private final JwkSetStore jwkSetStore;
 
@@ -40,23 +41,6 @@ public class DefaultJwkSetService implements JwkSetService {
 		Objects.requireNonNull(jwkSetStore, "jwkSetStore must not be null");
 
 		this.jwkSetStore = jwkSetStore;
-	}
-
-	@PostConstruct
-	@Transactional
-	public void init() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-		JWKSet jwkSet = this.jwkSetStore.load();
-
-		if (jwkSet.getKeys().isEmpty()) {
-			List<JWK> keys = new LinkedList<>();
-			keys.addAll(generateRotatingKeys());
-			keys.addAll(generatePermanentKeys());
-			jwkSet = new JWKSet(keys);
-			this.jwkSetStore.save(jwkSet);
-		}
-		else {
-			// TODO validate keys
-		}
 	}
 
 	@Override
@@ -75,6 +59,23 @@ public class DefaultJwkSetService implements JwkSetService {
 		JWKSet jwkSet = this.jwkSetStore.load();
 
 		return jwkSelector.select(jwkSet);
+	}
+
+	@Override
+	@Transactional
+	public void run(ApplicationArguments args) throws Exception {
+		JWKSet jwkSet = this.jwkSetStore.load();
+
+		if (jwkSet.getKeys().isEmpty()) {
+			List<JWK> keys = new LinkedList<>();
+			keys.addAll(generateRotatingKeys());
+			keys.addAll(generatePermanentKeys());
+			jwkSet = new JWKSet(keys);
+			this.jwkSetStore.save(jwkSet);
+		}
+		else {
+			// TODO validate keys
+		}
 	}
 
 	private List<JWK> generateRotatingKeys() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
