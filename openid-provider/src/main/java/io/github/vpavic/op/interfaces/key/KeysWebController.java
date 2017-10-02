@@ -1,7 +1,5 @@
 package io.github.vpavic.op.interfaces.key;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,13 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nimbusds.jose.jwk.JWKSet;
-import io.github.vpavic.op.oauth2.jwk.JwkSetService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import io.github.vpavic.op.oauth2.jwk.JwkSetService;
 import io.github.vpavic.op.oauth2.jwk.JwkSetStore;
 
 @Controller
@@ -47,7 +45,7 @@ public class KeysWebController {
 	}
 
 	@PostMapping(path = "/rotate")
-	public String rotate() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+	public String rotate() {
 		this.jwkSetService.rotate();
 
 		return "redirect:/web/keys";

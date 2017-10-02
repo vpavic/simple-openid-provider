@@ -46,11 +46,10 @@ public class JdbcJwkSetStore implements JwkSetStore {
 	@Override
 	@Transactional
 	public void save(JWKSet jwkSet) {
-		if (load().getKeys().isEmpty()) {
-			this.jdbcOperations.update(INSERT_STATEMENT, ps -> ps.setString(1, jwkSet.toJSONObject(false).toJSONString()));
-		}
-		else {
-			this.jdbcOperations.update(UPDATE_STATEMENT, ps -> ps.setString(1, jwkSet.toJSONObject(false).toJSONString()));
+		String jsonString = jwkSet.toJSONObject(false).toJSONString();
+
+		if (this.jdbcOperations.update(UPDATE_STATEMENT, ps -> ps.setString(1, jsonString)) == 0) {
+			this.jdbcOperations.update(INSERT_STATEMENT, ps -> ps.setString(1, jsonString));
 		}
 	}
 
