@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.langtag.LangTag;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
@@ -16,9 +17,11 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
+import com.nimbusds.openid.connect.sdk.Display;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.SubjectType;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
+import com.nimbusds.openid.connect.sdk.claims.ClaimType;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.slf4j.Logger;
@@ -79,10 +82,14 @@ public class OpenIdProviderConfiguration {
 		providerMetadata.setTokenEndpointAuthMethods(Arrays.asList(ClientAuthenticationMethod.CLIENT_SECRET_BASIC,
 				ClientAuthenticationMethod.CLIENT_SECRET_POST, ClientAuthenticationMethod.NONE));
 		providerMetadata.setIDTokenJWSAlgs(Collections.singletonList(JWSAlgorithm.RS256));
+		providerMetadata.setDisplays(Arrays.asList(Display.PAGE, Display.POPUP, Display.TOUCH));
+		providerMetadata.setClaimTypes(Collections.singletonList(ClaimType.NORMAL));
 		providerMetadata.setClaims(Arrays.asList(IDTokenClaimsSet.ISS_CLAIM_NAME, IDTokenClaimsSet.SUB_CLAIM_NAME,
 				IDTokenClaimsSet.AUD_CLAIM_NAME, IDTokenClaimsSet.EXP_CLAIM_NAME, IDTokenClaimsSet.IAT_CLAIM_NAME,
 				IDTokenClaimsSet.AUTH_TIME_CLAIM_NAME, IDTokenClaimsSet.NONCE_CLAIM_NAME,
 				IDTokenClaimsSet.ACR_CLAIM_NAME, IDTokenClaimsSet.AMR_CLAIM_NAME, IDTokenClaimsSet.AZP_CLAIM_NAME));
+		providerMetadata.setClaimLocales(Collections.singletonList(new LangTag("en")));
+		providerMetadata.setUILocales(Collections.singletonList(new LangTag("en")));
 		providerMetadata.setSupportsFrontChannelLogout(supportsFrontChannelLogout());
 		providerMetadata.setSupportsFrontChannelLogoutSession(supportsFrontChannelLogoutSession());
 
