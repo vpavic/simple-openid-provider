@@ -2,7 +2,6 @@ package io.github.vpavic.op.oauth2.endpoint;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -10,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.AuthorizationResponse;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -35,16 +35,14 @@ import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.servlet.ModelAndView;
 
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
@@ -80,8 +78,6 @@ public class AuthorizationEndpoint {
 	private static final String LOGIN_REDIRECT_URI = "redirect:/login";
 
 	private static final String FORM_POST_VIEW_NAME = "oauth2/form-post";
-
-	private static final String ERROR_VIEW_NAME = "error";
 
 	private final OIDCProviderMetadata providerMetadata;
 
@@ -119,7 +115,8 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public ModelAndView authorize(ServletWebRequest request, Authentication authentication) throws Exception {
+	public String authorize(ServletWebRequest request, Authentication authentication, Model model)
+			throws GeneralException {
 		AuthenticationRequest authRequest = resolveRequest(request);
 
 		ClientID clientID = authRequest.getClientID();
@@ -214,17 +211,7 @@ public class AuthorizationEndpoint {
 					sessionState, responseMode);
 		}
 
-		ModelAndView modelAndView;
-
-		if (!responseMode.equals(ResponseMode.FORM_POST)) {
-			modelAndView = new ModelAndView("redirect:" + authResponse.toURI());
-		}
-		else {
-			ModelMap model = new ModelMap("authResponse", authResponse);
-			modelAndView = new ModelAndView(FORM_POST_VIEW_NAME, model);
-		}
-
-		return modelAndView;
+		return prepareResponse(authResponse, model);
 	}
 
 	private AuthenticationRequest resolveRequest(ServletWebRequest request) throws GeneralException {
@@ -237,10 +224,12 @@ public class AuthorizationEndpoint {
 			ClientID clientID = e.getClientID();
 			URI redirectionURI = e.getRedirectionURI();
 
-			if (clientID != null && redirectionURI != null) {
-				OIDCClientMetadata clientMetadata = resolveClientMetadata(clientID);
-				validateRedirectionURI(redirectionURI, clientMetadata);
+			if (clientID == null || redirectionURI == null) {
+				throw new AuthorizationRequestException(e.getErrorObject());
 			}
+
+			OIDCClientMetadata clientMetadata = resolveClientMetadata(clientID);
+			validateRedirectionURI(redirectionURI, clientMetadata);
 
 			throw e;
 		}
@@ -248,23 +237,25 @@ public class AuthorizationEndpoint {
 		return authRequest;
 	}
 
-	private OIDCClientMetadata resolveClientMetadata(ClientID clientID) throws GeneralException {
+	private OIDCClientMetadata resolveClientMetadata(ClientID clientID) {
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
 		if (client == null) {
-			throw new GeneralException(
-					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"client_id\" parameter: " + clientID));
+			ErrorObject error = OAuth2Error.INVALID_REQUEST
+					.setDescription("Invalid \"client_id\" parameter: " + clientID);
+			throw new AuthorizationRequestException(error);
 		}
 
 		return client.getOIDCMetadata();
 	}
 
-	private void validateRedirectionURI(URI redirectionURI, OIDCClientMetadata clientMetadata) throws GeneralException {
+	private void validateRedirectionURI(URI redirectionURI, OIDCClientMetadata clientMetadata) {
 		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectionURI)) {
-			throw new GeneralException(OAuth2Error.INVALID_REQUEST
-					.setDescription("Invalid \"redirect_uri\" parameter: " + redirectionURI));
+			ErrorObject error = OAuth2Error.INVALID_REQUEST
+					.setDescription("Invalid \"redirect_uri\" parameter: " + redirectionURI);
+			throw new AuthorizationRequestException(error);
 		}
 	}
 
@@ -312,7 +303,7 @@ public class AuthorizationEndpoint {
 		return resolvedScope;
 	}
 
-	private ModelAndView redirectToLoginPage(ServletWebRequest request, AuthenticationRequest authRequest) {
+	private String redirectToLoginPage(ServletWebRequest request, AuthenticationRequest authRequest) {
 		Prompt prompt = authRequest.getPrompt();
 		String authRequestQuery;
 
@@ -332,34 +323,25 @@ public class AuthorizationEndpoint {
 		String authRequestUri = PATH_MAPPING + "?" + authRequestQuery;
 		request.setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri, RequestAttributes.SCOPE_SESSION);
 
-		return new ModelAndView(LOGIN_REDIRECT_URI);
+		return LOGIN_REDIRECT_URI;
+	}
+
+	private String prepareResponse(AuthorizationResponse authResponse, Model model) {
+		if (ResponseMode.FORM_POST.equals(authResponse.getResponseMode())) {
+			model.addAttribute("authResponse", authResponse);
+
+			return FORM_POST_VIEW_NAME;
+		}
+
+		return "redirect:" + authResponse.toURI();
 	}
 
 	@ExceptionHandler(GeneralException.class)
-	public ModelAndView handleGeneralException(GeneralException e) {
-		URI redirectionURI = e.getRedirectionURI();
+	public String handleGeneralException(GeneralException e, Model model) {
+		AuthenticationErrorResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
+				e.getErrorObject(), e.getState(), e.getResponseMode());
 
-		if (redirectionURI == null) {
-			ErrorObject error = e.getErrorObject();
-
-			if (error == null) {
-				error = OAuth2Error.INVALID_REQUEST;
-			}
-
-			ModelMap model = new ModelMap();
-			model.addAttribute("timestamp", new Date());
-			model.addAttribute("status", error.getHTTPStatusCode());
-			model.addAttribute("error", error.getCode());
-			model.addAttribute("message", e.getMessage());
-
-			return new ModelAndView(ERROR_VIEW_NAME, model, HttpStatus.valueOf(error.getHTTPStatusCode()));
-		}
-		else {
-			AuthenticationErrorResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
-					e.getErrorObject(), e.getState(), e.getResponseMode());
-
-			return new ModelAndView("redirect:" + authResponse.toURI());
-		}
+		return prepareResponse(authResponse, model);
 	}
 
 }
