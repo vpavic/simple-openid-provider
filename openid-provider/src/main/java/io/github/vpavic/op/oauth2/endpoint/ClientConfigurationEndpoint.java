@@ -55,9 +55,7 @@ public class ClientConfigurationEndpoint {
 			throws Exception {
 		ClientReadRequest clientReadRequest = resolveReadRequest(request);
 
-		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(new ClientID(clientId));
-
-		validateAccessToken(clientReadRequest, clientInformation);
+		OIDCClientInformation clientInformation = resolveAndValidateClient(new ClientID(clientId), clientReadRequest);
 
 		// @formatter:off
 		return ResponseEntity.ok()
@@ -72,9 +70,7 @@ public class ClientConfigurationEndpoint {
 		OIDCClientUpdateRequest clientUpdateRequest = resolveUpdateRequest(request);
 
 		ClientID id = new ClientID(clientId);
-		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
-
-		validateAccessToken(clientUpdateRequest, clientInformation);
+		OIDCClientInformation clientInformation = resolveAndValidateClient(id, clientUpdateRequest);
 
 		OIDCClientMetadata metadata = clientUpdateRequest.getOIDCClientMetadata();
 		metadata.applyDefaults();
@@ -105,9 +101,7 @@ public class ClientConfigurationEndpoint {
 		ClientDeleteRequest clientDeleteRequest = resolveDeleteRequest(request);
 
 		ClientID id = new ClientID(clientId);
-		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(id);
-
-		validateAccessToken(clientDeleteRequest, clientInformation);
+		resolveAndValidateClient(id, clientDeleteRequest);
 
 		this.clientRepository.deleteByClientId(id);
 
@@ -146,16 +140,22 @@ public class ClientConfigurationEndpoint {
 		return ClientDeleteRequest.parse(httpRequest);
 	}
 
-	private void validateAccessToken(ProtectedResourceRequest request, OIDCClientInformation clientInformation)
+	private OIDCClientInformation resolveAndValidateClient(ClientID clientId, ProtectedResourceRequest request)
 			throws GeneralException {
-		AccessToken requestAccessToken = request.getAccessToken();
-		BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
-		String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(clientId);
 
-		if ((registrationAccessToken == null || !requestAccessToken.equals(registrationAccessToken))
-				&& (apiAccessToken == null || !requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
-			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		if (clientInformation != null) {
+			AccessToken requestAccessToken = request.getAccessToken();
+			BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
+			String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+
+			if ((registrationAccessToken != null && requestAccessToken.equals(registrationAccessToken))
+					|| (apiAccessToken != null && requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
+				return clientInformation;
+			}
 		}
+
+		throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 	}
 
 }
