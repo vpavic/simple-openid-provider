@@ -3,7 +3,6 @@ package io.github.vpavic.op.oauth2.jwk;
 import java.util.Iterator;
 import java.util.List;
 
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyUse;
@@ -33,28 +32,24 @@ public class JwkSetGeneratorTests {
 		JWK jwk = jwkIterator.next();
 		assertThat(jwk).isInstanceOf(RSAKey.class);
 		assertThat(jwk.getKeyUse()).isEqualTo(KeyUse.SIGNATURE);
-		assertThat(jwk.getAlgorithm()).isEqualTo(JWSAlgorithm.RS256);
 		assertThat(jwk.getKeyID()).hasSize(43);
 		assertThat(jwk.size()).isEqualTo(2048);
 
 		jwk = jwkIterator.next();
 		assertThat(jwk).isInstanceOf(ECKey.class);
 		assertThat(jwk.getKeyUse()).isEqualTo(KeyUse.SIGNATURE);
-		assertThat(jwk.getAlgorithm()).isEqualTo(JWSAlgorithm.ES256);
 		assertThat(jwk.getKeyID()).hasSize(43);
 		assertThat(jwk.size()).isEqualTo(256);
 
 		jwk = jwkIterator.next();
 		assertThat(jwk).isInstanceOf(ECKey.class);
 		assertThat(jwk.getKeyUse()).isEqualTo(KeyUse.SIGNATURE);
-		assertThat(jwk.getAlgorithm()).isEqualTo(JWSAlgorithm.ES384);
 		assertThat(jwk.getKeyID()).hasSize(43);
 		assertThat(jwk.size()).isEqualTo(384);
 
 		jwk = jwkIterator.next();
 		assertThat(jwk).isInstanceOf(ECKey.class);
 		assertThat(jwk.getKeyUse()).isEqualTo(KeyUse.SIGNATURE);
-		assertThat(jwk.getAlgorithm()).isEqualTo(JWSAlgorithm.ES512);
 		assertThat(jwks.get(3).getKeyID()).hasSize(43);
 		assertThat(jwks.get(3).size()).isEqualTo(521);
 

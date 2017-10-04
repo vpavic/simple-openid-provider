@@ -75,7 +75,7 @@ public class TokenServiceImpl implements TokenService {
 		Instant issuedAt = Instant.now();
 		int tokenLifetime = this.properties.getAccessToken().getLifetime();
 
-		JWK jwk = resolveJwk();
+		JWK jwk = resolveJwk(JWSAlgorithm.RS256);
 
 		// @formatter:off
 		JWSHeader header = new JWSHeader.Builder(jwsAlgorithm)
@@ -159,7 +159,7 @@ public class TokenServiceImpl implements TokenService {
 
 		Instant issuedAt = Instant.now();
 
-		JWK jwk = resolveJwk();
+		JWK jwk = resolveJwk(JWSAlgorithm.RS256);
 
 		// @formatter:off
 		JWSHeader header = new JWSHeader.Builder(jwsAlgorithm)
@@ -222,12 +222,11 @@ public class TokenServiceImpl implements TokenService {
 		}
 	}
 
-	private JWK resolveJwk() {
+	private JWK resolveJwk(JWSAlgorithm algorithm) {
 		// @formatter:off
 		JWKMatcher jwkMatcher = new JWKMatcher.Builder()
-				.keyType(KeyType.RSA)
+				.keyType(KeyType.forAlgorithm(algorithm))
 				.keyUse(KeyUse.SIGNATURE)
-				.algorithm(JWSAlgorithm.RS256)
 				.build();
 		// @formatter:on
 

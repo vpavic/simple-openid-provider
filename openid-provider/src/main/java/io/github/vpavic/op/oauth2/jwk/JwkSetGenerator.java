@@ -15,7 +15,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
@@ -53,9 +52,9 @@ final class JwkSetGenerator {
 	static List<JWK> generateRotatingKeys() {
 		List<JWK> keys = new LinkedList<>();
 		keys.add(JwkSetGenerator.generateSigningRsaKey());
-		keys.add(JwkSetGenerator.generateSigningEcKey(JWSAlgorithm.ES256));
-		keys.add(JwkSetGenerator.generateSigningEcKey(JWSAlgorithm.ES384));
-		keys.add(JwkSetGenerator.generateSigningEcKey(JWSAlgorithm.ES512));
+		keys.add(JwkSetGenerator.generateSigningEcKey(Curve.P_256));
+		keys.add(JwkSetGenerator.generateSigningEcKey(Curve.P_384));
+		keys.add(JwkSetGenerator.generateSigningEcKey(Curve.P_521));
 		keys.add(JwkSetGenerator.generateEncryptionAesKey());
 
 		return keys;
@@ -89,7 +88,6 @@ final class JwkSetGenerator {
 			return new RSAKey.Builder(publicKey)
 					.privateKey(privateKey)
 					.keyUse(KeyUse.SIGNATURE)
-					.algorithm(JWSAlgorithm.RS256)
 					.keyIDFromThumbprint()
 					.build();
 			// @formatter:on
@@ -101,13 +99,12 @@ final class JwkSetGenerator {
 
 	/**
 	 * Generate an EC signing key with the specified algorithm and key ID set to its SHA-256 JWK thumbprint.
-	 * @param algorithm the Elliptic Curve algorithm
+	 * @param curve the curve
 	 * @return the generated JWK
 	 */
-	private static ECKey generateSigningEcKey(final JWSAlgorithm algorithm) {
+	private static ECKey generateSigningEcKey(final Curve curve) {
 		try {
 			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_EC);
-			Curve curve = Curve.forJWSAlgorithm(algorithm).iterator().next();
 			keyPairGenerator.initialize(curve.toECParameterSpec());
 			KeyPair keyPair = keyPairGenerator.generateKeyPair();
 			ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
@@ -117,7 +114,6 @@ final class JwkSetGenerator {
 			return new ECKey.Builder(curve, publicKey)
 					.privateKey(privateKey)
 					.keyUse(KeyUse.SIGNATURE)
-					.algorithm(algorithm)
 					.keyIDFromThumbprint()
 					.build();
 			// @formatter:on
