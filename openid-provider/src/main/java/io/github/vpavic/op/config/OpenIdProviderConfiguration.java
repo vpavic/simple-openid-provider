@@ -40,6 +40,11 @@ import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
 
+/**
+ * OpenID Provider configuration.
+ *
+ * @author Vedran Pavic
+ */
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)
 public class OpenIdProviderConfiguration {

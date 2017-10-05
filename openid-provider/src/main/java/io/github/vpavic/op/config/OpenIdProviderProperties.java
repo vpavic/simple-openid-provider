@@ -6,30 +6,57 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import javax.validation.Valid;
 
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Range;
+import org.hibernate.validator.constraints.URL;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+/**
+ * Configuration properties for OpenID Provider.
+ *
+ * @author Vedran Pavic
+ */
 @ConfigurationProperties("op")
+@Validated
 public class OpenIdProviderProperties {
 
+	/**
+	 * Issuer Identifier. A case sensitive URL that contains scheme, host, and optionally, port number and path
+	 * components and no query or fragment components.
+	 */
+	@URL
 	private String issuer = "http://localhost:6432";
 
+	@Valid
 	private final Jwk jwk = new Jwk();
 
+	@Valid
 	private final Registration registration = new Registration();
 
+	@Valid
 	private final IdToken idToken = new IdToken();
 
+	@Valid
 	private final Authorization authorization = new Authorization();
 
+	@Valid
 	private final AuthorizationCode code = new AuthorizationCode();
 
+	@Valid
 	private final AccessToken accessToken = new AccessToken();
 
+	@Valid
 	private final RefreshToken refreshToken = new RefreshToken();
 
+	@Valid
 	private final SessionManagement sessionManagement = new SessionManagement();
 
+	@Valid
 	private final FrontChannelLogout frontChannelLogout = new FrontChannelLogout();
 
 	public String getIssuer() {
@@ -82,7 +109,11 @@ public class OpenIdProviderProperties {
 
 	public static class Jwk {
 
-		private int retentionPeriod = 30;
+		/**
+		 * The retention period for decommissioned JWKs, in seconds.
+		 */
+		@Range(min = 1, max = 3600)
+		private int retentionPeriod = 1200;
 
 		public int getRetentionPeriod() {
 			return this.retentionPeriod;
@@ -96,12 +127,25 @@ public class OpenIdProviderProperties {
 
 	public static class Registration {
 
+		/**
+		 * Enable open Dynamic Registration.
+		 */
 		private boolean openRegistrationEnabled;
 
+		/**
+		 * Master access token for Dynamic Registration.
+		 */
+		@Length(min = 32)
 		private String apiAccessToken;
 
+		/**
+		 * Enable update of Client secret on registration update.
+		 */
 		private boolean updateSecret;
 
+		/**
+		 * Enable update of Client access token on registration update.
+		 */
 		private boolean updateAccessToken;
 
 		public boolean isOpenRegistrationEnabled() {
@@ -140,6 +184,10 @@ public class OpenIdProviderProperties {
 
 	public static class IdToken {
 
+		/**
+		 * The default ID Token lifetime, in seconds.
+		 */
+		@Range(min = 1, max = 3600)
 		private int lifetime = 900;
 
 		public int getLifetime() {
@@ -154,11 +202,22 @@ public class OpenIdProviderProperties {
 
 	public static class Authorization {
 
+		/**
+		 * Comma-separated list of supported OpenID scopes.
+		 */
+		@NotEmpty
 		private List<String> openidScopes = Arrays.asList(OIDCScopeValue.OPENID.getValue(),
 				OIDCScopeValue.OFFLINE_ACCESS.getValue());
 
+		/**
+		 * Mappings of resource scopes to resource IDs.
+		 */
 		private Map<String, String> resourceScopes = new HashMap<>();
 
+		/**
+		 * Comma-separated list of supported ACRs.
+		 */
+		@NotEmpty
 		private List<String> acrs = Collections.singletonList("1");
 
 		public List<String> getOpenidScopes() {
@@ -185,7 +244,11 @@ public class OpenIdProviderProperties {
 
 	public static class AuthorizationCode {
 
-		private int lifetime = 600;
+		/**
+		 * The default Authorization Code lifetime, in seconds.
+		 */
+		@Range(min = 1, max = 600)
+		private int lifetime = 300;
 
 		public int getLifetime() {
 			return this.lifetime;
@@ -199,6 +262,10 @@ public class OpenIdProviderProperties {
 
 	public static class AccessToken {
 
+		/**
+		 * The default Access Token lifetime, in seconds.
+		 */
+		@Range(min = 1, max = 3600)
 		private int lifetime = 600;
 
 		public int getLifetime() {
@@ -213,8 +280,15 @@ public class OpenIdProviderProperties {
 
 	public static class RefreshToken {
 
+		/**
+		 * The default Refresh Token lifetime, in seconds, zero implies no expiration.
+		 */
+		@Range(min = 0, max = Integer.MAX_VALUE)
 		private int lifetime;
 
+		/**
+		 * Enable update of Refresh Token on refresh request.
+		 */
 		private boolean update;
 
 		public int getLifetime() {
@@ -237,6 +311,9 @@ public class OpenIdProviderProperties {
 
 	public static class SessionManagement {
 
+		/**
+		 * Enable OpenID Connect Session Management support.
+		 */
 		private boolean enabled;
 
 		public boolean isEnabled() {
@@ -251,6 +328,9 @@ public class OpenIdProviderProperties {
 
 	public static class FrontChannelLogout {
 
+		/**
+		 * Enable OpenID Connect Front-Channel Logout support.
+		 */
 		private boolean enabled;
 
 		public boolean isEnabled() {
