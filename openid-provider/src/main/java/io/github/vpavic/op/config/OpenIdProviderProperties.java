@@ -107,6 +107,7 @@ public class OpenIdProviderProperties {
 		return this.sessionManagement.isEnabled() || this.frontChannelLogout.isEnabled();
 	}
 
+	@Validated
 	public static class Jwk {
 
 		/**
@@ -125,6 +126,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class Registration {
 
 		/**
@@ -182,6 +184,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class IdToken {
 
 		/**
@@ -200,6 +203,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class Authorization {
 
 		/**
@@ -242,6 +246,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class AuthorizationCode {
 
 		/**
@@ -260,6 +265,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class AccessToken {
 
 		/**
@@ -278,6 +284,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class RefreshToken {
 
 		/**
@@ -309,6 +316,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class SessionManagement {
 
 		/**
@@ -326,6 +334,7 @@ public class OpenIdProviderProperties {
 
 	}
 
+	@Validated
 	public static class FrontChannelLogout {
 
 		/**
