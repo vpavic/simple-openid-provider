@@ -28,7 +28,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.vpavic.op.oauth2.jwk.JwkSetService;
+import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 
 public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -38,18 +38,18 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private final String issuer;
 
-	private final JwkSetService jwkSetService;
+	private final JwkSetLoader jwkSetLoader;
 
 	private final AuthenticationManager authenticationManager;
 
-	public BearerAccessTokenAuthenticationFilter(String issuer, JwkSetService jwkSetService,
+	public BearerAccessTokenAuthenticationFilter(String issuer, JwkSetLoader jwkSetLoader,
 			AuthenticationManager authenticationManager) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
-		Objects.requireNonNull(jwkSetService, "jwkSetService must not be null");
+		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 
 		this.issuer = issuer;
-		this.jwkSetService = jwkSetService;
+		this.jwkSetLoader = jwkSetLoader;
 		this.authenticationManager = authenticationManager;
 	}
 
@@ -62,7 +62,7 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 			ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 			JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,
-					this.jwkSetService);
+					(jwkSelector, context) -> jwkSelector.select(this.jwkSetLoader.load()));
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
 

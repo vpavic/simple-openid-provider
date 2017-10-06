@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import io.github.vpavic.op.oauth2.jwk.JwkSetService;
 import io.github.vpavic.op.oauth2.jwk.JwkSetStore;
 
 @Controller
@@ -22,17 +21,13 @@ public class KeysWebController {
 
 	private final JwkSetStore jwkSetStore;
 
-	private final JwkSetService jwkSetService;
-
 	private final ObjectWriter objectWriter;
 
-	public KeysWebController(JwkSetStore jwkSetStore, JwkSetService jwkSetService, ObjectMapper objectMapper) {
+	public KeysWebController(JwkSetStore jwkSetStore, ObjectMapper objectMapper) {
 		Objects.requireNonNull(jwkSetStore, "jwkSetStore must not be null");
-		Objects.requireNonNull(jwkSetService, "jwkSetService must not be null");
 		Objects.requireNonNull(objectMapper, "objectMapper must not be null");
 
 		this.jwkSetStore = jwkSetStore;
-		this.jwkSetService = jwkSetService;
 		this.objectWriter = objectMapper.writer(SerializationFeature.INDENT_OUTPUT);
 	}
 
@@ -46,7 +41,7 @@ public class KeysWebController {
 
 	@PostMapping(path = "/rotate")
 	public String rotate() {
-		this.jwkSetService.rotate();
+		this.jwkSetStore.rotate();
 
 		return "redirect:/web/keys";
 	}

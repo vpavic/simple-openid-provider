@@ -38,7 +38,7 @@ import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
-import io.github.vpavic.op.oauth2.jwk.JwkSetService;
+import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
 
 @Configuration
@@ -184,13 +184,13 @@ public class SecurityConfiguration {
 
 		private final UserDetailsService userDetailsService;
 
-		private final JwkSetService jwkSetService;
+		private final JwkSetLoader jwkSetLoader;
 
 		UserInfoSecurityConfiguration(OpenIdProviderProperties properties,
-				ObjectProvider<UserDetailsService> userDetailsService, ObjectProvider<JwkSetService> jwkSetService) {
+				ObjectProvider<UserDetailsService> userDetailsService, ObjectProvider<JwkSetLoader> jwkSetLoader) {
 			this.properties = properties;
 			this.userDetailsService = userDetailsService.getObject();
-			this.jwkSetService = jwkSetService.getObject();
+			this.jwkSetLoader = jwkSetLoader.getObject();
 		}
 
 		@Override
@@ -203,7 +203,7 @@ public class SecurityConfiguration {
 					Collections.singletonList(authenticationProvider));
 
 			BearerAccessTokenAuthenticationFilter authenticationFilter = new BearerAccessTokenAuthenticationFilter(
-					this.properties.getIssuer(), this.jwkSetService, authenticationManager);
+					this.properties.getIssuer(), this.jwkSetLoader, authenticationManager);
 
 			// @formatter:off
 			http

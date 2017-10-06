@@ -17,6 +17,7 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKMatcher;
 import com.nimbusds.jose.jwk.JWKSelector;
+import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.KeyType;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -46,7 +47,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
-import io.github.vpavic.op.oauth2.jwk.JwkSetService;
+import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 
 @Service
@@ -58,18 +59,18 @@ public class DefaultTokenService implements TokenService {
 
 	private final OpenIdProviderProperties properties;
 
-	private final JwkSetService jwkSetService;
+	private final JwkSetLoader jwkSetLoader;
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	public DefaultTokenService(OpenIdProviderProperties properties, JwkSetService jwkSetService,
+	public DefaultTokenService(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(properties, "properties must not be null");
-		Objects.requireNonNull(jwkSetService, "jwkSetService must not be null");
+		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
 		this.properties = properties;
-		this.jwkSetService = jwkSetService;
+		this.jwkSetLoader = jwkSetLoader;
 		this.refreshTokenStore = refreshTokenStore;
 	}
 
@@ -234,7 +235,8 @@ public class DefaultTokenService implements TokenService {
 		// @formatter:on
 
 		JWKSelector jwkSelector = new JWKSelector(jwkMatcher);
-		List<JWK> jwks = this.jwkSetService.get(jwkSelector, null);
+		JWKSet jwkSet = this.jwkSetLoader.load();
+		List<JWK> jwks = jwkSelector.select(jwkSet);
 
 		return jwks.iterator().next();
 	}

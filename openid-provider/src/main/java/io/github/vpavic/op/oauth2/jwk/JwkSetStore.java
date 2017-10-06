@@ -2,10 +2,16 @@ package io.github.vpavic.op.oauth2.jwk;
 
 import com.nimbusds.jose.jwk.JWKSet;
 
-public interface JwkSetStore {
+/**
+ * {@link JWKSet} store.
+ *
+ * @author Vedran Pavic
+ */
+public interface JwkSetStore extends JwkSetLoader {
 
-	JWKSet load();
-
-	void save(JWKSet jwkSet);
+	/**
+	 * Rotate JWKs, keeping the decommissioned JWKs for the configured
+	 */
+	void rotate();
 
 }
