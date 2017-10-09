@@ -9,19 +9,17 @@ import org.springframework.session.web.http.DefaultCookieSerializer;
 @Configuration
 public class SessionConfiguration {
 
-	private final ServerProperties properties;
+	private final ServerProperties.Session.Cookie properties;
 
 	public SessionConfiguration(ServerProperties properties) {
-		this.properties = properties;
+		this.properties = properties.getSession().getCookie();
 	}
 
 	@Bean
 	public CookieSerializer cookieSerializer() {
-		ServerProperties.Session.Cookie sessionCookie = this.properties.getSession().getCookie();
-
 		DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
-		cookieSerializer.setCookieName(sessionCookie.getName());
-		cookieSerializer.setUseHttpOnlyCookie(sessionCookie.getHttpOnly());
+		cookieSerializer.setCookieName(this.properties.getName());
+		cookieSerializer.setUseHttpOnlyCookie(this.properties.getHttpOnly());
 
 		return cookieSerializer;
 	}
