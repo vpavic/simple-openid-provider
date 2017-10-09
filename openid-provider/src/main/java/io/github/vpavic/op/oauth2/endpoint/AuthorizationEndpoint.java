@@ -117,29 +117,17 @@ public class AuthorizationEndpoint {
 	@GetMapping
 	public String authorize(ServletWebRequest request, Authentication authentication, Model model)
 			throws GeneralException {
-		AuthenticationRequest authRequest = resolveRequest(request);
+		AuthenticationRequest authRequest = resolveAuthRequest(request);
+		OIDCClientMetadata clientMetadata = resolveClientMetadata(authRequest.getClientID());
+		validateAuthRequest(authRequest, clientMetadata, authentication);
 
-		ClientID clientID = authRequest.getClientID();
-		OIDCClientMetadata clientMetadata = resolveClientMetadata(clientID);
-
-		validateRequest(authRequest, authentication, clientMetadata);
-
-		Scope scope = resolveScope(authRequest, clientMetadata);
-
-		ResponseType responseType = authRequest.getResponseType();
-		ResponseMode responseMode = authRequest.impliedResponseMode();
-		URI redirectionURI = authRequest.getRedirectionURI();
-		State state = authRequest.getState();
-		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
-		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
-		Nonce nonce = authRequest.getNonce();
 		Prompt prompt = authRequest.getPrompt();
-		int maxAge = authRequest.getMaxAge();
 
 		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
 			return redirectToLoginPage(request, authRequest);
 		}
 
+		int maxAge = authRequest.getMaxAge();
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
@@ -148,73 +136,23 @@ public class AuthorizationEndpoint {
 
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
 
-		String principal = authentication.getName();
-		ACR acr = this.providerMetadata.getACRs().get(0);
-		AMR amr = AMR.PWD;
-		String sessionId = request.getSessionId();
-		State sessionState = (this.providerMetadata.getCheckSessionIframeURI() != null) ? State.parse(sessionId) : null;
-
+		ResponseType responseType = authRequest.getResponseType();
 		AuthenticationSuccessResponse authResponse;
 
-		// Authorization Code Flow
 		if (responseType.impliesCodeFlow()) {
-			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
-					authenticationTime, acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
-
-			AuthorizationCode code = this.authorizationCodeService.create(context);
-
-			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, null, null, state, sessionState,
-					responseMode);
+			authResponse = handleAuthorizationCodeFlow(authRequest, clientMetadata, request, authentication);
 		}
-		// Implicit Flow
 		else if (!responseType.contains(ResponseType.Value.CODE)) {
-			AccessToken accessToken = null;
-
-			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
-						this.accessTokenClaimsMapper);
-				accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			}
-
-			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
-					this.idTokenClaimsMapper, sessionId, nonce, accessToken, null,
-					(responseType.size() == 1) ? this.userInfoMapper : null);
-			JWT idToken = this.tokenService.createIdToken(idTokenRequest);
-
-			authResponse = new AuthenticationSuccessResponse(redirectionURI, null, idToken, accessToken, state,
-					sessionState, responseMode);
+			authResponse = handleImplicitFlow(authRequest, clientMetadata, request, authentication);
 		}
-		// Hybrid Flow
 		else {
-			AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope,
-					authenticationTime, acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
-
-			AuthorizationCode code = this.authorizationCodeService.create(context);
-
-			AccessToken accessToken = null;
-
-			if (responseType.contains(ResponseType.Value.TOKEN)) {
-				AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
-						this.accessTokenClaimsMapper);
-				accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			}
-
-			JWT idToken = null;
-
-			if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-				IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr,
-						amr, this.idTokenClaimsMapper, sessionId, nonce, accessToken, code, null);
-				idToken = this.tokenService.createIdToken(idTokenRequest);
-			}
-
-			authResponse = new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state,
-					sessionState, responseMode);
+			authResponse = handleHybridFlow(authRequest, clientMetadata, request, authentication);
 		}
 
 		return prepareResponse(authResponse, model);
 	}
 
-	private AuthenticationRequest resolveRequest(ServletWebRequest request) throws GeneralException {
+	private AuthenticationRequest resolveAuthRequest(ServletWebRequest request) throws GeneralException {
 		AuthenticationRequest authRequest;
 
 		try {
@@ -259,48 +197,28 @@ public class AuthorizationEndpoint {
 		}
 	}
 
-	private void validateRequest(AuthenticationRequest request, Authentication authentication,
-			OIDCClientMetadata clientMetadata) throws GeneralException {
-		ResponseType responseType = request.getResponseType();
-		ResponseMode responseMode = request.impliedResponseMode();
-		ClientID clientID = request.getClientID();
-		URI redirectionURI = request.getRedirectionURI();
-		State state = request.getState();
-		Prompt prompt = request.getPrompt();
+	private void validateAuthRequest(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata,
+			Authentication authentication) throws GeneralException {
+		ResponseType responseType = authRequest.getResponseType();
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientID = authRequest.getClientID();
+		URI redirectionURI = authRequest.getRedirectionURI();
+		State state = authRequest.getState();
+		Prompt prompt = authRequest.getPrompt();
 
 		validateRedirectionURI(redirectionURI, clientMetadata);
 
 		if (!clientMetadata.getResponseTypes().contains(responseType)) {
 			ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
+
 			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
 
 		if (prompt != null && prompt.contains(Prompt.Type.NONE) && authentication == null) {
 			ErrorObject error = OIDCError.LOGIN_REQUIRED;
+
 			throw new GeneralException(error.getDescription(), error, clientID, redirectionURI, responseMode, state);
 		}
-	}
-
-	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
-		Scope requestedScope = authRequest.getScope();
-		requestedScope.retainAll(this.providerMetadata.getScopes());
-		Scope registeredScope = clientMetadata.getScope();
-		Scope resolvedScope;
-
-		if (registeredScope == null || registeredScope.isEmpty()) {
-			resolvedScope = requestedScope;
-		}
-		else {
-			resolvedScope = new Scope();
-
-			for (Scope.Value scope : requestedScope) {
-				if (registeredScope.contains(scope)) {
-					resolvedScope.add(scope);
-				}
-			}
-		}
-
-		return resolvedScope;
 	}
 
 	private String redirectToLoginPage(ServletWebRequest request, AuthenticationRequest authRequest) {
@@ -324,6 +242,129 @@ public class AuthorizationEndpoint {
 		request.setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri, RequestAttributes.SCOPE_SESSION);
 
 		return LOGIN_REDIRECT_URI;
+	}
+
+	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
+			OIDCClientMetadata clientMetadata, ServletWebRequest request, Authentication authentication) {
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientId = authRequest.getClientID();
+		URI redirectionUri = authRequest.getRedirectionURI();
+		Scope scope = resolveScope(authRequest, clientMetadata);
+		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
+		Nonce nonce = authRequest.getNonce();
+
+		String principal = authentication.getName();
+		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		ACR acr = this.providerMetadata.getACRs().get(0);
+		AMR amr = AMR.PWD;
+		String sessionId = request.getSessionId();
+		State sessionState = (this.providerMetadata.getCheckSessionIframeURI() != null) ? State.parse(sessionId) : null;
+
+		AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientId, scope, authenticationTime,
+				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
+		AuthorizationCode code = this.authorizationCodeService.create(context);
+
+		return new AuthenticationSuccessResponse(redirectionUri, code, null, null, authRequest.getState(), sessionState,
+				responseMode);
+	}
+
+	private AuthenticationSuccessResponse handleImplicitFlow(AuthenticationRequest authRequest,
+			OIDCClientMetadata clientMetadata, ServletWebRequest request, Authentication authentication) {
+		ResponseType responseType = authRequest.getResponseType();
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientId = authRequest.getClientID();
+		URI redirectionUri = authRequest.getRedirectionURI();
+		Scope scope = resolveScope(authRequest, clientMetadata);
+		State state = authRequest.getState();
+		Nonce nonce = authRequest.getNonce();
+
+		String principal = authentication.getName();
+		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		ACR acr = this.providerMetadata.getACRs().get(0);
+		AMR amr = AMR.PWD;
+		String sessionId = request.getSessionId();
+		State sessionState = (this.providerMetadata.getCheckSessionIframeURI() != null) ? State.parse(sessionId) : null;
+
+		AccessToken accessToken = null;
+
+		if (responseType.contains(ResponseType.Value.TOKEN)) {
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+					this.accessTokenClaimsMapper);
+			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		}
+
+		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientId, scope, authenticationTime, acr, amr,
+				this.idTokenClaimsMapper, sessionId, nonce, accessToken, null,
+				(responseType.size() == 1) ? this.userInfoMapper : null);
+		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
+
+		return new AuthenticationSuccessResponse(redirectionUri, null, idToken, accessToken, state, sessionState,
+				responseMode);
+	}
+
+	private AuthenticationSuccessResponse handleHybridFlow(AuthenticationRequest authRequest,
+			OIDCClientMetadata clientMetadata, ServletWebRequest request, Authentication authentication) {
+		ResponseType responseType = authRequest.getResponseType();
+		ResponseMode responseMode = authRequest.impliedResponseMode();
+		ClientID clientID = authRequest.getClientID();
+		URI redirectionURI = authRequest.getRedirectionURI();
+		Scope scope = resolveScope(authRequest, clientMetadata);
+		State state = authRequest.getState();
+		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
+		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
+		Nonce nonce = authRequest.getNonce();
+
+		String principal = authentication.getName();
+		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		ACR acr = this.providerMetadata.getACRs().get(0);
+		AMR amr = AMR.PWD;
+		String sessionId = request.getSessionId();
+		State sessionState = (this.providerMetadata.getCheckSessionIframeURI() != null) ? State.parse(sessionId) : null;
+
+		AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientID, scope, authenticationTime,
+				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
+		AuthorizationCode code = this.authorizationCodeService.create(context);
+		AccessToken accessToken = null;
+
+		if (responseType.contains(ResponseType.Value.TOKEN)) {
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+					this.accessTokenClaimsMapper);
+			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		}
+
+		JWT idToken = null;
+
+		if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
+			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
+					this.idTokenClaimsMapper, sessionId, nonce, accessToken, code, null);
+			idToken = this.tokenService.createIdToken(idTokenRequest);
+		}
+
+		return new AuthenticationSuccessResponse(redirectionURI, code, idToken, accessToken, state, sessionState,
+				responseMode);
+	}
+
+	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
+		Scope requestedScope = authRequest.getScope();
+		requestedScope.retainAll(this.providerMetadata.getScopes());
+		Scope registeredScope = clientMetadata.getScope();
+		Scope resolvedScope;
+
+		if (registeredScope == null || registeredScope.isEmpty()) {
+			resolvedScope = requestedScope;
+		}
+		else {
+			resolvedScope = new Scope();
+
+			for (Scope.Value scope : requestedScope) {
+				if (registeredScope.contains(scope)) {
+					resolvedScope.add(scope);
+				}
+			}
+		}
+
+		return resolvedScope;
 	}
 
 	private String prepareResponse(AuthorizationResponse authResponse, Model model) {

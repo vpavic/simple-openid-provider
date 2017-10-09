@@ -16,6 +16,7 @@ import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
@@ -115,133 +116,22 @@ public class TokenEndpoint {
 		TokenRequest tokenRequest = resolveTokenRequest(request);
 
 		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
-
+		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+		Scope scope = tokenRequest.getScope();
 		AccessTokenResponse tokenResponse;
 
-		// Authorization Code Grant Type
 		if (authorizationGrant instanceof AuthorizationCodeGrant) {
-			AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) authorizationGrant;
-			AuthorizationCodeContext context = this.authorizationCodeService
-					.consume(authorizationCodeGrant.getAuthorizationCode());
-
-			if (context == null) {
-				throw new GeneralException(OAuth2Error.INVALID_GRANT);
-			}
-
-			CodeChallenge codeChallenge = context.getCodeChallenge();
-
-			if (codeChallenge != null) {
-				CodeChallengeMethod codeChallengeMethod = context.getCodeChallengeMethod();
-
-				if (codeChallengeMethod == null) {
-					codeChallengeMethod = CodeChallengeMethod.PLAIN;
-				}
-
-				CodeVerifier codeVerifier = authorizationCodeGrant.getCodeVerifier();
-
-				if (codeVerifier == null
-						|| !codeChallenge.equals(CodeChallenge.compute(codeChallengeMethod, codeVerifier))) {
-					throw new GeneralException(OAuth2Error.INVALID_REQUEST);
-				}
-			}
-
-			String principal = context.getPrincipal();
-			ClientID clientID = context.getClientID();
-			Scope scope = context.getScope();
-			Instant authenticationTime = context.getAuthenticationTime();
-			ACR acr = context.getAcr();
-			AMR amr = context.getAmr();
-			String sessionId = context.getSessionId();
-			Nonce nonce = context.getNonce();
-
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
-					this.accessTokenClaimsMapper);
-			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			RefreshToken refreshToken = null;
-
-			if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-				RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
-				refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
-			}
-
-			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
-					this.idTokenClaimsMapper, sessionId, nonce, accessToken, null, null);
-			JWT idToken = this.tokenService.createIdToken(idTokenRequest);
-			OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
-
-			tokenResponse = new OIDCTokenResponse(tokens);
+			tokenResponse = handleAuthorizationCodeGrantType((AuthorizationCodeGrant) authorizationGrant);
 		}
-		// Resource Owner Password Credentials Grant Type
 		else if (authorizationGrant instanceof ResourceOwnerPasswordCredentialsGrant) {
-			ResourceOwnerPasswordCredentialsGrant passwordCredentialsGrant = (ResourceOwnerPasswordCredentialsGrant) authorizationGrant;
-			String username = passwordCredentialsGrant.getUsername();
-			Secret password = passwordCredentialsGrant.getPassword();
-
-			Authentication authentication;
-
-			try {
-				authentication = this.authenticationManager
-						.authenticate(new UsernamePasswordAuthenticationToken(username, password.getValue()));
-			}
-			catch (AuthenticationException e) {
-				throw new GeneralException(OAuth2Error.INVALID_GRANT);
-			}
-
-			String principal = authentication.getName();
-			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
-			Scope scope = tokenRequest.getScope();
-
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
-					this.accessTokenClaimsMapper);
-			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			RefreshToken refreshToken = null;
-
-			if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-				RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
-				refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
-			}
-
-			Tokens tokens = new Tokens(accessToken, refreshToken);
-
-			tokenResponse = new AccessTokenResponse(tokens);
+			tokenResponse = handleResourceOwnerPasswordCredentialsGrantType(
+					(ResourceOwnerPasswordCredentialsGrant) authorizationGrant, clientAuthentication, scope);
 		}
-		// Client Credentials Grant Type
 		else if (authorizationGrant instanceof ClientCredentialsGrant) {
-			ClientID clientID = tokenRequest.getClientAuthentication().getClientID();
-			String principal = clientID.getValue();
-			Scope scope = tokenRequest.getScope();
-
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
-					this.accessTokenClaimsMapper);
-			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			Tokens tokens = new Tokens(accessToken, null);
-
-			tokenResponse = new AccessTokenResponse(tokens);
+			tokenResponse = handleClientCredentialsGrantType(clientAuthentication, scope);
 		}
-		// Refresh Token Grant Type
 		else if (authorizationGrant instanceof RefreshTokenGrant) {
-			RefreshTokenGrant refreshTokenGrant = (RefreshTokenGrant) authorizationGrant;
-			RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
-
-			RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
-			String principal = context.getPrincipal();
-			ClientID clientID = context.getClientID();
-			Scope scope = context.getScope();
-
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
-					this.accessTokenClaimsMapper);
-			AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
-			RefreshToken updatedRefreshToken = null;
-
-			if (this.properties.getRefreshToken().isUpdate() && scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-				RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
-				updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
-				this.refreshTokenStore.revoke(refreshToken);
-			}
-
-			Tokens tokens = new Tokens(accessToken, updatedRefreshToken);
-
-			tokenResponse = new AccessTokenResponse(tokens);
+			tokenResponse = handleRefreshTokenGrantType((RefreshTokenGrant) authorizationGrant);
 		}
 		else {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
@@ -260,6 +150,127 @@ public class TokenEndpoint {
 		this.clientRequestValidator.validateRequest(tokenRequest);
 
 		return tokenRequest;
+	}
+
+	private AccessTokenResponse handleAuthorizationCodeGrantType(AuthorizationCodeGrant authorizationCodeGrant)
+			throws GeneralException {
+		AuthorizationCodeContext context = this.authorizationCodeService
+				.consume(authorizationCodeGrant.getAuthorizationCode());
+
+		if (context == null) {
+			throw new GeneralException(OAuth2Error.INVALID_GRANT);
+		}
+
+		CodeChallenge codeChallenge = context.getCodeChallenge();
+
+		if (codeChallenge != null) {
+			CodeChallengeMethod codeChallengeMethod = context.getCodeChallengeMethod();
+
+			if (codeChallengeMethod == null) {
+				codeChallengeMethod = CodeChallengeMethod.PLAIN;
+			}
+
+			CodeVerifier codeVerifier = authorizationCodeGrant.getCodeVerifier();
+
+			if (codeVerifier == null
+					|| !codeChallenge.equals(CodeChallenge.compute(codeChallengeMethod, codeVerifier))) {
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST);
+			}
+		}
+
+		String principal = context.getPrincipal();
+		ClientID clientID = context.getClientID();
+		Scope scope = context.getScope();
+		Instant authenticationTime = context.getAuthenticationTime();
+		ACR acr = context.getAcr();
+		AMR amr = context.getAmr();
+		String sessionId = context.getSessionId();
+		Nonce nonce = context.getNonce();
+
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		RefreshToken refreshToken = null;
+
+		if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+		}
+
+		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
+				this.idTokenClaimsMapper, sessionId, nonce, accessToken, null, null);
+		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
+		OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
+
+		return new OIDCTokenResponse(tokens);
+	}
+
+	private AccessTokenResponse handleResourceOwnerPasswordCredentialsGrantType(
+			ResourceOwnerPasswordCredentialsGrant passwordCredentialsGrant, ClientAuthentication clientAuthentication,
+			Scope scope) throws GeneralException {
+		String username = passwordCredentialsGrant.getUsername();
+		Secret password = passwordCredentialsGrant.getPassword();
+
+		Authentication authentication;
+
+		try {
+			authentication = this.authenticationManager
+					.authenticate(new UsernamePasswordAuthenticationToken(username, password.getValue()));
+		}
+		catch (AuthenticationException e) {
+			throw new GeneralException(OAuth2Error.INVALID_GRANT);
+		}
+
+		String principal = authentication.getName();
+		ClientID clientID = clientAuthentication.getClientID();
+
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		RefreshToken refreshToken = null;
+
+		if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+		}
+
+		Tokens tokens = new Tokens(accessToken, refreshToken);
+
+		return new AccessTokenResponse(tokens);
+	}
+
+	private AccessTokenResponse handleClientCredentialsGrantType(ClientAuthentication clientAuthentication,
+			Scope scope) {
+		ClientID clientID = clientAuthentication.getClientID();
+		String principal = clientID.getValue();
+
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		Tokens tokens = new Tokens(accessToken, null);
+
+		return new AccessTokenResponse(tokens);
+	}
+
+	private AccessTokenResponse handleRefreshTokenGrantType(RefreshTokenGrant refreshTokenGrant)
+			throws GeneralException {
+		RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
+
+		RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
+		String principal = context.getPrincipal();
+		ClientID clientID = context.getClientID();
+		Scope scope = context.getScope();
+
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		RefreshToken updatedRefreshToken = null;
+
+		if (this.properties.getRefreshToken().isUpdate() && scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+			updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+			this.refreshTokenStore.revoke(refreshToken);
+		}
+
+		Tokens tokens = new Tokens(accessToken, updatedRefreshToken);
+
+		return new AccessTokenResponse(tokens);
 	}
 
 	@ExceptionHandler(GeneralException.class)
