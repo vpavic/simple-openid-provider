@@ -15,7 +15,7 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 @Service
 public class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
 
-	private static final String CODES_MAP = "op:authorizationCodes";
+	private static final String CODES_MAP = "op.authorizationCodes";
 
 	private final OpenIdProviderProperties properties;
 

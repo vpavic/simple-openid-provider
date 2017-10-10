@@ -17,7 +17,7 @@
 		</join>
 	</network>
 
-	<map name="spring:session:sessions">
+	<map name="op.sessions">
 		<attributes>
 			<attribute extractor="org.springframework.session.hazelcast.PrincipalNameExtractor">principalName</attribute>
 		</attributes>
