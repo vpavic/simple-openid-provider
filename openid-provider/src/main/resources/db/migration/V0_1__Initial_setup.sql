@@ -1,5 +1,7 @@
-CREATE TABLE op_jwk_set (
-	jwk_set TEXT NOT NULL
+CREATE TABLE op_keys (
+	id BIGSERIAL PRIMARY KEY,
+	jwk TEXT NOT NULL,
+	expiry TIMESTAMP
 );
 
 CREATE TABLE op_clients (

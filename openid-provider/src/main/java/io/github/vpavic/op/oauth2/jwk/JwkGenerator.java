@@ -8,8 +8,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Objects;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -17,17 +16,16 @@ import javax.crypto.SecretKey;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 
 /**
- * JWK set generators used by OpenID Provider.
+ * Collection of JWK generators used by OpenID Provider.
  *
  * @author Vedran Pavic
  */
-final class JwkSetGenerator {
+final class JwkGenerator {
 
 	private static final String ALGORITHM_AES = "AES";
 
@@ -41,42 +39,15 @@ final class JwkSetGenerator {
 
 	private static final String KEY_ID_SUBJECT_ENCRYPT = "subject-encrypt";
 
-	private JwkSetGenerator() {
+	private JwkGenerator() {
 
-	}
-
-	/**
-	 * Generate a set of rotating signature and encryption keys.
-	 * @return the list of generated JWKs
-	 */
-	static List<JWK> generateRotatingKeys() {
-		List<JWK> keys = new LinkedList<>();
-		keys.add(JwkSetGenerator.generateSigningRsaKey());
-		keys.add(JwkSetGenerator.generateSigningEcKey(Curve.P_256));
-		keys.add(JwkSetGenerator.generateSigningEcKey(Curve.P_384));
-		keys.add(JwkSetGenerator.generateSigningEcKey(Curve.P_521));
-		keys.add(JwkSetGenerator.generateEncryptionAesKey());
-
-		return keys;
-	}
-
-	/**
-	 * Generate a set of permanent keys.
-	 * @return the list of generated JWKs
-	 */
-	static List<JWK> generatePermanentKeys() {
-		List<JWK> keys = new LinkedList<>();
-		keys.add(JwkSetGenerator.generateSigningHmacSha256Key());
-		keys.add(JwkSetGenerator.generateSubjectEncryptionAesKey());
-
-		return keys;
 	}
 
 	/**
 	 * Generate a 2048 bit RSA signing key with key ID set to its SHA-256 JWK thumbprint.
 	 * @return the generated JWK
 	 */
-	private static RSAKey generateSigningRsaKey() {
+	static RSAKey generateSigningRsaKey() {
 		try {
 			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_RSA);
 			keyPairGenerator.initialize(2048);
@@ -102,7 +73,9 @@ final class JwkSetGenerator {
 	 * @param curve the curve
 	 * @return the generated JWK
 	 */
-	private static ECKey generateSigningEcKey(final Curve curve) {
+	static ECKey generateSigningEcKey(final Curve curve) {
+		Objects.requireNonNull(curve, "curve must not be null");
+
 		try {
 			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_EC);
 			keyPairGenerator.initialize(curve.toECParameterSpec());
@@ -127,7 +100,7 @@ final class JwkSetGenerator {
 	 * Generate a 128 bit AES encryption key with key ID set to its SHA-256 JWK thumbprint.
 	 * @return the generated JWK
 	 */
-	private static OctetSequenceKey generateEncryptionAesKey() {
+	static OctetSequenceKey generateEncryptionAesKey() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
 			keyGenerator.init(128);
@@ -149,7 +122,7 @@ final class JwkSetGenerator {
 	 * Generate a 256 bit HMAC SHA signing key with key ID "hmac".
 	 * @return the generated JWK
 	 */
-	private static OctetSequenceKey generateSigningHmacSha256Key() {
+	static OctetSequenceKey generateSigningHmacSha256Key() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_HMAC_SHA256);
 			SecretKey secretKey = keyGenerator.generateKey();
@@ -170,7 +143,7 @@ final class JwkSetGenerator {
 	 * Generate a 256 bit AES encryption key intended for subject encryption with key ID "subject-encrypt".
 	 * @return the generated JWK
 	 */
-	private static OctetSequenceKey generateSubjectEncryptionAesKey() {
+	static OctetSequenceKey generateSubjectEncryptionAesKey() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
 			keyGenerator.init(256);
