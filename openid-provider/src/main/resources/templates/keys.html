@@ -61,8 +61,24 @@
 </nav>
 <div class="container">
 	<div class="content">
-		<h4>Keys</h4>
-		<pre class="small" data-th-text="${keys}"></pre>
+		<table class="table table-hover">
+			<thead>
+			<tr>
+				<th>Type</th>
+				<th>Size</th>
+				<th>Use</th>
+				<th>Key ID</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr data-th-each="key : ${keys}">
+				<td data-th-text="${key.keyType}"></td>
+				<td data-th-text="${key.size()}"></td>
+				<td data-th-text="${key.keyUse}"></td>
+				<td data-th-text="${key.keyID}"></td>
+			</tr>
+			</tbody>
+		</table>
 
 		<form action="#" method="post" class="form-horizontal" data-th-action="@{/web/keys/rotate}">
 			<button class="btn btn-warning">Rotate Keys</button>
@@ -73,5 +89,10 @@
 		data-th-src="@{/webjars/jquery/jquery.min.js}"></script>
 <script src="https://cdn.jsdelivr.net/bootstrap/3.3.7/js/bootstrap.min.js"
 		data-th-src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+<script>
+	$(document).ready(function () {
+		$('[data-toggle="popover"]').popover();
+	});
+</script>
 </body>
 </html>
