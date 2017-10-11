@@ -10,7 +10,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 public interface JwkSetStore extends JwkSetLoader {
 
 	/**
-	 * Rotate JWKs, keeping the decommissioned JWKs for the configured
+	 * Rotate JWKs, keeping the decommissioned JWKs for the configured period of time
 	 */
 	void rotate();
 

@@ -47,6 +47,11 @@ public class JdbcJwkSetStore implements JwkSetStore, ApplicationRunner {
 
 	private final JdbcOperations jdbcOperations;
 
+	/**
+	 * Create a new {@link JdbcJwkSetStore} instance.
+	 * @param properties the OpenID Provider properties
+	 * @param jdbcOperations the {@link JdbcOperations} to use
+	 */
 	public JdbcJwkSetStore(OpenIdProviderProperties properties, JdbcOperations jdbcOperations) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(jdbcOperations, "jdbcOperations must not be null");
@@ -84,7 +89,7 @@ public class JdbcJwkSetStore implements JwkSetStore, ApplicationRunner {
 
 	@Transactional
 	@Scheduled(cron = "0 * * * * *")
-	public void cleanUpKeys() {
+	public void cleanUp() {
 		Instant now = Instant.now();
 		this.jdbcOperations.update(DELETE_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(now)));
 	}
