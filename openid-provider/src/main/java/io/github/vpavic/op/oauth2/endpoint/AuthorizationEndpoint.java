@@ -118,8 +118,8 @@ public class AuthorizationEndpoint {
 	public String authorize(ServletWebRequest request, Authentication authentication, Model model)
 			throws GeneralException {
 		AuthenticationRequest authRequest = resolveAuthRequest(request);
-		OIDCClientMetadata clientMetadata = resolveClientMetadata(authRequest.getClientID());
-		validateAuthRequest(authRequest, clientMetadata, authentication);
+		OIDCClientInformation client = resolveClient(authRequest.getClientID());
+		validateAuthRequest(authRequest, client, authentication);
 
 		Prompt prompt = authRequest.getPrompt();
 
@@ -140,13 +140,13 @@ public class AuthorizationEndpoint {
 		AuthenticationSuccessResponse authResponse;
 
 		if (responseType.impliesCodeFlow()) {
-			authResponse = handleAuthorizationCodeFlow(authRequest, clientMetadata, request, authentication);
+			authResponse = handleAuthorizationCodeFlow(authRequest, client, request, authentication);
 		}
 		else if (!responseType.contains(ResponseType.Value.CODE)) {
-			authResponse = handleImplicitFlow(authRequest, clientMetadata, request, authentication);
+			authResponse = handleImplicitFlow(authRequest, client, request, authentication);
 		}
 		else {
-			authResponse = handleHybridFlow(authRequest, clientMetadata, request, authentication);
+			authResponse = handleHybridFlow(authRequest, client, request, authentication);
 		}
 
 		return prepareResponse(authResponse, model);
@@ -166,8 +166,8 @@ public class AuthorizationEndpoint {
 				throw new AuthorizationRequestException(e.getErrorObject());
 			}
 
-			OIDCClientMetadata clientMetadata = resolveClientMetadata(clientID);
-			validateRedirectionURI(redirectionURI, clientMetadata);
+			OIDCClientInformation client = resolveClient(clientID);
+			validateRedirectionURI(redirectionURI, client.getOIDCMetadata());
 
 			throw e;
 		}
@@ -175,7 +175,7 @@ public class AuthorizationEndpoint {
 		return authRequest;
 	}
 
-	private OIDCClientMetadata resolveClientMetadata(ClientID clientID) {
+	private OIDCClientInformation resolveClient(ClientID clientID) {
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 
 		if (client == null) {
@@ -184,7 +184,7 @@ public class AuthorizationEndpoint {
 			throw new AuthorizationRequestException(error);
 		}
 
-		return client.getOIDCMetadata();
+		return client;
 	}
 
 	private void validateRedirectionURI(URI redirectionURI, OIDCClientMetadata clientMetadata) {
@@ -197,7 +197,7 @@ public class AuthorizationEndpoint {
 		}
 	}
 
-	private void validateAuthRequest(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata,
+	private void validateAuthRequest(AuthenticationRequest authRequest, OIDCClientInformation client,
 			Authentication authentication) throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
@@ -205,6 +205,7 @@ public class AuthorizationEndpoint {
 		URI redirectionURI = authRequest.getRedirectionURI();
 		State state = authRequest.getState();
 		Prompt prompt = authRequest.getPrompt();
+		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
 		validateRedirectionURI(redirectionURI, clientMetadata);
 
@@ -245,11 +246,11 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
-			OIDCClientMetadata clientMetadata, ServletWebRequest request, Authentication authentication) {
+			OIDCClientInformation client, ServletWebRequest request, Authentication authentication) {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
 		URI redirectionUri = authRequest.getRedirectionURI();
-		Scope scope = resolveScope(authRequest, clientMetadata);
+		Scope scope = resolveScope(authRequest, client.getOIDCMetadata());
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
@@ -270,12 +271,11 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleImplicitFlow(AuthenticationRequest authRequest,
-			OIDCClientMetadata clientMetadata, ServletWebRequest request, Authentication authentication) {
+			OIDCClientInformation client, ServletWebRequest request, Authentication authentication) {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
-		ClientID clientId = authRequest.getClientID();
 		URI redirectionUri = authRequest.getRedirectionURI();
-		Scope scope = resolveScope(authRequest, clientMetadata);
+		Scope scope = resolveScope(authRequest, client.getOIDCMetadata());
 		State state = authRequest.getState();
 		Nonce nonce = authRequest.getNonce();
 
@@ -294,7 +294,7 @@ public class AuthorizationEndpoint {
 			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		}
 
-		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientId, scope, authenticationTime, acr, amr,
+		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, client, scope, authenticationTime, acr, amr,
 				this.idTokenClaimsMapper, sessionId, nonce, accessToken, null,
 				(responseType.size() == 1) ? this.userInfoMapper : null);
 		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
@@ -304,12 +304,12 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleHybridFlow(AuthenticationRequest authRequest,
-			OIDCClientMetadata clientMetadata, ServletWebRequest request, Authentication authentication) {
+			OIDCClientInformation client, ServletWebRequest request, Authentication authentication) {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientID = authRequest.getClientID();
 		URI redirectionURI = authRequest.getRedirectionURI();
-		Scope scope = resolveScope(authRequest, clientMetadata);
+		Scope scope = resolveScope(authRequest, client.getOIDCMetadata());
 		State state = authRequest.getState();
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
@@ -336,7 +336,7 @@ public class AuthorizationEndpoint {
 		JWT idToken = null;
 
 		if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
+			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, client, scope, authenticationTime, acr, amr,
 					this.idTokenClaimsMapper, sessionId, nonce, accessToken, code, null);
 			idToken = this.tokenService.createIdToken(idTokenRequest);
 		}

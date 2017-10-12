@@ -2,6 +2,8 @@ package io.github.vpavic.op.oauth2.endpoint;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Date;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -11,6 +13,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
+import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
@@ -25,6 +28,9 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import io.github.vpavic.op.oauth2.client.ClientRepository;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,6 +81,9 @@ public class TokenEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
+	private ClientRepository clientRepository;
+
+	@MockBean
 	private ClientRequestValidator clientRequestValidator;
 
 	@MockBean
@@ -111,6 +120,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -135,6 +145,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -160,6 +171,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -185,6 +197,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
+		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -303,6 +316,17 @@ public class TokenEndpointTests {
 	public void invalid_noParams_isBadRequest() throws Exception {
 		this.mvc.perform(post("/oauth2/token").contentType(MediaType.APPLICATION_FORM_URLENCODED))
 				.andExpect(status().isBadRequest());
+	}
+
+	private static OIDCClientInformation client() {
+		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
+		clientMetadata.applyDefaults();
+		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
+		clientMetadata.setScope(new Scope(OIDCScopeValue.OPENID));
+		clientMetadata.setResponseTypes(Collections.singleton(new ResponseType(ResponseType.Value.CODE)));
+
+		return new OIDCClientInformation(new ClientID("test-client"), new Date(), clientMetadata,
+				new Secret("test-secret"));
 	}
 
 }

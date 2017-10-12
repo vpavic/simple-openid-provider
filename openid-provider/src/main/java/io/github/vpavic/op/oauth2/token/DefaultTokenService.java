@@ -44,6 +44,7 @@ import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
@@ -150,8 +151,13 @@ public class DefaultTokenService implements TokenService {
 		}
 
 		String principal = idTokenRequest.getPrincipal();
-		ClientID clientID = idTokenRequest.getClientID();
-		JWSAlgorithm algorithm = defaultAlgorithm;
+		OIDCClientInformation client = idTokenRequest.getClient();
+		ClientID clientID = client.getID();
+		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
+
+		if (algorithm == null) {
+			algorithm = defaultAlgorithm;
+		}
 
 		Issuer issuer = new Issuer(this.properties.getIssuer());
 		Subject subject = new Subject(principal);
@@ -203,7 +209,7 @@ public class DefaultTokenService implements TokenService {
 			JWTAssertionDetails details = JWTAssertionDetails.parse(claimsSet.toJWTClaimsSet());
 
 			if (JWSAlgorithm.Family.HMAC_SHA.contains(algorithm)) {
-				Secret secret = new Secret(); // TODO client secret
+				Secret secret = client.getSecret();
 
 				return JWTAssertionFactory.create(details, algorithm, secret);
 			}
@@ -236,9 +242,9 @@ public class DefaultTokenService implements TokenService {
 
 		JWKSelector jwkSelector = new JWKSelector(jwkMatcher);
 		JWKSet jwkSet = this.jwkSetLoader.load();
-		List<JWK> jwks = jwkSelector.select(jwkSet);
+		List<JWK> keys = jwkSelector.select(jwkSet);
 
-		return jwks.iterator().next();
+		return keys.iterator().next();
 	}
 
 }

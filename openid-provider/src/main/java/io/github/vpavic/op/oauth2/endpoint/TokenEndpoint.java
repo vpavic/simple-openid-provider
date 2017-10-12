@@ -32,6 +32,7 @@ import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
@@ -74,6 +76,8 @@ public class TokenEndpoint {
 
 	private final OpenIdProviderProperties properties;
 
+	private final ClientRepository clientRepository;
+
 	private final ClientRequestValidator clientRequestValidator;
 
 	private final AuthorizationCodeService authorizationCodeService;
@@ -88,11 +92,12 @@ public class TokenEndpoint {
 
 	private final IdTokenClaimsMapper idTokenClaimsMapper;
 
-	public TokenEndpoint(OpenIdProviderProperties properties, ClientRequestValidator clientRequestValidator,
-			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
-			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
+	public TokenEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+			ClientRequestValidator clientRequestValidator, AuthorizationCodeService authorizationCodeService,
+			TokenService tokenService, AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper) {
 		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
@@ -102,6 +107,7 @@ public class TokenEndpoint {
 		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
 		this.properties = properties;
+		this.clientRepository = clientRepository;
 		this.clientRequestValidator = clientRequestValidator;
 		this.authorizationCodeService = authorizationCodeService;
 		this.tokenService = tokenService;
@@ -187,6 +193,7 @@ public class TokenEndpoint {
 		String sessionId = context.getSessionId();
 		Nonce nonce = context.getNonce();
 
+		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
@@ -196,7 +203,7 @@ public class TokenEndpoint {
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
 
-		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, clientID, scope, authenticationTime, acr, amr,
+		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, client, scope, authenticationTime, acr, amr,
 				this.idTokenClaimsMapper, sessionId, nonce, accessToken, null, null);
 		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 		OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);

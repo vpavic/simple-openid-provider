@@ -5,11 +5,11 @@ import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 
@@ -17,7 +17,7 @@ public final class IdTokenRequest {
 
 	private final String principal;
 
-	private final ClientID clientID;
+	private final OIDCClientInformation client;
 
 	private final Scope scope;
 
@@ -39,11 +39,11 @@ public final class IdTokenRequest {
 
 	private final UserInfoMapper userInfoMapper;
 
-	public IdTokenRequest(String principal, ClientID clientID, Scope scope, Instant authenticationTime, ACR acr,
-			AMR amr, IdTokenClaimsMapper idTokenClaimsMapper, String sessionId, Nonce nonce, AccessToken accessToken,
-			AuthorizationCode code, UserInfoMapper userInfoMapper) {
+	public IdTokenRequest(String principal, OIDCClientInformation client, Scope scope, Instant authenticationTime,
+			ACR acr, AMR amr, IdTokenClaimsMapper idTokenClaimsMapper, String sessionId, Nonce nonce,
+			AccessToken accessToken, AuthorizationCode code, UserInfoMapper userInfoMapper) {
 		Objects.requireNonNull(principal, "principal must not be null");
-		Objects.requireNonNull(clientID, "clientID must not be null");
+		Objects.requireNonNull(client, "client must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
@@ -51,7 +51,7 @@ public final class IdTokenRequest {
 		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
 		this.principal = principal;
-		this.clientID = clientID;
+		this.client = client;
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
@@ -68,8 +68,8 @@ public final class IdTokenRequest {
 		return this.principal;
 	}
 
-	public ClientID getClientID() {
-		return this.clientID;
+	public OIDCClientInformation getClient() {
+		return this.client;
 	}
 
 	public Scope getScope() {
