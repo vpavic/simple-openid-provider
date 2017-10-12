@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
-import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -137,7 +137,7 @@ public class OpenIdProviderProperties {
 		/**
 		 * Master access token for Dynamic Registration.
 		 */
-		@Length(min = 32)
+		@Size(min = 32)
 		private String apiAccessToken;
 
 		/**
