@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.vpavic.op.oauth2.jwk.JwkSetStore;
+import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 
 /**
  * Endpoint that publishes server's public RSA keys as a JSON Web Key (JWK) set.
@@ -24,17 +24,17 @@ public class KeysEndpoint {
 
 	private static final MediaType JWK_SET = MediaType.parseMediaType(JWKSet.MIME_TYPE);
 
-	private final JwkSetStore jwkSetStore;
+	private final JwkSetLoader jwkSetLoader;
 
-	public KeysEndpoint(JwkSetStore jwkSetStore) {
-		Objects.requireNonNull(jwkSetStore, "jwkSetStore must not be null");
+	public KeysEndpoint(JwkSetLoader jwkSetLoader) {
+		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 
-		this.jwkSetStore = jwkSetStore;
+		this.jwkSetLoader = jwkSetLoader;
 	}
 
 	@GetMapping
 	public ResponseEntity<String> getJwkSet() {
-		JWKSet jwkSet = this.jwkSetStore.load();
+		JWKSet jwkSet = this.jwkSetLoader.load();
 
 		// @formatter:off
 		return ResponseEntity.ok()

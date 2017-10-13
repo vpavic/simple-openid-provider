@@ -1,6 +1,5 @@
 package io.github.vpavic.op.oauth2.endpoint;
 
-import io.github.vpavic.op.oauth2.jwk.JwkSetStore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -10,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+
+import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 
 /**
  * Tests for {@link KeysEndpoint}.
@@ -27,7 +28,7 @@ public class KeysEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
-	private JwkSetStore jwkSetStore;
+	private JwkSetLoader jwkSetLoader;
 
 	@Test
 	public void test() {
