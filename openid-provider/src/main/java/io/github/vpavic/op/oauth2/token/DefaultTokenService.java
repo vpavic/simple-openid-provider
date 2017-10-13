@@ -154,11 +154,6 @@ public class DefaultTokenService implements TokenService {
 		OIDCClientInformation client = idTokenRequest.getClient();
 		ClientID clientID = client.getID();
 		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
-
-		if (algorithm == null) {
-			algorithm = defaultAlgorithm;
-		}
-
 		Issuer issuer = new Issuer(this.properties.getIssuer());
 		Subject subject = new Subject(principal);
 		List<Audience> audience = Audience.create(clientID.getValue());
