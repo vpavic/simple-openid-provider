@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import io.github.vpavic.op.config.OpenIdProviderProperties;
+import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
 import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
 
@@ -33,16 +35,18 @@ public class RevocationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/revoke";
 
-	private final ClientRequestValidator clientRequestValidator;
-
 	private final RefreshTokenStore refreshTokenStore;
 
-	public RevocationEndpoint(ClientRequestValidator clientRequestValidator, RefreshTokenStore refreshTokenStore) {
-		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
+	private final ClientRequestValidator clientRequestValidator;
+
+	public RevocationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+			RefreshTokenStore refreshTokenStore) {
+		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
-		this.clientRequestValidator = clientRequestValidator;
 		this.refreshTokenStore = refreshTokenStore;
+		this.clientRequestValidator = new ClientRequestValidator(properties, clientRepository);
 	}
 
 	@PostMapping

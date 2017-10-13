@@ -18,11 +18,9 @@ import com.nimbusds.oauth2.sdk.client.ClientType;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import org.springframework.stereotype.Component;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 
-@Component
 public class ClientRequestValidator {
 
 	private final OpenIdProviderProperties properties;

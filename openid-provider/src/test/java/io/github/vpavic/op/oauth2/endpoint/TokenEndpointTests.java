@@ -16,6 +16,7 @@ import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
@@ -30,7 +31,6 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import io.github.vpavic.op.oauth2.client.ClientRepository;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -48,7 +48,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
+import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
 import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
@@ -84,9 +84,6 @@ public class TokenEndpointTests {
 	private ClientRepository clientRepository;
 
 	@MockBean
-	private ClientRequestValidator clientRequestValidator;
-
-	@MockBean
 	private AuthorizationCodeService authorizationCodeService;
 
 	@MockBean
@@ -120,7 +117,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -145,7 +143,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -171,7 +170,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -197,7 +197,8 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(client());
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -215,6 +216,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
@@ -233,6 +236,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
@@ -250,6 +255,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -266,6 +273,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -283,6 +292,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
 				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), null));
@@ -303,6 +314,8 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
+		given(this.clientRepository.findByClientId(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
 				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), null));
@@ -318,15 +331,16 @@ public class TokenEndpointTests {
 				.andExpect(status().isBadRequest());
 	}
 
-	private static OIDCClientInformation client() {
+	private static OIDCClientInformation client(ClientAuthenticationMethod clientAuthenticationMethod) {
 		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
 		clientMetadata.applyDefaults();
 		clientMetadata.setRedirectionURI(URI.create("http://example.com"));
 		clientMetadata.setScope(new Scope(OIDCScopeValue.OPENID));
 		clientMetadata.setResponseTypes(Collections.singleton(new ResponseType(ResponseType.Value.CODE)));
+		clientMetadata.setTokenEndpointAuthMethod(clientAuthenticationMethod);
 
 		return new OIDCClientInformation(new ClientID("test-client"), new Date(), clientMetadata,
-				new Secret("test-secret"));
+				ClientAuthenticationMethod.NONE.equals(clientAuthenticationMethod) ? null : new Secret("test-secret"));
 	}
 
 }

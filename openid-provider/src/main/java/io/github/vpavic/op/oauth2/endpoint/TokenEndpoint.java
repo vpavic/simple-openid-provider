@@ -78,8 +78,6 @@ public class TokenEndpoint {
 
 	private final ClientRepository clientRepository;
 
-	private final ClientRequestValidator clientRequestValidator;
-
 	private final AuthorizationCodeService authorizationCodeService;
 
 	private final TokenService tokenService;
@@ -92,13 +90,14 @@ public class TokenEndpoint {
 
 	private final IdTokenClaimsMapper idTokenClaimsMapper;
 
+	private final ClientRequestValidator clientRequestValidator;
+
 	public TokenEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
-			ClientRequestValidator clientRequestValidator, AuthorizationCodeService authorizationCodeService,
+			AuthorizationCodeService authorizationCodeService,
 			TokenService tokenService, AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-		Objects.requireNonNull(clientRequestValidator, "clientRequestValidator must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
@@ -108,13 +107,13 @@ public class TokenEndpoint {
 
 		this.properties = properties;
 		this.clientRepository = clientRepository;
-		this.clientRequestValidator = clientRequestValidator;
 		this.authorizationCodeService = authorizationCodeService;
 		this.tokenService = tokenService;
 		this.authenticationManager = authenticationManager;
 		this.refreshTokenStore = refreshTokenStore;
 		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 		this.idTokenClaimsMapper = idTokenClaimsMapper;
+		this.clientRequestValidator = new ClientRequestValidator(properties, clientRepository);
 	}
 
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
