@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.jwk;
 
 import java.util.Objects;
 
@@ -8,8 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 
 /**
  * Endpoint that publishes server's public RSA keys as a JSON Web Key (JWK) set.

@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.token;
 
 import java.net.URI;
 import java.time.Instant;
@@ -31,6 +31,7 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import io.github.vpavic.op.oauth2.token.TokenEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

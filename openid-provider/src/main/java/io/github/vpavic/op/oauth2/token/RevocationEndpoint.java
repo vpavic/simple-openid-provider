@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.token;
 
 import java.util.Objects;
 
@@ -20,7 +20,6 @@ import org.springframework.web.context.request.ServletWebRequest;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
-import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
 
 /**
  * OAuth 2.0 compatible Token Revocation Endpoint implementation.

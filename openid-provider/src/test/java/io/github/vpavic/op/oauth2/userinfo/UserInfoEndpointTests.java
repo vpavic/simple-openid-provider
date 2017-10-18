@@ -1,6 +1,7 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.userinfo;
 
-import io.github.vpavic.op.oauth2.client.ClientRepository;
+import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
+import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -12,13 +13,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Tests for {@link ClientRegistrationEndpoint}.
+ * Tests for {@link UserInfoEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = ClientRegistrationEndpoint.class)
-public class ClientRegistrationEndpointTests {
+@WebMvcTest(controllers = UserInfoEndpoint.class)
+public class UserInfoEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -27,7 +28,7 @@ public class ClientRegistrationEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
-	private ClientRepository clientRepository;
+	private UserInfoMapper userInfoMapper;
 
 	@Test
 	public void test() {

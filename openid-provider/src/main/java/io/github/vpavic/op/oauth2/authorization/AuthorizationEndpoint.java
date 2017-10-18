@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.authorization;
 
 import java.net.URI;
 import java.time.Instant;

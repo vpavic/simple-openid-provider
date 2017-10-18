@@ -31,14 +31,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.vpavic.op.oauth2.endpoint.AuthorizationEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.CheckSessionIframe;
-import io.github.vpavic.op.oauth2.endpoint.ClientRegistrationEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.EndSessionEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.KeysEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.RevocationEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.TokenEndpoint;
-import io.github.vpavic.op.oauth2.endpoint.UserInfoEndpoint;
+import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
+import io.github.vpavic.op.oauth2.checksession.CheckSessionIframe;
+import io.github.vpavic.op.oauth2.client.ClientRegistrationEndpoint;
+import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
+import io.github.vpavic.op.oauth2.jwk.KeysEndpoint;
+import io.github.vpavic.op.oauth2.token.RevocationEndpoint;
+import io.github.vpavic.op.oauth2.token.TokenEndpoint;
+import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
 
 /**
  * OpenID Provider configuration.

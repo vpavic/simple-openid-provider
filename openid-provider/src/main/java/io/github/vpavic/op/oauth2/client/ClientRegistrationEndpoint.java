@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.client;
 
 import java.net.URI;
 import java.util.Date;
@@ -29,7 +29,6 @@ import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBui
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
-import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 @RestController
 @RequestMapping(path = ClientRegistrationEndpoint.PATH_MAPPING)

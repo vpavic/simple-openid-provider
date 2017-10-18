@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.userinfo;
 
 import java.util.Objects;
 
@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 
 /**
  * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.

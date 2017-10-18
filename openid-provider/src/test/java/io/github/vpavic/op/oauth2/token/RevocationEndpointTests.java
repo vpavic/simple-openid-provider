@@ -1,6 +1,8 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.token;
 
-import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
+import io.github.vpavic.op.oauth2.client.ClientRepository;
+import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
+import io.github.vpavic.op.oauth2.token.RevocationEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -12,13 +14,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Tests for {@link UserInfoEndpoint}.
+ * Tests for {@link RevocationEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = UserInfoEndpoint.class)
-public class UserInfoEndpointTests {
+@WebMvcTest(controllers = RevocationEndpoint.class)
+public class RevocationEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -27,7 +29,10 @@ public class UserInfoEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
-	private UserInfoMapper userInfoMapper;
+	private ClientRepository clientRepository;
+
+	@MockBean
+	private RefreshTokenStore refreshTokenStore;
 
 	@Test
 	public void test() {

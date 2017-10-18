@@ -1,11 +1,14 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.endsession;
 
+import io.github.vpavic.op.oauth2.client.ClientRepository;
+import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -13,13 +16,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link CheckSessionIframe}.
+ * Tests for {@link EndSessionEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = CheckSessionIframe.class, secure = false)
-public class CheckSessionIframeTests {
+@WebMvcTest(controllers = EndSessionEndpoint.class, secure = false)
+public class EndSessionEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -27,8 +30,11 @@ public class CheckSessionIframeTests {
 	@Autowired
 	private MockMvc mvc;
 
+	@MockBean
+	private ClientRepository clientRepository;
+
 	@Test
-	public void getCheckSessionIframeDisabled() throws Exception {
+	public void getEndSessionEndpointDisabled() throws Exception {
 		this.mvc.perform(get("/oauth2/check-session")).andExpect(status().isNotFound());
 	}
 

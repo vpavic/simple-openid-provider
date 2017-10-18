@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.endpoint;
+package io.github.vpavic.op.oauth2.token;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -51,14 +51,6 @@ import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
-import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
-import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
-import io.github.vpavic.op.oauth2.token.IdTokenRequest;
-import io.github.vpavic.op.oauth2.token.RefreshTokenContext;
-import io.github.vpavic.op.oauth2.token.RefreshTokenRequest;
-import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
-import io.github.vpavic.op.oauth2.token.TokenService;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Token Endpoint implementation.
