@@ -31,7 +31,6 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import io.github.vpavic.op.oauth2.token.TokenEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -52,13 +51,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
-import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
-import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
-import io.github.vpavic.op.oauth2.token.IdTokenRequest;
-import io.github.vpavic.op.oauth2.token.RefreshTokenContext;
-import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
-import io.github.vpavic.op.oauth2.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

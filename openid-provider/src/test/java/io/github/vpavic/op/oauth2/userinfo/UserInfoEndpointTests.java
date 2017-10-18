@@ -1,7 +1,5 @@
 package io.github.vpavic.op.oauth2.userinfo;
 
-import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
-import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

@@ -20,6 +20,7 @@ apply plugin: 'com.github.ben-manes.versions'
 
 subprojects {
 	apply plugin: 'java'
+	apply plugin: 'checkstyle'
 	apply from: "$rootDir/gradle/dependency-management.gradle"
 
 	sourceCompatibility = 1.8
@@ -28,5 +29,11 @@ subprojects {
 		mavenCentral()
 		maven { url 'https://repo.spring.io/milestone/' }
 		maven { url 'https://repo.spring.io/snapshot/' }
+	}
+
+	checkstyle {
+		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+		configProperties.configDir = configFile.parentFile
+		toolVersion = '8.3'
 	}
 }

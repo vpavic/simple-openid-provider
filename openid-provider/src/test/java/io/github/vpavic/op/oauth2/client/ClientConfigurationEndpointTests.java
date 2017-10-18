@@ -1,7 +1,5 @@
 package io.github.vpavic.op.oauth2.client;
 
-import io.github.vpavic.op.oauth2.client.ClientConfigurationEndpoint;
-import io.github.vpavic.op.oauth2.client.ClientRepository;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

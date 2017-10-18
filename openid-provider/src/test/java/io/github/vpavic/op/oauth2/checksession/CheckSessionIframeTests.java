@@ -1,6 +1,5 @@
 package io.github.vpavic.op.oauth2.checksession;
 
-import io.github.vpavic.op.oauth2.checksession.CheckSessionIframe;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

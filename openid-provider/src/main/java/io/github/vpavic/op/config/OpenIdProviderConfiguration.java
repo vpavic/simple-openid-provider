@@ -36,8 +36,8 @@ import io.github.vpavic.op.oauth2.checksession.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
 import io.github.vpavic.op.oauth2.jwk.JwkSetEndpoint;
-import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.op.oauth2.token.TokenEndpoint;
+import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
 
 /**

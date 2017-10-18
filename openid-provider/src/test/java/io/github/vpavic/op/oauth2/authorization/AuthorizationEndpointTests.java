@@ -21,7 +21,6 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;

@@ -1,6 +1,5 @@
 package io.github.vpavic.op.oauth2.discovery;
 
-import io.github.vpavic.op.oauth2.discovery.DiscoveryEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
