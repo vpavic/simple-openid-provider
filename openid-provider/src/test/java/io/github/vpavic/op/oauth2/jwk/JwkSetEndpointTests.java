@@ -1,7 +1,6 @@
 package io.github.vpavic.op.oauth2.jwk;
 
 import com.nimbusds.jose.jwk.JWKSet;
-import io.github.vpavic.op.oauth2.jwk.KeysEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -12,21 +11,19 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
-
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link KeysEndpoint}.
+ * Tests for {@link JwkSetEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = KeysEndpoint.class, secure = false)
-public class KeysEndpointTests {
+@WebMvcTest(controllers = JwkSetEndpoint.class, secure = false)
+public class JwkSetEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

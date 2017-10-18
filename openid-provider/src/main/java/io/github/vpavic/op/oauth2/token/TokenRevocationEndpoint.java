@@ -29,8 +29,8 @@ import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
  * @see <a href="https://tools.ietf.org/html/rfc7009">RFC 7009: OAuth 2.0 Token Revocation</a>
  */
 @RestController
-@RequestMapping(path = RevocationEndpoint.PATH_MAPPING)
-public class RevocationEndpoint {
+@RequestMapping(path = TokenRevocationEndpoint.PATH_MAPPING)
+public class TokenRevocationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/revoke";
 
@@ -38,7 +38,7 @@ public class RevocationEndpoint {
 
 	private final ClientRequestValidator clientRequestValidator;
 
-	public RevocationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	public TokenRevocationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");

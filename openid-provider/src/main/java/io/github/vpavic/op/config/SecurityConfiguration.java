@@ -35,8 +35,8 @@ import io.github.vpavic.op.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.discovery.DiscoveryEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
-import io.github.vpavic.op.oauth2.jwk.KeysEndpoint;
-import io.github.vpavic.op.oauth2.token.RevocationEndpoint;
+import io.github.vpavic.op.oauth2.jwk.JwkSetEndpoint;
+import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.op.oauth2.token.TokenEndpoint;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
 import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
@@ -93,7 +93,7 @@ public class SecurityConfiguration {
 			http
 				.authorizeRequests()
 					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING,
-							EndSessionEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING, KeysEndpoint.PATH_MAPPING)
+							EndSessionEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING, JwkSetEndpoint.PATH_MAPPING)
 						.permitAll()
 					.antMatchers("/web/**").hasRole("USER")
 					.anyRequest().denyAll()
@@ -162,7 +162,7 @@ public class SecurityConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers(TokenEndpoint.PATH_MAPPING, RevocationEndpoint.PATH_MAPPING)
+					.antMatchers(TokenEndpoint.PATH_MAPPING, TokenRevocationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
 					.anyRequest().permitAll()

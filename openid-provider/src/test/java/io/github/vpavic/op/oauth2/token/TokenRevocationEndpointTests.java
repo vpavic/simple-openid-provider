@@ -1,8 +1,6 @@
 package io.github.vpavic.op.oauth2.token;
 
 import io.github.vpavic.op.oauth2.client.ClientRepository;
-import io.github.vpavic.op.oauth2.token.RefreshTokenStore;
-import io.github.vpavic.op.oauth2.token.RevocationEndpoint;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -14,13 +12,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Tests for {@link RevocationEndpoint}.
+ * Tests for {@link TokenRevocationEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = RevocationEndpoint.class)
-public class RevocationEndpointTests {
+@WebMvcTest(controllers = TokenRevocationEndpoint.class)
+public class TokenRevocationEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

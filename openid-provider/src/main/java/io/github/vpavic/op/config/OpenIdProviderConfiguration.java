@@ -35,8 +35,8 @@ import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.checksession.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
-import io.github.vpavic.op.oauth2.jwk.KeysEndpoint;
-import io.github.vpavic.op.oauth2.token.RevocationEndpoint;
+import io.github.vpavic.op.oauth2.jwk.JwkSetEndpoint;
+import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.op.oauth2.token.TokenEndpoint;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
 
@@ -63,12 +63,12 @@ public class OpenIdProviderConfiguration {
 	@Bean
 	public OIDCProviderMetadata providerMetadata() throws Exception {
 		OIDCProviderMetadata providerMetadata = new OIDCProviderMetadata(issuer(),
-				Collections.singletonList(SubjectType.PUBLIC), createURI(KeysEndpoint.PATH_MAPPING));
+				Collections.singletonList(SubjectType.PUBLIC), createURI(JwkSetEndpoint.PATH_MAPPING));
 		providerMetadata.setAuthorizationEndpointURI(createURI(AuthorizationEndpoint.PATH_MAPPING));
 		providerMetadata.setTokenEndpointURI(createURI(TokenEndpoint.PATH_MAPPING));
 		providerMetadata.setUserInfoEndpointURI(createURI(UserInfoEndpoint.PATH_MAPPING));
 		providerMetadata.setRegistrationEndpointURI(createURI(ClientRegistrationEndpoint.PATH_MAPPING));
-		providerMetadata.setRevocationEndpointURI(createURI(RevocationEndpoint.PATH_MAPPING));
+		providerMetadata.setRevocationEndpointURI(createURI(TokenRevocationEndpoint.PATH_MAPPING));
 		providerMetadata.setCheckSessionIframeURI(checkSessionIframeUri());
 		providerMetadata.setEndSessionEndpointURI(endSessionEndpointUri());
 		providerMetadata.setScopes(scopes());

@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Vedran Pavic
  */
 @RestController
-@RequestMapping(path = KeysEndpoint.PATH_MAPPING)
-public class KeysEndpoint {
+@RequestMapping(path = JwkSetEndpoint.PATH_MAPPING)
+public class JwkSetEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/keys";
 
@@ -24,7 +24,7 @@ public class KeysEndpoint {
 
 	private final JwkSetLoader jwkSetLoader;
 
-	public KeysEndpoint(JwkSetLoader jwkSetLoader) {
+	public JwkSetEndpoint(JwkSetLoader jwkSetLoader) {
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 
 		this.jwkSetLoader = jwkSetLoader;
