@@ -1,10 +1,7 @@
 package io.github.vpavic.op.config;
 
-import java.util.Collections;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.security.EndpointRequest;
 import org.springframework.boot.autoconfigure.security.StaticResourceRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -12,29 +9,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.ForwardLogoutSuccessHandler;
-import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 
 import io.github.vpavic.op.interfaces.login.LoginFormController;
 import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
-import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.op.oauth2.token.TokenEndpoint;
 import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
-import io.github.vpavic.op.oauth2.userinfo.UserInfoEndpoint;
-import io.github.vpavic.op.security.web.authentication.BearerAccessTokenAuthenticationFilter;
 
 @Configuration
 @EnableConfigurationProperties(SecurityProperties.class)
@@ -166,54 +156,6 @@ public class SecurityConfiguration {
 					.disable()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			// @formatter:on
-		}
-
-	}
-
-	@Order(96)
-	@Configuration
-	static class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		private final OpenIdProviderProperties properties;
-
-		private final UserDetailsService userDetailsService;
-
-		private final JwkSetLoader jwkSetLoader;
-
-		UserInfoSecurityConfiguration(OpenIdProviderProperties properties,
-				ObjectProvider<UserDetailsService> userDetailsService, ObjectProvider<JwkSetLoader> jwkSetLoader) {
-			this.properties = properties;
-			this.userDetailsService = userDetailsService.getObject();
-			this.jwkSetLoader = jwkSetLoader.getObject();
-		}
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			PreAuthenticatedAuthenticationProvider authenticationProvider = new PreAuthenticatedAuthenticationProvider();
-			authenticationProvider.setPreAuthenticatedUserDetailsService(
-					new UserDetailsByNameServiceWrapper<>(this.userDetailsService));
-
-			AuthenticationManager authenticationManager = new ProviderManager(
-					Collections.singletonList(authenticationProvider));
-
-			BearerAccessTokenAuthenticationFilter authenticationFilter = new BearerAccessTokenAuthenticationFilter(
-					this.properties.getIssuer(), this.jwkSetLoader, authenticationManager);
-
-			// @formatter:off
-			http
-				.antMatcher(UserInfoEndpoint.PATH_MAPPING)
-				.authorizeRequests()
-					.anyRequest().authenticated()
-					.and()
-				.cors()
-					.and()
-				.csrf()
-					.disable()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-					.and()
-				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
 			// @formatter:on
 		}
 

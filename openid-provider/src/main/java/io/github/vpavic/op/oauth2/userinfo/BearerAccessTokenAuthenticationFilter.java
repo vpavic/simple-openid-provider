@@ -1,4 +1,4 @@
-package io.github.vpavic.op.security.web.authentication;
+package io.github.vpavic.op.oauth2.userinfo;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -30,7 +30,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 
-public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
+class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
 	private static final String SCOPE_CLAIM = "scope";
 
@@ -42,7 +42,7 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private final AuthenticationManager authenticationManager;
 
-	public BearerAccessTokenAuthenticationFilter(String issuer, JwkSetLoader jwkSetLoader,
+	BearerAccessTokenAuthenticationFilter(String issuer, JwkSetLoader jwkSetLoader,
 			AuthenticationManager authenticationManager) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
