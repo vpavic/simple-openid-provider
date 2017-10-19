@@ -18,10 +18,8 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-@Repository
 public class JdbcClientRepository implements ClientRepository {
 
 	private static final String INSERT_STATEMENT = "INSERT INTO op_clients(id, issue_date, metadata, secret, registration_uri, access_token) VALUES (?, ?, ?, ?, ?, ?)";
