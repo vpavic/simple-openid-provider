@@ -40,7 +40,7 @@ public class UserInfoEndpoint {
 	public ResponseEntity<String> getUserInfo(Authentication authentication) throws Exception {
 		String principal = authentication.getName();
 		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
-		Scope scope = Scope.parse(claimsSet.getStringClaim(SCOPE_CLAIM));
+		Scope scope = Scope.parse(claimsSet.getStringListClaim(SCOPE_CLAIM));
 		UserInfo userInfo = this.userInfoMapper.map(principal, scope);
 
 		// @formatter:off

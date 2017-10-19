@@ -2,6 +2,7 @@ package io.github.vpavic.op.oauth2.userinfo;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.FilterChain;
@@ -18,6 +19,7 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
@@ -78,7 +79,9 @@ class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 				throw new Exception("Access token has expired");
 			}
 
-			if (!StringUtils.hasText(claimsSet.getStringClaim(SCOPE_CLAIM))) {
+			List<String> scopes = claimsSet.getStringListClaim(SCOPE_CLAIM);
+
+			if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
 				throw new Exception("Invalid scope");
 			}
 
