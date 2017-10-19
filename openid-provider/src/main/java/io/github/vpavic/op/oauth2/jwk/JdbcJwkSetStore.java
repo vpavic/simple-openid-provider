@@ -18,7 +18,6 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
@@ -28,7 +27,6 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
  *
  * @author Vedran Pavic
  */
-@Repository
 public class JdbcJwkSetStore implements JwkSetStore, ApplicationRunner {
 
 	private static final String INSERT_STATEMENT = "INSERT INTO op_keys(jwk, expiry) VALUES (?, ?)";

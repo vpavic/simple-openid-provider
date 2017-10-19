@@ -31,7 +31,6 @@ import io.github.vpavic.op.interfaces.login.LoginFormController;
 import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.discovery.DiscoveryEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
-import io.github.vpavic.op.oauth2.jwk.JwkSetEndpoint;
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.op.oauth2.token.TokenEndpoint;
 import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
@@ -90,7 +89,7 @@ public class SecurityConfiguration {
 			http
 				.authorizeRequests()
 					.antMatchers("/", LoginFormController.PATH_MAPPING, AuthorizationEndpoint.PATH_MAPPING,
-							EndSessionEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING, JwkSetEndpoint.PATH_MAPPING)
+							EndSessionEndpoint.PATH_MAPPING, DiscoveryEndpoint.PATH_MAPPING)
 						.permitAll()
 					.antMatchers("/web/**").hasRole("USER")
 					.anyRequest().denyAll()
