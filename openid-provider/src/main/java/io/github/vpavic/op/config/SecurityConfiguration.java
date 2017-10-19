@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.security.EndpointRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.StaticResourceRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +29,6 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import io.github.vpavic.op.interfaces.login.LoginFormController;
 import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
-import io.github.vpavic.op.oauth2.checksession.CheckSessionIframe;
 import io.github.vpavic.op.oauth2.discovery.DiscoveryEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
 import io.github.vpavic.op.oauth2.jwk.JwkSetEndpoint;
@@ -218,26 +216,6 @@ public class SecurityConfiguration {
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 					.and()
 				.addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
-			// @formatter:on
-		}
-
-	}
-
-	@Order(95)
-	@Configuration
-	@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
-	static class CheckSessionConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.antMatcher(CheckSessionIframe.PATH_MAPPING)
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.headers()
-					.frameOptions().disable();
 			// @formatter:on
 		}
 

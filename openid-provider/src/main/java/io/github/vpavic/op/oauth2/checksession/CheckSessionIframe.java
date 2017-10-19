@@ -1,6 +1,5 @@
 package io.github.vpavic.op.oauth2.checksession;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
 @Controller
-@ConditionalOnProperty(prefix = "op.session-management", name = "enabled", havingValue = "true")
 @RequestMapping(path = CheckSessionIframe.PATH_MAPPING)
 public class CheckSessionIframe {
 
