@@ -45,10 +45,10 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.oauth2.client.ClientRepository;
-import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
-import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
 import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.op.oauth2.token.AuthorizationCodeContext;
+import io.github.vpavic.op.oauth2.token.AuthorizationCodeService;
 import io.github.vpavic.op.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.IdTokenRequest;
 import io.github.vpavic.op.oauth2.token.TokenService;

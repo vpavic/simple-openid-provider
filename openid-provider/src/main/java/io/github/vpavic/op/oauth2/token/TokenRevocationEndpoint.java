@@ -11,10 +11,10 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
@@ -28,7 +28,7 @@ import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
  * @see <a href="https://tools.ietf.org/html/rfc6749">RFC 6749: The OAuth 2.0 Authorization Framework</a>
  * @see <a href="https://tools.ietf.org/html/rfc7009">RFC 7009: OAuth 2.0 Token Revocation</a>
  */
-@RestController
+@Controller
 @RequestMapping(path = TokenRevocationEndpoint.PATH_MAPPING)
 public class TokenRevocationEndpoint {
 

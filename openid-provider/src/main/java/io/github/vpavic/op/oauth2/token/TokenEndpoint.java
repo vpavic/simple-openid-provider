@@ -40,17 +40,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.client.ClientRequestValidator;
-import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
-import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Token Endpoint implementation.
@@ -60,7 +58,7 @@ import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
  * @see <a href="https://tools.ietf.org/html/rfc7636">RFC 7636: Proof Key for Code Exchange by OAuth Public Clients</a>
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
-@RestController
+@Controller
 @RequestMapping(path = TokenEndpoint.PATH_MAPPING)
 public class TokenEndpoint {
 

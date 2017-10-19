@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.code;
+package io.github.vpavic.op.oauth2.token;
 
 import java.io.Serializable;
 import java.time.Instant;

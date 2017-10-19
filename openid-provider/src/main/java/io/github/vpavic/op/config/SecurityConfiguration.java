@@ -23,8 +23,6 @@ import org.springframework.security.web.authentication.logout.ForwardLogoutSucce
 import io.github.vpavic.op.interfaces.login.LoginFormController;
 import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
-import io.github.vpavic.op.oauth2.token.TokenEndpoint;
-import io.github.vpavic.op.oauth2.token.TokenRevocationEndpoint;
 
 @Configuration
 @EnableConfigurationProperties(SecurityProperties.class)
@@ -133,29 +131,6 @@ public class SecurityConfiguration {
 					.and()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.NEVER);
-			// @formatter:on
-		}
-
-	}
-
-	@Order(97)
-	@Configuration
-	static class EndpointSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.requestMatchers()
-					.antMatchers(TokenEndpoint.PATH_MAPPING, TokenRevocationEndpoint.PATH_MAPPING)
-					.and()
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.csrf()
-					.disable()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 			// @formatter:on
 		}
 

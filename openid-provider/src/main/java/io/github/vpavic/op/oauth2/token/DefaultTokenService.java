@@ -45,14 +45,12 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 
-@Service
-public class DefaultTokenService implements TokenService {
+class DefaultTokenService implements TokenService {
 
 	private static final String SCOPE_CLAIM = "scope";
 
@@ -64,7 +62,7 @@ public class DefaultTokenService implements TokenService {
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	public DefaultTokenService(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
+	DefaultTokenService(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");

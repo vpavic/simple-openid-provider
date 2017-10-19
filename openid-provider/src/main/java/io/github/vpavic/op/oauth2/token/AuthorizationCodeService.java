@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.code;
+package io.github.vpavic.op.oauth2.token;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;

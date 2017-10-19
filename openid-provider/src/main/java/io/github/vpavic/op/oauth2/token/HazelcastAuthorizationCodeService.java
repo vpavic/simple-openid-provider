@@ -1,4 +1,4 @@
-package io.github.vpavic.op.oauth2.code;
+package io.github.vpavic.op.oauth2.token;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -8,12 +8,10 @@ import com.hazelcast.core.IMap;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.springframework.stereotype.Service;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 
-@Service
-public class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
+class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
 
 	private static final String CODES_MAP = "op.authorizationCodes";
 
@@ -21,7 +19,7 @@ public class HazelcastAuthorizationCodeService implements AuthorizationCodeServi
 
 	private final IMap<String, AuthorizationCodeContext> codes;
 
-	public HazelcastAuthorizationCodeService(OpenIdProviderProperties properties, HazelcastInstance hazelcastInstance) {
+	HazelcastAuthorizationCodeService(OpenIdProviderProperties properties, HazelcastInstance hazelcastInstance) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(hazelcastInstance, "hazelcastInstance must not be null");
 

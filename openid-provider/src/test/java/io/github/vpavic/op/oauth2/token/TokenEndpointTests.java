@@ -49,8 +49,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import io.github.vpavic.op.oauth2.client.ClientRepository;
-import io.github.vpavic.op.oauth2.code.AuthorizationCodeContext;
-import io.github.vpavic.op.oauth2.code.AuthorizationCodeService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
