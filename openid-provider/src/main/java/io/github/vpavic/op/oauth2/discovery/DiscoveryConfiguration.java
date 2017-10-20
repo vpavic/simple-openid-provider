@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.langtag.LangTag;
@@ -127,17 +126,7 @@ public class DiscoveryConfiguration {
 	}
 
 	private Scope scope() {
-		Scope scope = new Scope();
-
-		for (String openidScope : this.properties.getAuthorization().getOpenidScopes()) {
-			scope.add(openidScope);
-		}
-
-		for (String resourceScope : this.properties.getAuthorization().getResourceScopes().keySet()) {
-			scope.add(resourceScope);
-		}
-
-		return scope;
+		return this.properties.getAuthorization().getSupportedScope();
 	}
 
 	private List<ResponseType> responseTypes() {
@@ -163,7 +152,7 @@ public class DiscoveryConfiguration {
 	}
 
 	private List<ACR> acrs() {
-		return this.properties.getAuthorization().getAcrs().stream().map(ACR::new).collect(Collectors.toList());
+		return this.properties.getAuthorization().getAcrs();
 	}
 
 	private List<ClientAuthenticationMethod> tokenEndpointAuthMethods() {

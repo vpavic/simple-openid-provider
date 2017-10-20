@@ -8,11 +8,13 @@ import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
 
+import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
+import com.nimbusds.openid.connect.sdk.claims.ACR;
 import org.hibernate.validator.constraints.Range;
-import org.hibernate.validator.constraints.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -29,8 +31,7 @@ public class OpenIdProviderProperties {
 	 * Issuer Identifier. A case sensitive URL that contains scheme, host, and optionally, port number and path
 	 * components and no query or fragment components.
 	 */
-	@URL
-	private String issuer = "http://localhost:6432";
+	private Issuer issuer = new Issuer("http://127.0.0.1:6432");
 
 	@Valid
 	private final Jwk jwk = new Jwk();
@@ -59,11 +60,11 @@ public class OpenIdProviderProperties {
 	@Valid
 	private final FrontChannelLogout frontChannelLogout = new FrontChannelLogout();
 
-	public String getIssuer() {
+	public Issuer getIssuer() {
 		return this.issuer;
 	}
 
-	public void setIssuer(String issuer) {
+	public void setIssuer(Issuer issuer) {
 		this.issuer = issuer;
 	}
 
@@ -137,8 +138,7 @@ public class OpenIdProviderProperties {
 		/**
 		 * Master access token for Dynamic Registration.
 		 */
-		@Size(min = 32)
-		private String apiAccessToken;
+		private BearerAccessToken apiAccessToken;
 
 		/**
 		 * Enable update of Client secret on registration update.
@@ -158,11 +158,11 @@ public class OpenIdProviderProperties {
 			this.openRegistrationEnabled = openRegistrationEnabled;
 		}
 
-		public String getApiAccessToken() {
+		public BearerAccessToken getApiAccessToken() {
 			return this.apiAccessToken;
 		}
 
-		public void setApiAccessToken(String apiAccessToken) {
+		public void setApiAccessToken(BearerAccessToken apiAccessToken) {
 			this.apiAccessToken = apiAccessToken;
 		}
 
@@ -210,38 +210,45 @@ public class OpenIdProviderProperties {
 		 * Comma-separated list of supported OpenID scopes.
 		 */
 		@NotEmpty
-		private List<String> openidScopes = Arrays.asList(OIDCScopeValue.OPENID.getValue(),
-				OIDCScopeValue.OFFLINE_ACCESS.getValue());
+		private List<Scope.Value> openidScopes = Arrays.asList(OIDCScopeValue.OPENID, OIDCScopeValue.OFFLINE_ACCESS);
 
 		/**
 		 * Mappings of resource scopes to resource IDs.
 		 */
-		private Map<String, String> resourceScopes = new HashMap<>();
+		private Map<Scope.Value, String> resourceScopes = new HashMap<>();
 
 		/**
 		 * Comma-separated list of supported ACRs.
 		 */
 		@NotEmpty
-		private List<String> acrs = Collections.singletonList("1");
+		private List<ACR> acrs = Collections.singletonList(new ACR("1"));
 
-		public List<String> getOpenidScopes() {
+		public List<Scope.Value> getOpenidScopes() {
 			return this.openidScopes;
 		}
 
-		public void setOpenidScopes(List<String> openidScopes) {
+		public void setOpenidScopes(List<Scope.Value> openidScopes) {
 			this.openidScopes = openidScopes;
 		}
 
-		public Map<String, String> getResourceScopes() {
+		public Map<Scope.Value, String> getResourceScopes() {
 			return this.resourceScopes;
 		}
 
-		public List<String> getAcrs() {
+		public List<ACR> getAcrs() {
 			return this.acrs;
 		}
 
-		public void setAcrs(List<String> acrs) {
+		public void setAcrs(List<ACR> acrs) {
 			this.acrs = acrs;
+		}
+
+		public Scope getSupportedScope() {
+			Scope supportedScope = new Scope();
+			this.openidScopes.forEach(value -> supportedScope.add(value.getValue()));
+			this.resourceScopes.keySet().forEach(value -> supportedScope.add(value.getValue()));
+
+			return supportedScope;
 		}
 
 	}

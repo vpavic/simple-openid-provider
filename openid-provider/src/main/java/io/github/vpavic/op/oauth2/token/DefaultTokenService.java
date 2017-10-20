@@ -88,7 +88,7 @@ class DefaultTokenService implements TokenService {
 		audience.add(new Audience(this.properties.getIssuer()));
 
 		for (Scope.Value value : scope) {
-			String resource = this.properties.getAuthorization().getResourceScopes().get(value.getValue());
+			String resource = this.properties.getAuthorization().getResourceScopes().get(value);
 
 			if (resource != null) {
 				audience.add(new Audience(resource));

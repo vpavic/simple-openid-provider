@@ -1,10 +1,10 @@
 package io.github.vpavic.op.oauth2.authorization;
 
-import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 import io.github.vpavic.op.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.op.oauth2.token.AuthorizationCodeService;
@@ -15,7 +15,7 @@ import io.github.vpavic.op.oauth2.userinfo.UserInfoMapper;
 @Configuration
 public class AuthorizationConfiguration {
 
-	private final OIDCProviderMetadata providerMetadata;
+	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
@@ -29,12 +29,12 @@ public class AuthorizationConfiguration {
 
 	private final UserInfoMapper userInfoMapper;
 
-	public AuthorizationConfiguration(OIDCProviderMetadata providerMetadata,
+	public AuthorizationConfiguration(OpenIdProviderProperties properties,
 			ObjectProvider<ClientRepository> clientRepository,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
 			ObjectProvider<TokenService> tokenService, ObjectProvider<AccessTokenClaimsMapper> accessTokenClaimsMapper,
 			ObjectProvider<IdTokenClaimsMapper> idTokenClaimsMapper, ObjectProvider<UserInfoMapper> userInfoMapper) {
-		this.providerMetadata = providerMetadata;
+		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.tokenService = tokenService.getObject();
@@ -45,7 +45,7 @@ public class AuthorizationConfiguration {
 
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
-		return new AuthorizationEndpoint(this.providerMetadata, this.clientRepository, this.authorizationCodeService,
+		return new AuthorizationEndpoint(this.properties, this.clientRepository, this.authorizationCodeService,
 				this.tokenService, this.accessTokenClaimsMapper, this.idTokenClaimsMapper, this.userInfoMapper);
 	}
 

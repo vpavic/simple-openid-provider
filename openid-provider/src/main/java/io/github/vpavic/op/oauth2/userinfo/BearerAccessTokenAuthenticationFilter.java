@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
 
 class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
@@ -37,19 +38,19 @@ class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
 	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
 
-	private final String issuer;
+	private final OpenIdProviderProperties properties;
 
 	private final JwkSetLoader jwkSetLoader;
 
 	private final AuthenticationManager authenticationManager;
 
-	BearerAccessTokenAuthenticationFilter(String issuer, JwkSetLoader jwkSetLoader,
+	BearerAccessTokenAuthenticationFilter(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
 			AuthenticationManager authenticationManager) {
-		Objects.requireNonNull(issuer, "issuer must not be null");
+		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 
-		this.issuer = issuer;
+		this.properties = properties;
 		this.jwkSetLoader = jwkSetLoader;
 		this.authenticationManager = authenticationManager;
 	}
@@ -67,11 +68,13 @@ class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
 
-			if (!this.issuer.equals(claimsSet.getIssuer())) {
+			String issuer = this.properties.getIssuer().getValue();
+
+			if (!issuer.equals(claimsSet.getIssuer())) {
 				throw new Exception("Invalid issuer");
 			}
 
-			if (!claimsSet.getAudience().contains(this.issuer)) {
+			if (!claimsSet.getAudience().contains(issuer)) {
 				throw new Exception("Invalid audience");
 			}
 

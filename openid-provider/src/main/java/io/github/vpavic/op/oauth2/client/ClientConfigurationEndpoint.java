@@ -146,10 +146,9 @@ public class ClientConfigurationEndpoint {
 		if (clientInformation != null) {
 			AccessToken requestAccessToken = request.getAccessToken();
 			BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
-			String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+			BearerAccessToken apiAccessToken = this.properties.getRegistration().getApiAccessToken();
 
-			if ((registrationAccessToken != null && requestAccessToken.equals(registrationAccessToken))
-					|| (apiAccessToken != null && requestAccessToken.equals(new BearerAccessToken(apiAccessToken)))) {
+			if (requestAccessToken.equals(registrationAccessToken) || requestAccessToken.equals(apiAccessToken)) {
 				return clientInformation;
 			}
 		}

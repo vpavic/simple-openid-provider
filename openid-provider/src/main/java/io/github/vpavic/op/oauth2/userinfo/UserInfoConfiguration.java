@@ -59,7 +59,7 @@ public class UserInfoConfiguration {
 					Collections.singletonList(authenticationProvider));
 
 			BearerAccessTokenAuthenticationFilter authenticationFilter = new BearerAccessTokenAuthenticationFilter(
-					this.properties.getIssuer(), this.jwkSetLoader, authenticationManager);
+					this.properties, this.jwkSetLoader, authenticationManager);
 
 			// @formatter:off
 			http

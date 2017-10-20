@@ -48,7 +48,7 @@ public class ClientRegistrationEndpoint {
 
 		this.properties = properties;
 		this.clientRepository = clientRepository;
-		this.clientIdSuffix = UriComponentsBuilder.fromHttpUrl(properties.getIssuer()).build().getHost();
+		this.clientIdSuffix = UriComponentsBuilder.fromHttpUrl(properties.getIssuer().getValue()).build().getHost();
 	}
 
 	@PostMapping
@@ -99,10 +99,9 @@ public class ClientRegistrationEndpoint {
 	private void validateAccessToken(OIDCClientRegistrationRequest request) throws GeneralException {
 		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
 			AccessToken requestAccessToken = request.getAccessToken();
-			String apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+			BearerAccessToken apiAccessToken = this.properties.getRegistration().getApiAccessToken();
 
-			if (requestAccessToken == null || apiAccessToken == null
-					|| !requestAccessToken.equals(new BearerAccessToken(apiAccessToken))) {
+			if (requestAccessToken == null || !requestAccessToken.equals(apiAccessToken)) {
 				throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 			}
 		}
