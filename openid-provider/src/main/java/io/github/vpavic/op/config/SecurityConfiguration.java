@@ -28,6 +28,12 @@ import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
 @EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfiguration {
 
+	private static final int WEB_ORDER = 100;
+
+	private static final int ACTUATOR_ORDER = WEB_ORDER - 1;
+
+	private static final int STATIC_ORDER = WEB_ORDER - 2;
+
 	private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
 	private final SecurityProperties properties;
@@ -63,8 +69,8 @@ public class SecurityConfiguration {
 		return userDetailsManager;
 	}
 
-	@Order(100)
 	@Configuration
+	@Order(WEB_ORDER)
 	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
@@ -95,27 +101,8 @@ public class SecurityConfiguration {
 
 	}
 
-	@Order(99)
 	@Configuration
-	static class StaticResourcesSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.requestMatcher(StaticResourceRequest.toCommonLocations())
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.headers()
-					.cacheControl().disable();
-			// @formatter:on
-		}
-
-	}
-
-	@Order(98)
-	@Configuration
+	@Order(ACTUATOR_ORDER)
 	static class ActuatorSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
@@ -131,6 +118,25 @@ public class SecurityConfiguration {
 					.and()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.NEVER);
+			// @formatter:on
+		}
+
+	}
+
+	@Configuration
+	@Order(STATIC_ORDER)
+	static class StaticResourcesSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.requestMatcher(StaticResourceRequest.toCommonLocations())
+				.authorizeRequests()
+					.anyRequest().permitAll()
+					.and()
+				.headers()
+					.cacheControl().disable();
 			// @formatter:on
 		}
 
