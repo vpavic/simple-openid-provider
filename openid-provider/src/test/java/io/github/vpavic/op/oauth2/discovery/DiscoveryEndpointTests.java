@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import io.github.vpavic.op.config.OpenIdProviderConfiguration;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(DiscoveryEndpoint.class)
-@Import(DiscoveryConfiguration.class)
+@Import({ OpenIdProviderConfiguration.class, DiscoveryConfiguration.class })
 public class DiscoveryEndpointTests {
 
 	@Rule

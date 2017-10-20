@@ -8,9 +8,11 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import io.github.vpavic.op.config.OpenIdProviderConfiguration;
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(SpringRunner.class)
 @JdbcTest
+@Import(OpenIdProviderConfiguration.class)
 public class JdbcJwkSetStoreTests {
 
 	@Rule

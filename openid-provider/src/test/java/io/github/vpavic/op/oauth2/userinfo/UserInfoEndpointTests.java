@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = UserInfoEndpoint.class)
+@WebMvcTest(UserInfoEndpoint.class)
 public class UserInfoEndpointTests {
 
 	@Rule

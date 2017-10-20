@@ -38,6 +38,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -48,6 +49,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import io.github.vpavic.op.config.OpenIdProviderConfiguration;
 import io.github.vpavic.op.oauth2.client.ClientRepository;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -62,7 +64,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = TokenEndpoint.class, secure = false)
+@WebMvcTest(TokenEndpoint.class)
+@Import({ OpenIdProviderConfiguration.class, TokenConfiguration.SecurityConfiguration.class })
 public class TokenEndpointTests {
 
 	@Rule

@@ -1,7 +1,0 @@
-# AutoConfigureJdbc auto-configuration imports
-org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc=\
-io.github.vpavic.op.config.OpenIdProviderConfiguration
-
-# AutoConfigureMockMvc auto-configuration imports
-org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc=\
-io.github.vpavic.op.config.OpenIdProviderConfiguration
