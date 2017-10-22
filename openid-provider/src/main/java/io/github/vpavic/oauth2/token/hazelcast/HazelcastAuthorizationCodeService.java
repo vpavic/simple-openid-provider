@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.token;
+package io.github.vpavic.oauth2.token.hazelcast;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -10,6 +10,8 @@ import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.token.AuthorizationCodeContext;
+import io.github.vpavic.oauth2.token.AuthorizationCodeService;
 
 public class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
 

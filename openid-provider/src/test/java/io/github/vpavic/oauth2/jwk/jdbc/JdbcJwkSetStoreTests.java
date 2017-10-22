@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.jwk;
+package io.github.vpavic.oauth2.jwk.jdbc;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import org.junit.Before;

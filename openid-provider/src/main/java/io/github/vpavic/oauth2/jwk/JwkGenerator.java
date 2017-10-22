@@ -25,7 +25,7 @@ import com.nimbusds.jose.jwk.RSAKey;
  *
  * @author Vedran Pavic
  */
-final class JwkGenerator {
+public final class JwkGenerator {
 
 	private static final String ALGORITHM_AES = "AES";
 
@@ -47,7 +47,7 @@ final class JwkGenerator {
 	 * Generate a 2048 bit RSA signing key with key ID set to its SHA-256 JWK thumbprint.
 	 * @return the generated JWK
 	 */
-	static RSAKey generateSigningRsaKey() {
+	public static RSAKey generateSigningRsaKey() {
 		try {
 			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_RSA);
 			keyPairGenerator.initialize(2048);
@@ -73,7 +73,7 @@ final class JwkGenerator {
 	 * @param curve the curve
 	 * @return the generated JWK
 	 */
-	static ECKey generateSigningEcKey(final Curve curve) {
+	public static ECKey generateSigningEcKey(final Curve curve) {
 		Objects.requireNonNull(curve, "curve must not be null");
 
 		try {
@@ -100,7 +100,7 @@ final class JwkGenerator {
 	 * Generate a 128 bit AES encryption key with key ID set to its SHA-256 JWK thumbprint.
 	 * @return the generated JWK
 	 */
-	static OctetSequenceKey generateEncryptionAesKey() {
+	public static OctetSequenceKey generateEncryptionAesKey() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
 			keyGenerator.init(128);
@@ -122,7 +122,7 @@ final class JwkGenerator {
 	 * Generate a 256 bit HMAC SHA signing key with key ID "hmac".
 	 * @return the generated JWK
 	 */
-	static OctetSequenceKey generateSigningHmacSha256Key() {
+	public static OctetSequenceKey generateSigningHmacSha256Key() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_HMAC_SHA256);
 			SecretKey secretKey = keyGenerator.generateKey();
@@ -143,7 +143,7 @@ final class JwkGenerator {
 	 * Generate a 256 bit AES encryption key intended for subject encryption with key ID "subject-encrypt".
 	 * @return the generated JWK
 	 */
-	static OctetSequenceKey generateSubjectEncryptionAesKey() {
+	public static OctetSequenceKey generateSubjectEncryptionAesKey() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
 			keyGenerator.init(256);

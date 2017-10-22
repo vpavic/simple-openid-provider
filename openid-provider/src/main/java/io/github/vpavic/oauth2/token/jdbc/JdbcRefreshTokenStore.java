@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.token;
+package io.github.vpavic.oauth2.token.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +15,9 @@ import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
+
+import io.github.vpavic.oauth2.token.RefreshTokenContext;
+import io.github.vpavic.oauth2.token.RefreshTokenStore;
 
 public class JdbcRefreshTokenStore implements RefreshTokenStore {
 

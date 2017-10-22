@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.jwk;
+package io.github.vpavic.oauth2.jwk.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +21,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.jwk.JwkGenerator;
+import io.github.vpavic.oauth2.jwk.JwkSetStore;
 
 /**
  * JDBC {@link JwkSetStore} implementation.

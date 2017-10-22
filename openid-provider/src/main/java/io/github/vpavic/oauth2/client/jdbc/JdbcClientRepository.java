@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.client;
+package io.github.vpavic.oauth2.client.jdbc;
 
 import java.net.URI;
 import java.sql.ResultSet;
@@ -19,6 +19,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
+
+import io.github.vpavic.oauth2.client.ClientRepository;
 
 public class JdbcClientRepository implements ClientRepository {
 
