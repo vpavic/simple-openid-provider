@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
-import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
+import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 
 @Controller
 @RequestMapping(path = LoginFormController.PATH_MAPPING)

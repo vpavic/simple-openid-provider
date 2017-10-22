@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import io.github.vpavic.op.oauth2.jwk.JwkSetStore;
+import io.github.vpavic.oauth2.jwk.JwkSetStore;
 
 @Controller
 @RequestMapping("/web/keys")

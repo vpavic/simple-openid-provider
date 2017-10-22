@@ -9,7 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import io.github.vpavic.op.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.client.ClientRepository;
 
 @Controller
 @RequestMapping("/web/clients")

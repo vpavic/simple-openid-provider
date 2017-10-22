@@ -20,9 +20,9 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 
+import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
+import io.github.vpavic.oauth2.endsession.EndSessionEndpoint;
 import io.github.vpavic.op.interfaces.login.LoginFormController;
-import io.github.vpavic.op.oauth2.authorization.AuthorizationEndpoint;
-import io.github.vpavic.op.oauth2.endsession.EndSessionEndpoint;
 
 @Configuration
 @EnableConfigurationProperties(SecurityProperties.class)
