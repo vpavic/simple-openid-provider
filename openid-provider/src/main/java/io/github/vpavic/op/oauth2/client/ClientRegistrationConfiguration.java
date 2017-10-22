@@ -30,13 +30,18 @@ public class ClientRegistrationConfiguration {
 	}
 
 	@Bean
+	public ClientService clientService() {
+		return new DefaultClientService(this.properties, clientRepository());
+	}
+
+	@Bean
 	public ClientRegistrationEndpoint clientRegistrationEndpoint() {
-		return new ClientRegistrationEndpoint(this.properties, clientRepository());
+		return new ClientRegistrationEndpoint(this.properties, clientService());
 	}
 
 	@Bean
 	public ClientConfigurationEndpoint clientConfigurationEndpoint() {
-		return new ClientConfigurationEndpoint(this.properties, clientRepository());
+		return new ClientConfigurationEndpoint(this.properties, clientRepository(), clientService());
 	}
 
 	@Order(94)

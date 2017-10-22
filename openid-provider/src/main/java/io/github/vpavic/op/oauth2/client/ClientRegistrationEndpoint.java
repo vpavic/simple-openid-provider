@@ -1,17 +1,11 @@
 package io.github.vpavic.op.oauth2.client;
 
-import java.net.URI;
-import java.util.Date;
 import java.util.Objects;
-import java.util.UUID;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
-import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerTokenError;
@@ -25,8 +19,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 
@@ -38,17 +30,14 @@ public class ClientRegistrationEndpoint {
 
 	private final OpenIdProviderProperties properties;
 
-	private final ClientRepository clientRepository;
+	private final ClientService clientService;
 
-	private final String clientIdSuffix;
-
-	public ClientRegistrationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	public ClientRegistrationEndpoint(OpenIdProviderProperties properties, ClientService clientService) {
 		Objects.requireNonNull(properties, "properties must not be null");
-		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
+		Objects.requireNonNull(clientService, "clientService must not be null");
 
 		this.properties = properties;
-		this.clientRepository = clientRepository;
-		this.clientIdSuffix = UriComponentsBuilder.fromHttpUrl(properties.getIssuer().getValue()).build().getHost();
+		this.clientService = clientService;
 	}
 
 	@PostMapping
@@ -57,20 +46,8 @@ public class ClientRegistrationEndpoint {
 
 		validateAccessToken(registrationRequest);
 
-		String id = UUID.randomUUID().toString() + "." + this.clientIdSuffix;
-		OIDCClientMetadata metadata = registrationRequest.getOIDCClientMetadata();
-		metadata.applyDefaults();
-		Secret secret = null;
-
-		if (!ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod())) {
-			secret = new Secret();
-		}
-
-		URI registrationUri = MvcUriComponentsBuilder.fromController(ClientConfigurationEndpoint.class).build(id);
-		OIDCClientInformation clientInformation = new OIDCClientInformation(new ClientID(id), new Date(), metadata,
-				secret, registrationUri, new BearerAccessToken());
-
-		this.clientRepository.save(clientInformation);
+		OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
+		OIDCClientInformation clientInformation = this.clientService.create(clientMetadata);
 
 		// @formatter:off
 		return ResponseEntity.ok()

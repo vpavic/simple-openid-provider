@@ -32,6 +32,9 @@ public class ClientConfigurationEndpointTests {
 	@MockBean
 	private ClientRepository clientRepository;
 
+	@MockBean
+	private ClientService clientService;
+
 	@Test
 	public void test() {
 		// TODO

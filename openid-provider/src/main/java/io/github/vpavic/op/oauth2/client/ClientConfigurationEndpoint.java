@@ -5,8 +5,6 @@ import java.util.Objects;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.ProtectedResourceRequest;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
-import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.client.ClientDeleteRequest;
 import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
@@ -35,26 +33,31 @@ import io.github.vpavic.op.config.OpenIdProviderProperties;
 @RequestMapping(path = ClientConfigurationEndpoint.PATH_MAPPING)
 public class ClientConfigurationEndpoint {
 
-	public static final String PATH_MAPPING = "/oauth2/register/{clientId:.*}";
+	public static final String PATH_MAPPING = "/oauth2/register/{id:.*}";
 
 	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
-	public ClientConfigurationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	private final ClientService clientService;
+
+	public ClientConfigurationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+			ClientService clientService) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
+		Objects.requireNonNull(clientService, "clientService must not be null");
 
 		this.properties = properties;
 		this.clientRepository = clientRepository;
+		this.clientService = clientService;
 	}
 
 	@GetMapping
-	public ResponseEntity<String> getClientConfiguration(@PathVariable String clientId, ServletWebRequest request)
+	public ResponseEntity<String> getClientConfiguration(@PathVariable String id, ServletWebRequest request)
 			throws Exception {
 		ClientReadRequest clientReadRequest = resolveReadRequest(request);
 
-		OIDCClientInformation clientInformation = resolveAndValidateClient(new ClientID(clientId), clientReadRequest);
+		OIDCClientInformation clientInformation = resolveAndValidateClient(new ClientID(id), clientReadRequest);
 
 		// @formatter:off
 		return ResponseEntity.ok()
@@ -64,28 +67,15 @@ public class ClientConfigurationEndpoint {
 	}
 
 	@PutMapping
-	public ResponseEntity<String> updateClientConfiguration(@PathVariable String clientId, ServletWebRequest request)
+	public ResponseEntity<String> updateClientConfiguration(@PathVariable String id, ServletWebRequest request)
 			throws Exception {
 		OIDCClientUpdateRequest clientUpdateRequest = resolveUpdateRequest(request);
 
-		ClientID id = new ClientID(clientId);
-		OIDCClientInformation clientInformation = resolveAndValidateClient(id, clientUpdateRequest);
+		ClientID clientId = new ClientID(id);
+		resolveAndValidateClient(clientId, clientUpdateRequest);
 
-		OIDCClientMetadata metadata = clientUpdateRequest.getOIDCClientMetadata();
-		metadata.applyDefaults();
-		Secret secret = null;
-
-		if (!ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod())) {
-			secret = this.properties.getRegistration().isUpdateSecret() ? new Secret() : clientInformation.getSecret();
-		}
-
-		BearerAccessToken accessToken = this.properties.getRegistration().isUpdateAccessToken()
-				? new BearerAccessToken()
-				: clientInformation.getRegistrationAccessToken();
-
-		clientInformation = new OIDCClientInformation(id, clientInformation.getIDIssueDate(), metadata, secret,
-				clientInformation.getRegistrationURI(), accessToken);
-		this.clientRepository.save(clientInformation);
+		OIDCClientMetadata clientMetadata = clientUpdateRequest.getOIDCClientMetadata();
+		OIDCClientInformation clientInformation = this.clientService.update(clientId, clientMetadata);
 
 		// @formatter:off
 		return ResponseEntity.ok()
@@ -95,14 +85,14 @@ public class ClientConfigurationEndpoint {
 	}
 
 	@DeleteMapping
-	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable String clientId, ServletWebRequest request)
+	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable String id, ServletWebRequest request)
 			throws Exception {
 		ClientDeleteRequest clientDeleteRequest = resolveDeleteRequest(request);
 
-		ClientID id = new ClientID(clientId);
-		resolveAndValidateClient(id, clientDeleteRequest);
+		ClientID clientId = new ClientID(id);
+		resolveAndValidateClient(clientId, clientDeleteRequest);
 
-		this.clientRepository.deleteByClientId(id);
+		this.clientRepository.deleteByClientId(clientId);
 
 		// @formatter:off
 		return ResponseEntity.noContent()
