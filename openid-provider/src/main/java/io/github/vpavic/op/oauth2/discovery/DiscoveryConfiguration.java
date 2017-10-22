@@ -162,7 +162,8 @@ public class DiscoveryConfiguration {
 
 	private List<JWSAlgorithm> idTokenJwsAlgorithms() {
 		return Arrays.asList(JWSAlgorithm.HS256, JWSAlgorithm.HS384, JWSAlgorithm.HS512, JWSAlgorithm.RS256,
-				JWSAlgorithm.RS384, JWSAlgorithm.RS512, JWSAlgorithm.ES256, JWSAlgorithm.ES384, JWSAlgorithm.ES512);
+				JWSAlgorithm.RS384, JWSAlgorithm.RS512, JWSAlgorithm.ES256, JWSAlgorithm.ES384, JWSAlgorithm.ES512,
+				JWSAlgorithm.PS256, JWSAlgorithm.PS384, JWSAlgorithm.PS512);
 	}
 
 	private List<Display> displays() {

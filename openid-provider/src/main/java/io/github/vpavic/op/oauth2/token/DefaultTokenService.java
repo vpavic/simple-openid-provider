@@ -45,6 +45,7 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import io.github.vpavic.op.config.OpenIdProviderProperties;
 import io.github.vpavic.op.oauth2.jwk.JwkSetLoader;
@@ -55,6 +56,8 @@ class DefaultTokenService implements TokenService {
 	private static final String SCOPE_CLAIM = "scope";
 
 	private static final JWSAlgorithm defaultAlgorithm = JWSAlgorithm.RS256;
+
+	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
 
 	private final OpenIdProviderProperties properties;
 
@@ -210,12 +213,13 @@ class DefaultTokenService implements TokenService {
 				RSAKey rsaKey = (RSAKey) resolveJwk(algorithm);
 
 				return JWTAssertionFactory.create(details, algorithm, rsaKey.toRSAPrivateKey(), rsaKey.getKeyID(),
-						null);
+						jcaProvider);
 			}
 			else if (JWSAlgorithm.Family.EC.contains(algorithm)) {
 				ECKey ecKey = (ECKey) resolveJwk(algorithm);
 
-				return JWTAssertionFactory.create(details, algorithm, ecKey.toECPrivateKey(), ecKey.getKeyID(), null);
+				return JWTAssertionFactory.create(details, algorithm, ecKey.toECPrivateKey(), ecKey.getKeyID(),
+						jcaProvider);
 			}
 
 			throw new KeyException("Unsupported algorithm: " + algorithm);
