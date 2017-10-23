@@ -17,6 +17,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jmx.export.annotation.ManagedOperation;
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ import io.github.vpavic.oauth2.jwk.JwkSetStore;
  *
  * @author Vedran Pavic
  */
+@ManagedResource
 public class JdbcJwkSetStore implements JwkSetStore, ApplicationRunner {
 
 	private static final String INSERT_STATEMENT = "INSERT INTO op_keys(jwk, expiry) VALUES (?, ?)";
@@ -70,6 +73,7 @@ public class JdbcJwkSetStore implements JwkSetStore, ApplicationRunner {
 
 	@Override
 	@Transactional
+	@ManagedOperation
 	public void rotate() {
 		Instant expiration = Instant.now().plusSeconds(this.properties.getJwk().getRetentionPeriod());
 		this.jdbcOperations.update(UPDATE_STATEMENT, ps -> ps.setTimestamp(1, Timestamp.from(expiration)));
