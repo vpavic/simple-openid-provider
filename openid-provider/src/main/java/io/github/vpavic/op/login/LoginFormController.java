@@ -1,4 +1,4 @@
-package io.github.vpavic.op.interfaces.login;
+package io.github.vpavic.op.login;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.WebAttributes;

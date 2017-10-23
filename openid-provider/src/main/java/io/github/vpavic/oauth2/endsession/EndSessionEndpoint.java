@@ -25,7 +25,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.op.interfaces.login.LoginFormController;
+import io.github.vpavic.op.login.LoginFormController;
 
 @Controller
 @RequestMapping(path = EndSessionEndpoint.PATH_MAPPING)
