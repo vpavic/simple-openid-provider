@@ -6,11 +6,13 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,6 +33,9 @@ public class DiscoveryEndpointTests {
 
 	@Autowired
 	private MockMvc mvc;
+
+	@MockBean
+	private JwkSetLoader jwkSetLoader;
 
 	@Test
 	public void getProviderMetadata() throws Exception {

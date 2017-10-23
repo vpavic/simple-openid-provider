@@ -16,7 +16,6 @@ import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.jdbc.JdbcClientRepository;
 import io.github.vpavic.oauth2.discovery.DiscoveryConfiguration;
 import io.github.vpavic.oauth2.endsession.EndSessionConfiguration;
-import io.github.vpavic.oauth2.jwk.JwkSetConfiguration;
 import io.github.vpavic.oauth2.jwk.JwkSetStore;
 import io.github.vpavic.oauth2.jwk.jdbc.JdbcJwkSetStore;
 import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
@@ -34,8 +33,8 @@ import io.github.vpavic.op.oauth2.SubjectUserInfoMapper;
 
 @Configuration
 @Import({ AuthorizationConfiguration.class, CheckSessionConfiguration.class, ClientRegistrationConfiguration.class,
-		DiscoveryConfiguration.class, EndSessionConfiguration.class, JwkSetConfiguration.class,
-		OpenIdProviderConfiguration.class, TokenConfiguration.class, UserInfoConfiguration.class })
+		DiscoveryConfiguration.class, EndSessionConfiguration.class, OpenIdProviderConfiguration.class,
+		TokenConfiguration.class, UserInfoConfiguration.class })
 public class OAuth2Configuration {
 
 	private final OpenIdProviderProperties properties;

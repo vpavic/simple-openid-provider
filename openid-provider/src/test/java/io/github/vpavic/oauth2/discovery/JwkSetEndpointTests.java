@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.jwk;
+package io.github.vpavic.oauth2.discovery;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import org.junit.Rule;
@@ -12,6 +12,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
+
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(JwkSetEndpoint.class)
-@Import(JwkSetConfiguration.SecurityConfiguration.class)
+@Import({ OpenIdProviderConfiguration.class, DiscoveryConfiguration.class })
 public class JwkSetEndpointTests {
 
 	@Rule

@@ -22,18 +22,20 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.ClaimType;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.checksession.CheckSessionIframe;
 import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.oauth2.endsession.EndSessionEndpoint;
-import io.github.vpavic.oauth2.jwk.JwkSetEndpoint;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.token.TokenEndpoint;
 import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
@@ -43,8 +45,11 @@ public class DiscoveryConfiguration {
 
 	private final OpenIdProviderProperties properties;
 
-	public DiscoveryConfiguration(OpenIdProviderProperties properties) {
+	private final JwkSetLoader jwkSetLoader;
+
+	public DiscoveryConfiguration(OpenIdProviderProperties properties, ObjectProvider<JwkSetLoader> jwkSetLoader) {
 		this.properties = properties;
+		this.jwkSetLoader = jwkSetLoader.getObject();
 	}
 
 	@Bean
@@ -79,6 +84,11 @@ public class DiscoveryConfiguration {
 	@Bean
 	public DiscoveryEndpoint discoveryEndpoint() {
 		return new DiscoveryEndpoint(providerMetadata());
+	}
+
+	@Bean
+	public JwkSetEndpoint jwkSetEndpoint() {
+		return new JwkSetEndpoint(this.jwkSetLoader);
 	}
 
 	private Issuer issuer() {
@@ -207,7 +217,7 @@ public class DiscoveryConfiguration {
 		return supportsFrontChannelLogout();
 	}
 
-	@Order(92)
+	@Order(93)
 	@Configuration
 	static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -215,9 +225,16 @@ public class DiscoveryConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.antMatcher(DiscoveryEndpoint.PATH_MAPPING)
+				.requestMatchers()
+					.antMatchers(DiscoveryEndpoint.PATH_MAPPING, JwkSetEndpoint.PATH_MAPPING)
+					.and()
 				.authorizeRequests()
-					.anyRequest().permitAll();
+					.anyRequest().permitAll()
+					.and()
+				.csrf()
+					.disable()
+				.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 			// @formatter:on
 		}
 
