@@ -30,7 +30,7 @@ public class ClientRegistrationConfiguration {
 
 	@Bean
 	public ClientRegistrationEndpoint clientRegistrationEndpoint() {
-		return new ClientRegistrationEndpoint(this.properties, clientService());
+		return new ClientRegistrationEndpoint(this.properties, this.clientRepository, clientService());
 	}
 
 	@Bean

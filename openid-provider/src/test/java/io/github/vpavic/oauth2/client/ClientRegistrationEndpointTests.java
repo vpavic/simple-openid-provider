@@ -30,6 +30,9 @@ public class ClientRegistrationEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
+	private ClientRepository clientRepository;
+
+	@MockBean
 	private ClientService clientService;
 
 	@Test
