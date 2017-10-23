@@ -8,17 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesBindin
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.Converter;
-
-import io.github.vpavic.oauth2.authorization.AuthorizationConfiguration;
-import io.github.vpavic.oauth2.checksession.CheckSessionConfiguration;
-import io.github.vpavic.oauth2.client.ClientRegistrationConfiguration;
-import io.github.vpavic.oauth2.discovery.DiscoveryConfiguration;
-import io.github.vpavic.oauth2.endsession.EndSessionConfiguration;
-import io.github.vpavic.oauth2.jwk.JwkSetConfiguration;
-import io.github.vpavic.oauth2.token.TokenConfiguration;
-import io.github.vpavic.oauth2.userinfo.UserInfoConfiguration;
 
 /**
  * OpenID Provider configuration.
@@ -27,9 +17,6 @@ import io.github.vpavic.oauth2.userinfo.UserInfoConfiguration;
  */
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)
-@Import({ AuthorizationConfiguration.class, CheckSessionConfiguration.class, ClientRegistrationConfiguration.class,
-		DiscoveryConfiguration.class, EndSessionConfiguration.class, JwkSetConfiguration.class,
-		TokenConfiguration.class, UserInfoConfiguration.class })
 public class OpenIdProviderConfiguration {
 
 	@Bean
