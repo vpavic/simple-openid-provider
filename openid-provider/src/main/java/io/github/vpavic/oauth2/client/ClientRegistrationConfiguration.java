@@ -33,11 +33,6 @@ public class ClientRegistrationConfiguration {
 		return new ClientRegistrationEndpoint(this.properties, this.clientRepository, clientService());
 	}
 
-	@Bean
-	public ClientConfigurationEndpoint clientConfigurationEndpoint() {
-		return new ClientConfigurationEndpoint(this.properties, this.clientRepository, clientService());
-	}
-
 	@Order(94)
 	@Configuration
 	static class SecurityConfiguration extends WebSecurityConfigurerAdapter {

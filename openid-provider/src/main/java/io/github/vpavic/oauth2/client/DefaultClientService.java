@@ -14,7 +14,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 
@@ -44,8 +44,8 @@ class DefaultClientService implements ClientService {
 			secret = new Secret();
 		}
 
-		URI registrationUri = MvcUriComponentsBuilder.fromController(ClientConfigurationEndpoint.class)
-				.build(clientId.getValue());
+		URI registrationUri = UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue())
+				.path("/oauth2/register/{id}").build(clientId.getValue());
 		BearerAccessToken accessToken = new BearerAccessToken();
 		OIDCClientInformation clientInformation = new OIDCClientInformation(clientId, Date.from(issueDate),
 				clientMetadata, secret, registrationUri, accessToken);
