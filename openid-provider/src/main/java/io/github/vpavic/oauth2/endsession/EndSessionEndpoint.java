@@ -20,12 +20,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.op.login.LoginFormController;
 
 @Controller
 @RequestMapping(path = EndSessionEndpoint.PATH_MAPPING)
@@ -141,7 +139,8 @@ public class EndSessionEndpoint {
 	}
 
 	private String resolveDefaultPostLogoutRedirectUri() {
-		return MvcUriComponentsBuilder.fromController(LoginFormController.class).query("logout").toUriString();
+		return UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue()).path("/login").query("logout")
+				.toUriString();
 	}
 
 }
