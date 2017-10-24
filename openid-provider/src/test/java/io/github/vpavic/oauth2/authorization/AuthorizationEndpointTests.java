@@ -30,14 +30,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
@@ -63,7 +62,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(AuthorizationEndpoint.class)
-@Import(OpenIdProviderConfiguration.class)
 public class AuthorizationEndpointTests {
 
 	@Rule
@@ -71,6 +69,9 @@ public class AuthorizationEndpointTests {
 
 	@Autowired
 	private MockMvc mvc;
+
+	@MockBean
+	private OpenIdProviderProperties properties;
 
 	@MockBean
 	private ClientRepository clientRepository;
@@ -95,6 +96,9 @@ public class AuthorizationEndpointTests {
 	@Before
 	public void setUp() {
 		this.session = new MockHttpSession();
+
+		given(this.properties.getAuthorization()).willReturn(new OpenIdProviderProperties.Authorization());
+		given(this.properties.getSessionManagement()).willReturn(new OpenIdProviderProperties.SessionManagement());
 	}
 
 	@Test

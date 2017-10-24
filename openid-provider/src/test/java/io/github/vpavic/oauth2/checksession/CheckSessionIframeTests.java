@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import io.github.vpavic.oauth2.LogoutConfiguration;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -22,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(CheckSessionIframe.class)
-@Import(CheckSessionConfiguration.SecurityConfiguration.class)
+@Import(LogoutConfiguration.SecurityConfiguration.class)
 public class CheckSessionIframeTests {
 
 	@Rule
@@ -32,7 +34,7 @@ public class CheckSessionIframeTests {
 	private MockMvc mvc;
 
 	@Test
-	public void getCheckSessionIframeDisabled() throws Exception {
+	public void getCheckSessionIframe() throws Exception {
 		this.mvc.perform(get("/oauth2/check-session")).andExpect(status().isOk())
 				.andExpect(content().string(containsString("<title>OIDC Provider</title>")));
 	}

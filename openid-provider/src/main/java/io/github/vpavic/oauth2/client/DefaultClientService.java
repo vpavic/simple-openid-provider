@@ -18,13 +18,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 
-class DefaultClientService implements ClientService {
+public class DefaultClientService implements ClientService {
 
 	private final OpenIdProviderProperties properties;
 
 	private final ClientRepository clientRepository;
 
-	DefaultClientService(OpenIdProviderProperties properties, ClientRepository clientRepository) {
+	public DefaultClientService(OpenIdProviderProperties properties, ClientRepository clientRepository) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 

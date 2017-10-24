@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.discovery;
+package io.github.vpavic.oauth2;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -30,10 +30,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.checksession.CheckSessionIframe;
 import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
+import io.github.vpavic.oauth2.discovery.DiscoveryEndpoint;
+import io.github.vpavic.oauth2.discovery.JwkSetEndpoint;
 import io.github.vpavic.oauth2.endsession.EndSessionEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.token.TokenEndpoint;
@@ -132,7 +133,9 @@ public class DiscoveryConfiguration {
 	}
 
 	private URI endSessionEndpoint() {
-		return this.properties.isLogoutEnabled() ? createUri(EndSessionEndpoint.PATH_MAPPING) : null;
+		return (this.properties.getSessionManagement().isEnabled()
+				|| this.properties.getFrontChannelLogout().isEnabled()) ? createUri(EndSessionEndpoint.PATH_MAPPING)
+						: null;
 	}
 
 	private Scope scope() {
@@ -217,9 +220,9 @@ public class DiscoveryConfiguration {
 		return supportsFrontChannelLogout();
 	}
 
-	@Order(93)
+	@Order(-4)
 	@Configuration
-	static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+	public static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {

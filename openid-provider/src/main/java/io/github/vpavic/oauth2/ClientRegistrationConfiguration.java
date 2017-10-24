@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.client;
+package io.github.vpavic.oauth2;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +8,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
+import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.client.ClientService;
+import io.github.vpavic.oauth2.client.DefaultClientService;
 
 @Configuration
 public class ClientRegistrationConfiguration {
@@ -33,9 +36,9 @@ public class ClientRegistrationConfiguration {
 		return new ClientRegistrationEndpoint(this.properties, this.clientRepository, clientService());
 	}
 
-	@Order(94)
+	@Order(-2)
 	@Configuration
-	static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+	public static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {

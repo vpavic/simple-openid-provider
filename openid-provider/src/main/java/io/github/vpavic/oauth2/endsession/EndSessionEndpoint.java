@@ -53,13 +53,11 @@ public class EndSessionEndpoint {
 
 	@GetMapping
 	public String getLogoutPrompt(ServletWebRequest request, Model model) throws ParseException {
-		if (this.properties.isLogoutEnabled()) {
-			LogoutRequest logoutRequest = resolveLogoutRequest(request);
+		LogoutRequest logoutRequest = resolveLogoutRequest(request);
 
-			if (logoutRequest != null) {
-				model.addAttribute("redirectURI", logoutRequest.getPostLogoutRedirectionURI());
-				model.addAttribute("state", logoutRequest.getState());
-			}
+		if (logoutRequest != null) {
+			model.addAttribute("redirectURI", logoutRequest.getPostLogoutRedirectionURI());
+			model.addAttribute("state", logoutRequest.getState());
 		}
 
 		return LOGOUT_PROMPT_VIEW_NAME;
@@ -71,7 +69,7 @@ public class EndSessionEndpoint {
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
-		if (this.properties.isLogoutEnabled() && StringUtils.hasText(postLogoutRedirectUri)) {
+		if (StringUtils.hasText(postLogoutRedirectUri)) {
 			// @formatter:off
 			Set<String> postLogoutRedirectUris = clients.stream()
 					.flatMap(client -> Optional.ofNullable(client.getOIDCMetadata().getPostLogoutRedirectionURIs())

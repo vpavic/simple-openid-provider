@@ -7,12 +7,11 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(EndSessionEndpoint.class)
-@Import(OpenIdProviderConfiguration.class)
 public class EndSessionEndpointTests {
 
 	@Rule
@@ -33,6 +31,9 @@ public class EndSessionEndpointTests {
 
 	@Autowired
 	private MockMvc mvc;
+
+	@MockBean
+	private OpenIdProviderProperties properties;
 
 	@MockBean
 	private ClientRepository clientRepository;

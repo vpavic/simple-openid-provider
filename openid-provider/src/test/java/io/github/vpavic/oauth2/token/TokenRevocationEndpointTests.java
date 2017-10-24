@@ -11,7 +11,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.CoreConfiguration;
+import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
 /**
@@ -21,7 +22,7 @@ import io.github.vpavic.oauth2.client.ClientRepository;
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(TokenRevocationEndpoint.class)
-@Import(OpenIdProviderConfiguration.class)
+@Import(CoreConfiguration.TokenSecurityConfiguration.class)
 public class TokenRevocationEndpointTests {
 
 	@Rule
@@ -29,6 +30,9 @@ public class TokenRevocationEndpointTests {
 
 	@Autowired
 	private MockMvc mvc;
+
+	@MockBean
+	private OpenIdProviderProperties properties;
 
 	@MockBean
 	private ClientRepository clientRepository;

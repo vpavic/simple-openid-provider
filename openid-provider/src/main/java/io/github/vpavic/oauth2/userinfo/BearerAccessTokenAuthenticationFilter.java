@@ -32,7 +32,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
-class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
+public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
 	private static final String SCOPE_CLAIM = "scope";
 
@@ -44,7 +44,7 @@ class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
 	private final AuthenticationManager authenticationManager;
 
-	BearerAccessTokenAuthenticationFilter(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
+	public BearerAccessTokenAuthenticationFilter(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
 			AuthenticationManager authenticationManager) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");

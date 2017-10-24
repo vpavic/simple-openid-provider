@@ -51,7 +51,7 @@ import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
-class DefaultTokenService implements TokenService {
+public class DefaultTokenService implements TokenService {
 
 	private static final String SCOPE_CLAIM = "scope";
 
@@ -65,7 +65,7 @@ class DefaultTokenService implements TokenService {
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	DefaultTokenService(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
+	public DefaultTokenService(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");

@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.DiscoveryConfiguration;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 import static org.mockito.BDDMockito.given;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(JwkSetEndpoint.class)
-@Import({ OpenIdProviderConfiguration.class, DiscoveryConfiguration.class })
+@Import(DiscoveryConfiguration.SecurityConfiguration.class)
 public class JwkSetEndpointTests {
 
 	@Rule

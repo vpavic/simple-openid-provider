@@ -104,10 +104,6 @@ public class OpenIdProviderProperties {
 		return this.frontChannelLogout;
 	}
 
-	public boolean isLogoutEnabled() {
-		return this.sessionManagement.isEnabled() || this.frontChannelLogout.isEnabled();
-	}
-
 	@Validated
 	public static class Jwk {
 

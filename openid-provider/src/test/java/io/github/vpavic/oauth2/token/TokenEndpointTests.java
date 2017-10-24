@@ -21,6 +21,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -31,6 +32,7 @@ import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +51,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
+import io.github.vpavic.oauth2.CoreConfiguration;
+import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -65,7 +68,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @WebMvcTest(TokenEndpoint.class)
-@Import({ OpenIdProviderConfiguration.class, TokenConfiguration.SecurityConfiguration.class })
+@Import(CoreConfiguration.TokenSecurityConfiguration.class)
 public class TokenEndpointTests {
 
 	@Rule
@@ -73,6 +76,9 @@ public class TokenEndpointTests {
 
 	@Autowired
 	private MockMvc mvc;
+
+	@MockBean
+	private OpenIdProviderProperties properties;
 
 	@MockBean
 	private ClientRepository clientRepository;
@@ -94,6 +100,12 @@ public class TokenEndpointTests {
 
 	@MockBean
 	private IdTokenClaimsMapper idTokenClaimsMapper;
+
+	@Before
+	public void setUp() throws Exception {
+		given(this.properties.getIssuer()).willReturn(new Issuer("http://127.0.0.1"));
+		given(this.properties.getRefreshToken()).willReturn(new OpenIdProviderProperties.RefreshToken());
+	}
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
