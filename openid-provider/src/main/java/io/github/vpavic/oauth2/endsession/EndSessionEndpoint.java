@@ -1,7 +1,6 @@
 package io.github.vpavic.oauth2.endsession;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -101,28 +100,15 @@ public class EndSessionEndpoint {
 		model.addAttribute("postLogoutRedirectUri", postLogoutRedirectUri);
 
 		if (this.properties.getFrontChannelLogout().isEnabled()) {
-			List<String> frontChannelLogoutUris = new ArrayList<>();
-
-			// @formatter:off
-			List<String> registeredFrontChannelLogoutUris = clients.stream()
-					.map(client -> client.getOIDCMetadata().getFrontChannelLogoutURI())
-					.filter(Objects::nonNull)
-					.map(URI::toString)
-					.collect(Collectors.toList());
-			// @formatter:on
-
 			String sessionId = request.getSessionId();
 
-			for (String frontChannelLogoutUri : registeredFrontChannelLogoutUris) {
-				// @formatter:off
-				frontChannelLogoutUri = UriComponentsBuilder.fromHttpUrl(frontChannelLogoutUri)
-						.queryParam("iss", this.properties.getIssuer())
-						.queryParam("sid", sessionId)
-						.toUriString();
-				// @formatter:on
-
-				frontChannelLogoutUris.add(frontChannelLogoutUri);
-			}
+			// @formatter:off
+			List<String> frontChannelLogoutUris = clients.stream()
+					.map(client -> client.getOIDCMetadata().getFrontChannelLogoutURI())
+					.filter(Objects::nonNull)
+					.map(uri -> buildFrontChannelLogoutUri(uri, sessionId))
+					.collect(Collectors.toList());
+			// @formatter:on
 
 			model.addAttribute("frontChannelLogoutUris", frontChannelLogoutUris);
 		}
@@ -137,8 +123,21 @@ public class EndSessionEndpoint {
 	}
 
 	private String resolveDefaultPostLogoutRedirectUri() {
-		return UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue()).path("/login").query("logout")
+		// @formatter:off
+		return UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue())
+				.path("/login")
+				.query("logout")
 				.toUriString();
+		// @formatter:on
+	}
+
+	private String buildFrontChannelLogoutUri(URI uri, String sessionId) {
+		// @formatter:off
+		return UriComponentsBuilder.fromUri(uri)
+				.queryParam("iss", this.properties.getIssuer())
+				.queryParam("sid", sessionId)
+				.toUriString();
+		// @formatter:on
 	}
 
 }
