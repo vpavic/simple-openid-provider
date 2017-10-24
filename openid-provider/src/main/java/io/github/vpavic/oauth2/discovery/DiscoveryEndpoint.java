@@ -21,21 +21,31 @@ public class DiscoveryEndpoint {
 
 	public static final String PATH_MAPPING = "/.well-known/openid-configuration";
 
-	private final String providerMetadata;
+	private final OIDCProviderMetadata providerMetadata;
+
+	private String providerMetadataJson;
 
 	public DiscoveryEndpoint(OIDCProviderMetadata providerMetadata) {
 		Objects.requireNonNull(providerMetadata, "providerMetadata must not be null");
 
-		this.providerMetadata = providerMetadata.toJSONObject().toJSONString();
+		this.providerMetadata = providerMetadata;
 	}
 
 	@GetMapping
 	public ResponseEntity<String> getProviderMetadata() {
+		if (this.providerMetadataJson == null) {
+			generateProviderMetadataJson();
+		}
+
 		// @formatter:off
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(this.providerMetadata);
+				.body(this.providerMetadataJson);
 		// @formatter:on
+	}
+
+	private void generateProviderMetadataJson() {
+		this.providerMetadataJson = this.providerMetadata.toJSONObject().toJSONString();
 	}
 
 }
