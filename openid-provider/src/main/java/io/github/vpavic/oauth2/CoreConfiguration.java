@@ -6,6 +6,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -107,7 +108,7 @@ public class CoreConfiguration {
 			// @formatter:off
 			http
 				.requestMatchers()
-					.antMatchers(TokenEndpoint.PATH_MAPPING, TokenRevocationEndpoint.PATH_MAPPING)
+					.antMatchers(HttpMethod.POST, TokenEndpoint.PATH_MAPPING, TokenRevocationEndpoint.PATH_MAPPING)
 					.and()
 				.authorizeRequests()
 					.anyRequest().permitAll()

@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -53,15 +54,15 @@ public class LogoutConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.antMatcher(CheckSessionIframe.PATH_MAPPING)
+				.requestMatchers()
+					.antMatchers(HttpMethod.GET, CheckSessionIframe.PATH_MAPPING)
+					.and()
 				.authorizeRequests()
 					.anyRequest().permitAll()
 					.and()
 				.headers()
 					.frameOptions().disable()
 					.and()
-				.csrf()
-					.disable()
 				.sessionManagement()
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 			// @formatter:on
