@@ -145,11 +145,6 @@ public class DefaultTokenService implements TokenService {
 	public RefreshToken createRefreshToken(RefreshTokenRequest refreshTokenRequest) {
 		Instant now = Instant.now();
 		Scope scope = refreshTokenRequest.getScope();
-
-		if (!scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OFFLINE_ACCESS + "' is required");
-		}
-
 		int tokenLifetime = this.properties.getRefreshToken().getLifetime();
 
 		RefreshToken refreshToken = new RefreshToken();

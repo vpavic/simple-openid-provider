@@ -10,6 +10,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
+import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
@@ -188,7 +189,8 @@ public class TokenEndpoint {
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
-		if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+		if (client.getOIDCMetadata().getGrantTypes().contains(GrantType.REFRESH_TOKEN)
+				|| scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
@@ -226,7 +228,7 @@ public class TokenEndpoint {
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
-		if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+		if (client.getOIDCMetadata().getGrantTypes().contains(GrantType.REFRESH_TOKEN)) {
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
@@ -265,10 +267,10 @@ public class TokenEndpoint {
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken updatedRefreshToken = null;
 
-		if (this.properties.getRefreshToken().isUpdate() && scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
+		if (this.properties.getRefreshToken().isUpdate()) {
+			this.refreshTokenStore.revoke(refreshToken);
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
-			this.refreshTokenStore.revoke(refreshToken);
 		}
 
 		Tokens tokens = new Tokens(accessToken, updatedRefreshToken);
