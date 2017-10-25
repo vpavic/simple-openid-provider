@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -277,12 +278,22 @@ public class OpenIdProviderProperties {
 		@Range(min = 1, max = 3600)
 		private int lifetime = 600;
 
+		private JWSAlgorithm jwsAlgorithm = JWSAlgorithm.RS256;
+
 		public int getLifetime() {
 			return this.lifetime;
 		}
 
 		public void setLifetime(int lifetime) {
 			this.lifetime = lifetime;
+		}
+
+		public JWSAlgorithm getJwsAlgorithm() {
+			return this.jwsAlgorithm;
+		}
+
+		public void setJwsAlgorithm(JWSAlgorithm jwsAlgorithm) {
+			this.jwsAlgorithm = jwsAlgorithm;
 		}
 
 	}

@@ -289,7 +289,7 @@ public class AuthorizationEndpoint {
 		AccessToken accessToken = null;
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
 					this.accessTokenClaimsMapper);
 			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		}
@@ -328,7 +328,7 @@ public class AuthorizationEndpoint {
 		AccessToken accessToken = null;
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope,
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
 					this.accessTokenClaimsMapper);
 			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		}

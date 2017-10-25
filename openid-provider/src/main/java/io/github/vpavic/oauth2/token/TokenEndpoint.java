@@ -83,8 +83,8 @@ public class TokenEndpoint {
 	private final ClientRequestValidator clientRequestValidator;
 
 	public TokenEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
-			AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService, AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
+			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
+			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper) {
 		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
@@ -183,7 +183,8 @@ public class TokenEndpoint {
 		Nonce nonce = context.getNonce();
 
 		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
+				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
@@ -219,7 +220,9 @@ public class TokenEndpoint {
 		String principal = authentication.getName();
 		ClientID clientID = clientAuthentication.getClientID();
 
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
+				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
@@ -238,7 +241,9 @@ public class TokenEndpoint {
 		ClientID clientID = clientAuthentication.getClientID();
 		String principal = clientID.getValue();
 
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
+				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		Tokens tokens = new Tokens(accessToken, null);
 
@@ -254,7 +259,9 @@ public class TokenEndpoint {
 		ClientID clientID = context.getClientID();
 		Scope scope = context.getScope();
 
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, scope, this.accessTokenClaimsMapper);
+		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
+				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken updatedRefreshToken = null;
 

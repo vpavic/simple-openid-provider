@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -44,6 +45,12 @@ public class OpenIdProviderConfiguration {
 
 	@Bean
 	@ConfigurationPropertiesBinding
+	public StringToJwsAlgorithmConverter stringToJwsAlgorithmConverter() {
+		return new StringToJwsAlgorithmConverter();
+	}
+
+	@Bean
+	@ConfigurationPropertiesBinding
 	public StringToScopeValueConverter stringToScopeValueConverter() {
 		return new StringToScopeValueConverter();
 	}
@@ -71,6 +78,15 @@ public class OpenIdProviderConfiguration {
 		@Override
 		public Issuer convert(String source) {
 			return new Issuer(source);
+		}
+
+	}
+
+	private static class StringToJwsAlgorithmConverter implements Converter<String, JWSAlgorithm> {
+
+		@Override
+		public JWSAlgorithm convert(String source) {
+			return JWSAlgorithm.parse(source);
 		}
 
 	}

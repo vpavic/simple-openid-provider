@@ -55,8 +55,6 @@ public class DefaultTokenService implements TokenService {
 
 	private static final String SCOPE_CLAIM = "scope";
 
-	private static final JWSAlgorithm defaultAlgorithm = JWSAlgorithm.RS256;
-
 	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
 
 	private final OpenIdProviderProperties properties;
@@ -82,6 +80,7 @@ public class DefaultTokenService implements TokenService {
 		int tokenLifetime = this.properties.getAccessToken().getLifetime();
 
 		String principal = accessTokenRequest.getPrincipal();
+		OIDCClientInformation client = accessTokenRequest.getClient();
 		Scope scope = accessTokenRequest.getScope();
 		AccessTokenClaimsMapper accessTokenClaimsMapper = accessTokenRequest.getAccessTokenClaimsMapper();
 
@@ -109,11 +108,31 @@ public class DefaultTokenService implements TokenService {
 		}
 
 		try {
+			JWSAlgorithm algorithm = this.properties.getAccessToken().getJwsAlgorithm();
 			JWTAssertionDetails details = new JWTAssertionDetails(issuer, subject, audience, expirationTime, null,
 					issueTime, jwtId, claims);
-			RSAKey rsaKey = (RSAKey) resolveJwk(defaultAlgorithm);
-			SignedJWT accessToken = JWTAssertionFactory.create(details, defaultAlgorithm, rsaKey.toRSAPrivateKey(),
-					rsaKey.getKeyID(), null);
+			SignedJWT accessToken;
+
+			if (JWSAlgorithm.Family.HMAC_SHA.contains(algorithm)) {
+				Secret secret = client.getSecret();
+
+				accessToken = JWTAssertionFactory.create(details, algorithm, secret);
+			}
+			else if (JWSAlgorithm.Family.RSA.contains(algorithm)) {
+				RSAKey rsaKey = (RSAKey) resolveJwk(algorithm);
+
+				accessToken = JWTAssertionFactory.create(details, algorithm, rsaKey.toRSAPrivateKey(),
+						rsaKey.getKeyID(), jcaProvider);
+			}
+			else if (JWSAlgorithm.Family.EC.contains(algorithm)) {
+				ECKey ecKey = (ECKey) resolveJwk(algorithm);
+
+				accessToken = JWTAssertionFactory.create(details, algorithm, ecKey.toECPrivateKey(), ecKey.getKeyID(),
+						jcaProvider);
+			}
+			else {
+				throw new KeyException("Unsupported algorithm: " + algorithm);
+			}
 
 			return new BearerAccessToken(accessToken.serialize(), tokenLifetime, scope);
 		}
