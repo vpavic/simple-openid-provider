@@ -11,19 +11,19 @@ public class RefreshTokenContext implements Serializable {
 
 	private final String principal;
 
-	private final ClientID clientID;
+	private final ClientID clientId;
 
 	private final Scope scope;
 
 	private final Instant expiry;
 
-	public RefreshTokenContext(String principal, ClientID clientID, Scope scope, Instant expiry) {
+	public RefreshTokenContext(String principal, ClientID clientId, Scope scope, Instant expiry) {
 		Objects.requireNonNull(principal, "principal must not be null");
-		Objects.requireNonNull(clientID, "clientID must not be null");
+		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 
 		this.principal = principal;
-		this.clientID = clientID;
+		this.clientId = clientId;
 		this.scope = scope;
 		this.expiry = expiry;
 	}
@@ -32,8 +32,8 @@ public class RefreshTokenContext implements Serializable {
 		return this.principal;
 	}
 
-	public ClientID getClientID() {
-		return this.clientID;
+	public ClientID getClientId() {
+		return this.clientId;
 	}
 
 	public Scope getScope() {

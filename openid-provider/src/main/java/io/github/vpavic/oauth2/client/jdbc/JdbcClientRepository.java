@@ -46,13 +46,13 @@ public class JdbcClientRepository implements ClientRepository {
 
 	@Override
 	@Transactional
-	public void save(OIDCClientInformation clientInformation) {
-		ClientID id = clientInformation.getID();
-		Date issueDate = clientInformation.getIDIssueDate();
-		OIDCClientMetadata metadata = clientInformation.getOIDCMetadata();
-		Secret secret = clientInformation.getSecret();
-		URI registrationUri = clientInformation.getRegistrationURI();
-		BearerAccessToken accessToken = clientInformation.getRegistrationAccessToken();
+	public void save(OIDCClientInformation client) {
+		ClientID id = client.getID();
+		Date issueDate = client.getIDIssueDate();
+		OIDCClientMetadata metadata = client.getOIDCMetadata();
+		Secret secret = client.getSecret();
+		URI registrationUri = client.getRegistrationURI();
+		BearerAccessToken accessToken = client.getRegistrationAccessToken();
 
 		int updatedCount = this.jdbcOperations.update(UPDATE_STATEMENT, ps -> {
 			ps.setString(1, metadata.toJSONObject().toJSONString());
@@ -75,8 +75,8 @@ public class JdbcClientRepository implements ClientRepository {
 
 	@Override
 	@Transactional(readOnly = true)
-	public OIDCClientInformation findByClientId(ClientID clientID) {
-		String id = clientID.getValue();
+	public OIDCClientInformation findById(ClientID clientId) {
+		String id = clientId.getValue();
 
 		try {
 			return this.jdbcOperations.queryForObject(SELECT_BY_ID_STATEMENT, clientMapper, id);
@@ -94,8 +94,8 @@ public class JdbcClientRepository implements ClientRepository {
 
 	@Override
 	@Transactional
-	public void deleteByClientId(ClientID clientID) {
-		String id = clientID.getValue();
+	public void deleteById(ClientID clientId) {
+		String id = clientId.getValue();
 
 		this.jdbcOperations.update(DELETE_STATEMENT, ps -> ps.setString(1, id));
 	}

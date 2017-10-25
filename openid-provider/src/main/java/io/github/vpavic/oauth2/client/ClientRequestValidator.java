@@ -38,7 +38,7 @@ public class ClientRequestValidator {
 	public void validateRequest(AbstractOptionallyIdentifiedRequest request) throws Exception {
 		ClientAuthentication clientAuthentication = request.getClientAuthentication();
 
-		OIDCClientInformation client = this.clientRepository.findByClientId(
+		OIDCClientInformation client = this.clientRepository.findById(
 				(clientAuthentication != null) ? clientAuthentication.getClientID() : request.getClientID());
 
 		if (client == null) {

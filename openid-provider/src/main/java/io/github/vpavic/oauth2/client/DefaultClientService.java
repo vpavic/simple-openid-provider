@@ -34,52 +34,52 @@ public class DefaultClientService implements ClientService {
 
 	@Override
 	@Transactional
-	public OIDCClientInformation create(OIDCClientMetadata clientMetadata) {
-		clientMetadata.applyDefaults();
+	public OIDCClientInformation create(OIDCClientMetadata metadata) {
+		metadata.applyDefaults();
 		ClientID clientId = new ClientID(UUID.randomUUID().toString());
 		Instant issueDate = Instant.now();
 		Secret secret = null;
 
-		if (!ClientAuthenticationMethod.NONE.equals(clientMetadata.getTokenEndpointAuthMethod())) {
+		if (!ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod())) {
 			secret = new Secret();
 		}
 
 		URI registrationUri = UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue())
 				.path("/oauth2/register/{id}").build(clientId.getValue());
 		BearerAccessToken accessToken = new BearerAccessToken();
-		OIDCClientInformation clientInformation = new OIDCClientInformation(clientId, Date.from(issueDate),
-				clientMetadata, secret, registrationUri, accessToken);
-		this.clientRepository.save(clientInformation);
+		OIDCClientInformation client = new OIDCClientInformation(clientId, Date.from(issueDate),
+				metadata, secret, registrationUri, accessToken);
+		this.clientRepository.save(client);
 
-		return clientInformation;
+		return client;
 	}
 
 	@Override
 	@Transactional
-	public OIDCClientInformation update(ClientID clientId, OIDCClientMetadata clientMetadata)
+	public OIDCClientInformation update(ClientID id, OIDCClientMetadata metadata)
 			throws InvalidClientException {
-		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(clientId);
+		OIDCClientInformation client = this.clientRepository.findById(id);
 
-		if (clientInformation == null) {
+		if (client == null) {
 			throw InvalidClientException.BAD_ID;
 		}
 
-		clientMetadata.applyDefaults();
+		metadata.applyDefaults();
 		Secret secret = null;
 
-		if (!ClientAuthenticationMethod.NONE.equals(clientMetadata.getTokenEndpointAuthMethod())) {
-			secret = this.properties.getRegistration().isUpdateSecret() ? new Secret() : clientInformation.getSecret();
+		if (!ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod())) {
+			secret = this.properties.getRegistration().isUpdateSecret() ? new Secret() : client.getSecret();
 		}
 
 		BearerAccessToken accessToken = this.properties.getRegistration().isUpdateAccessToken()
 				? new BearerAccessToken()
-				: clientInformation.getRegistrationAccessToken();
+				: client.getRegistrationAccessToken();
 
-		clientInformation = new OIDCClientInformation(clientId, clientInformation.getIDIssueDate(), clientMetadata,
-				secret, clientInformation.getRegistrationURI(), accessToken);
-		this.clientRepository.save(clientInformation);
+		client = new OIDCClientInformation(id, client.getIDIssueDate(), metadata,
+				secret, client.getRegistrationURI(), accessToken);
+		this.clientRepository.save(client);
 
-		return clientInformation;
+		return client;
 	}
 
 }

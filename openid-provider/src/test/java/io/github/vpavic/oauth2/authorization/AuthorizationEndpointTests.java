@@ -106,7 +106,7 @@ public class AuthorizationEndpointTests {
 	public void authCode_minimumParams_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -122,7 +122,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 		State state = new State();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -135,7 +135,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void authCode_withPromptLogin_isRequireLogin() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&prompt=login")
@@ -148,7 +148,7 @@ public class AuthorizationEndpointTests {
 	public void authCode_withPromptNoneAndAuthentication_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -163,7 +163,7 @@ public class AuthorizationEndpointTests {
 	public void authCode_withPromptNoneAndNoAuthentication_isError() throws Exception {
 		ErrorObject error = OIDCError.LOGIN_REQUIRED;
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&prompt=none")
@@ -177,7 +177,7 @@ public class AuthorizationEndpointTests {
 	public void authCode_withValidMaxAge_isSuccess() throws Exception {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
 		MockHttpServletRequestBuilder request = get(
@@ -190,7 +190,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void authCode_withExpiredMaxAge_isRequireLogin() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		Thread.sleep(1000);
 
@@ -205,7 +205,7 @@ public class AuthorizationEndpointTests {
 	public void authCode_withoutScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://example.com")
@@ -217,7 +217,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void authCode_withoutScopeWithInvalidRedirectUri_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com")
@@ -230,7 +230,7 @@ public class AuthorizationEndpointTests {
 	public void authCode_withInvalidScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=test&response_type=code&client_id=test-client&redirect_uri=http://example.com")
@@ -242,7 +242,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void authCode_withoutClientId_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&redirect_uri=http://example.com")
@@ -253,7 +253,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void authCode_withoutRedirectUri_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client").session(this.session);
@@ -263,7 +263,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void authCode_withInvalidRedirectUri_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://invalid.example.com")
@@ -277,7 +277,7 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -296,7 +296,7 @@ public class AuthorizationEndpointTests {
 	public void implicitWithIdToken_minimumParams_isSuccess() throws Exception {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = get(
@@ -313,7 +313,7 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		State state = new State();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -331,7 +331,7 @@ public class AuthorizationEndpointTests {
 	public void implicitWithIdTokenAndToken_withoutScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -344,7 +344,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutClientId_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -356,7 +356,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -370,7 +370,7 @@ public class AuthorizationEndpointTests {
 	public void implicitWithIdTokenAndToken_withoutNonce_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
@@ -387,7 +387,7 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
@@ -406,7 +406,7 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
@@ -424,7 +424,7 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 
@@ -445,7 +445,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 		State state = new State();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
@@ -461,7 +461,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void hybridWithIdTokenAndToken_withoutClientId_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code id_token token&redirect_uri=http://example.com")
@@ -472,7 +472,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void hybridWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&state=")
@@ -485,7 +485,7 @@ public class AuthorizationEndpointTests {
 	public void invalid_withoutResponseType_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findByClientId(any(ClientID.class))).willReturn(authCodeClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&client_id=test-client&redirect_uri=http://example.com")

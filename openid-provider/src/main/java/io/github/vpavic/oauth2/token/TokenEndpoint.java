@@ -174,7 +174,7 @@ public class TokenEndpoint {
 		}
 
 		String principal = context.getPrincipal();
-		ClientID clientID = context.getClientID();
+		ClientID clientId = context.getClientId();
 		Scope scope = context.getScope();
 		Instant authenticationTime = context.getAuthenticationTime();
 		ACR acr = context.getAcr();
@@ -182,14 +182,14 @@ public class TokenEndpoint {
 		String sessionId = context.getSessionId();
 		Nonce nonce = context.getNonce();
 
-		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
 				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
 		if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
 
@@ -218,16 +218,16 @@ public class TokenEndpoint {
 		}
 
 		String principal = authentication.getName();
-		ClientID clientID = clientAuthentication.getClientID();
+		ClientID clientId = clientAuthentication.getClientID();
 
-		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
 				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
 		if (scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
 
@@ -238,10 +238,10 @@ public class TokenEndpoint {
 
 	private AccessTokenResponse handleClientCredentialsGrantType(ClientAuthentication clientAuthentication,
 			Scope scope) {
-		ClientID clientID = clientAuthentication.getClientID();
-		String principal = clientID.getValue();
+		ClientID clientId = clientAuthentication.getClientID();
+		String principal = clientId.getValue();
 
-		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
 				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
@@ -256,17 +256,17 @@ public class TokenEndpoint {
 
 		RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
 		String principal = context.getPrincipal();
-		ClientID clientID = context.getClientID();
+		ClientID clientId = context.getClientId();
 		Scope scope = context.getScope();
 
-		OIDCClientInformation client = this.clientRepository.findByClientId(clientID);
+		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
 				this.accessTokenClaimsMapper);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken updatedRefreshToken = null;
 
 		if (this.properties.getRefreshToken().isUpdate() && scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientID, scope);
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 			this.refreshTokenStore.revoke(refreshToken);
 		}

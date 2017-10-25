@@ -7,12 +7,12 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 public interface ClientRepository {
 
-	void save(OIDCClientInformation clientInformation);
+	void save(OIDCClientInformation client);
 
-	OIDCClientInformation findByClientId(ClientID clientID);
+	OIDCClientInformation findById(ClientID id);
 
 	List<OIDCClientInformation> findAll();
 
-	void deleteByClientId(ClientID clientID);
+	void deleteById(ClientID id);
 
 }

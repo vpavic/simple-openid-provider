@@ -9,17 +9,17 @@ public final class RefreshTokenRequest {
 
 	private final String principal;
 
-	private final ClientID clientID;
+	private final ClientID clientId;
 
 	private final Scope scope;
 
-	public RefreshTokenRequest(String principal, ClientID clientID, Scope scope) {
+	public RefreshTokenRequest(String principal, ClientID clientId, Scope scope) {
 		Objects.requireNonNull(principal, "principal must not be null");
-		Objects.requireNonNull(clientID, "clientID must not be null");
+		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 
 		this.principal = principal;
-		this.clientID = clientID;
+		this.clientId = clientId;
 		this.scope = scope;
 	}
 
@@ -27,8 +27,8 @@ public final class RefreshTokenRequest {
 		return this.principal;
 	}
 
-	public ClientID getClientID() {
-		return this.clientID;
+	public ClientID getClientId() {
+		return this.clientId;
 	}
 
 	public Scope getScope() {

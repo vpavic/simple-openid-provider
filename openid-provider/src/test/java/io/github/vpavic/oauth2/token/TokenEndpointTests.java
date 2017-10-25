@@ -109,21 +109,21 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
-		ClientID clientID = new ClientID("test-client");
+		ClientID clientId = new ClientID("test-client");
 		URI redirectionUri = URI.create("http://rp.example.com");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
+		ClientSecretBasic clientAuth = new ClientSecretBasic(clientId, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID, scope, Instant.now(),
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId, scope, Instant.now(),
 				new ACR("1"), AMR.PWD, "test", null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
@@ -137,19 +137,19 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_postAuth_isOk() throws Exception {
-		ClientID clientID = new ClientID("test-client");
+		ClientID clientId = new ClientID("test-client");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
+		ClientSecretPost clientAuth = new ClientSecretPost(clientId, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com")));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID,
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId,
 				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, "test", null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
@@ -162,21 +162,21 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkcePlain_isOk() throws Exception {
-		ClientID clientID = new ClientID("test-client");
+		ClientID clientId = new ClientID("test-client");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.PLAIN;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientId,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID,
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId,
 				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, "test",
 				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
@@ -189,21 +189,21 @@ public class TokenEndpointTests {
 
 	@Test
 	public void authCode_pkceS256_isOk() throws Exception {
-		ClientID clientID = new ClientID("test-client");
+		ClientID clientId = new ClientID("test-client");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.S256;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
-		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientID,
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientId,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientID,
+		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId,
 				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, "test",
 				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
@@ -222,7 +222,7 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
@@ -242,7 +242,7 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
 				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
@@ -261,7 +261,7 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
@@ -279,7 +279,7 @@ public class TokenEndpointTests {
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
@@ -290,19 +290,19 @@ public class TokenEndpointTests {
 
 	@Test
 	public void refreshToken_basicAuth_isOk() throws Exception {
-		ClientID clientID = new ClientID("test-client");
+		ClientID clientId = new ClientID("test-client");
 
-		ClientSecretBasic clientAuth = new ClientSecretBasic(clientID, new Secret("test-secret"));
+		ClientSecretBasic clientAuth = new ClientSecretBasic(clientId, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new RefreshTokenGrant(new RefreshToken()));
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), null));
+				.willReturn(new RefreshTokenContext("user", clientId, new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -312,19 +312,19 @@ public class TokenEndpointTests {
 
 	@Test
 	public void refreshToken_postAuth_isOk() throws Exception {
-		ClientID clientID = new ClientID("test-client");
+		ClientID clientId = new ClientID("test-client");
 
-		ClientSecretPost clientAuth = new ClientSecretPost(clientID, new Secret("test-secret"));
+		ClientSecretPost clientAuth = new ClientSecretPost(clientId, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new RefreshTokenGrant(new RefreshToken()));
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
-		given(this.clientRepository.findByClientId(any(ClientID.class)))
+		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext("user", clientID, new Scope(OIDCScopeValue.OPENID), null));
+				.willReturn(new RefreshTokenContext("user", clientId, new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

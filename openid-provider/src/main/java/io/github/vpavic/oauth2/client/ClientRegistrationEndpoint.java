@@ -87,12 +87,12 @@ public class ClientRegistrationEndpoint {
 		}
 
 		OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
-		OIDCClientInformation clientInformation = this.clientService.create(clientMetadata);
+		OIDCClientInformation client = this.clientService.create(clientMetadata);
 
 		// @formatter:off
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(clientInformation.toJSONObject().toJSONString());
+				.body(client.toJSONObject().toJSONString());
 		// @formatter:on
 	}
 
@@ -101,12 +101,12 @@ public class ClientRegistrationEndpoint {
 			throws Exception {
 		ClientReadRequest clientReadRequest = resolveReadRequest(request);
 
-		OIDCClientInformation clientInformation = resolveAndValidateClient(new ClientID(id), clientReadRequest);
+		OIDCClientInformation client = resolveAndValidateClient(new ClientID(id), clientReadRequest);
 
 		// @formatter:off
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(clientInformation.toJSONObject().toJSONString());
+				.body(client.toJSONObject().toJSONString());
 		// @formatter:on
 	}
 
@@ -119,12 +119,12 @@ public class ClientRegistrationEndpoint {
 		resolveAndValidateClient(clientId, clientUpdateRequest);
 
 		OIDCClientMetadata clientMetadata = clientUpdateRequest.getOIDCClientMetadata();
-		OIDCClientInformation clientInformation = this.clientService.update(clientId, clientMetadata);
+		OIDCClientInformation client = this.clientService.update(clientId, clientMetadata);
 
 		// @formatter:off
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(clientInformation.toJSONObject().toJSONString());
+				.body(client.toJSONObject().toJSONString());
 		// @formatter:on
 	}
 
@@ -136,7 +136,7 @@ public class ClientRegistrationEndpoint {
 		ClientID clientId = new ClientID(id);
 		resolveAndValidateClient(clientId, clientDeleteRequest);
 
-		this.clientRepository.deleteByClientId(clientId);
+		this.clientRepository.deleteById(clientId);
 
 		// @formatter:off
 		return ResponseEntity.noContent()
@@ -192,15 +192,15 @@ public class ClientRegistrationEndpoint {
 
 	private OIDCClientInformation resolveAndValidateClient(ClientID clientId, ProtectedResourceRequest request)
 			throws GeneralException {
-		OIDCClientInformation clientInformation = this.clientRepository.findByClientId(clientId);
+		OIDCClientInformation client = this.clientRepository.findById(clientId);
 
-		if (clientInformation != null) {
+		if (client != null) {
 			AccessToken requestAccessToken = request.getAccessToken();
-			BearerAccessToken registrationAccessToken = clientInformation.getRegistrationAccessToken();
+			BearerAccessToken registrationAccessToken = client.getRegistrationAccessToken();
 			BearerAccessToken apiAccessToken = this.properties.getRegistration().getApiAccessToken();
 
 			if (requestAccessToken.equals(registrationAccessToken) || requestAccessToken.equals(apiAccessToken)) {
-				return clientInformation;
+				return client;
 			}
 		}
 

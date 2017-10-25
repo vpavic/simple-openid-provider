@@ -16,7 +16,7 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final String principal;
 
-	private final ClientID clientID;
+	private final ClientID clientId;
 
 	private final Scope scope;
 
@@ -34,11 +34,11 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final Nonce nonce;
 
-	public AuthorizationCodeContext(String principal, ClientID clientID, Scope scope, Instant authenticationTime,
+	public AuthorizationCodeContext(String principal, ClientID clientId, Scope scope, Instant authenticationTime,
 			ACR acr, AMR amr, String sessionId, CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod,
 			Nonce nonce) {
 		Objects.requireNonNull(principal, "principal must not be null");
-		Objects.requireNonNull(clientID, "clientID must not be null");
+		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
@@ -46,7 +46,7 @@ public class AuthorizationCodeContext implements Serializable {
 		Objects.requireNonNull(sessionId, "sessionId must not be null");
 
 		this.principal = principal;
-		this.clientID = clientID;
+		this.clientId = clientId;
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
@@ -61,8 +61,8 @@ public class AuthorizationCodeContext implements Serializable {
 		return this.principal;
 	}
 
-	public ClientID getClientID() {
-		return this.clientID;
+	public ClientID getClientId() {
+		return this.clientId;
 	}
 
 	public Scope getScope() {

@@ -7,8 +7,8 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 
 public interface ClientService {
 
-	OIDCClientInformation create(OIDCClientMetadata clientMetadata);
+	OIDCClientInformation create(OIDCClientMetadata metadata);
 
-	OIDCClientInformation update(ClientID clientId, OIDCClientMetadata clientMetadata) throws InvalidClientException;
+	OIDCClientInformation update(ClientID id, OIDCClientMetadata metadata) throws InvalidClientException;
 
 }

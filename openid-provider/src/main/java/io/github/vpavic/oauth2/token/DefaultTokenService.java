@@ -155,7 +155,7 @@ public class DefaultTokenService implements TokenService {
 		RefreshToken refreshToken = new RefreshToken();
 		Instant expiry = (tokenLifetime > 0) ? now.plusSeconds(tokenLifetime) : null;
 		RefreshTokenContext context = new RefreshTokenContext(refreshTokenRequest.getPrincipal(),
-				refreshTokenRequest.getClientID(), scope, expiry);
+				refreshTokenRequest.getClientId(), scope, expiry);
 		this.refreshTokenStore.save(refreshToken, context);
 
 		return refreshToken;
@@ -172,11 +172,11 @@ public class DefaultTokenService implements TokenService {
 
 		String principal = idTokenRequest.getPrincipal();
 		OIDCClientInformation client = idTokenRequest.getClient();
-		ClientID clientID = client.getID();
+		ClientID clientId = client.getID();
 		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
 		Issuer issuer = new Issuer(this.properties.getIssuer());
 		Subject subject = new Subject(principal);
-		List<Audience> audience = Audience.create(clientID.getValue());
+		List<Audience> audience = Audience.create(clientId.getValue());
 		Date expirationTime = Date.from(now.plusSeconds(this.properties.getIdToken().getLifetime()));
 		Date issueTime = Date.from(now);
 
@@ -185,7 +185,7 @@ public class DefaultTokenService implements TokenService {
 		claimsSet.setNonce(idTokenRequest.getNonce());
 		claimsSet.setACR(idTokenRequest.getAcr());
 		claimsSet.setAMR(Collections.singletonList(idTokenRequest.getAmr()));
-		claimsSet.setAuthorizedParty(new AuthorizedParty(clientID.getValue()));
+		claimsSet.setAuthorizedParty(new AuthorizedParty(clientId.getValue()));
 
 		if (this.properties.getFrontChannelLogout().isEnabled()) {
 			SessionID sessionId = new SessionID(idTokenRequest.getSessionId());

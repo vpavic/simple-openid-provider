@@ -47,7 +47,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 		this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
 			ps.setString(1, refreshToken.getValue());
 			ps.setString(2, context.getPrincipal());
-			ps.setString(3, context.getClientID().getValue());
+			ps.setString(3, context.getClientId().getValue());
 			ps.setString(4, context.getScope().toString());
 			ps.setLong(5, (expiry != null) ? expiry.getEpochSecond() : 0);
 		});
