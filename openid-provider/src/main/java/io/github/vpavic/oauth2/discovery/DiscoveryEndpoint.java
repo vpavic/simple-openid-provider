@@ -33,19 +33,19 @@ public class DiscoveryEndpoint {
 
 	@GetMapping
 	public ResponseEntity<String> getProviderMetadata() {
-		if (this.providerMetadataJson == null) {
-			generateProviderMetadataJson();
-		}
-
 		// @formatter:off
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(this.providerMetadataJson);
+				.body(getProviderMetadataJson());
 		// @formatter:on
 	}
 
-	private void generateProviderMetadataJson() {
-		this.providerMetadataJson = this.providerMetadata.toJSONObject().toJSONString();
+	private String getProviderMetadataJson() {
+		if (this.providerMetadataJson == null) {
+			this.providerMetadataJson = this.providerMetadata.toJSONObject().toJSONString();
+		}
+
+		return this.providerMetadataJson;
 	}
 
 }

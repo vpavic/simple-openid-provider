@@ -93,7 +93,7 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@GetMapping(path = "/{id:.*}")
-	public ResponseEntity<String> getClientConfiguration(@PathVariable ClientID id, HTTPRequest httpRequest)
+	public ResponseEntity<String> getClientConfiguration(HTTPRequest httpRequest, @PathVariable ClientID id)
 			throws Exception {
 		ClientReadRequest clientReadRequest = ClientReadRequest.parse(httpRequest);
 		OIDCClientInformation client = resolveAndValidateClient(id, clientReadRequest);
@@ -106,7 +106,7 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@PutMapping(path = "/{id:.*}")
-	public ResponseEntity<String> updateClientConfiguration(@PathVariable ClientID id, HTTPRequest httpRequest)
+	public ResponseEntity<String> updateClientConfiguration(HTTPRequest httpRequest, @PathVariable ClientID id)
 			throws Exception {
 		OIDCClientUpdateRequest clientUpdateRequest = OIDCClientUpdateRequest.parse(httpRequest);
 		resolveAndValidateClient(id, clientUpdateRequest);
@@ -122,7 +122,7 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@DeleteMapping(path = "/{id:.*}")
-	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable ClientID id, HTTPRequest httpRequest)
+	public ResponseEntity<Void> deleteClientConfiguration(HTTPRequest httpRequest, @PathVariable ClientID id)
 			throws Exception {
 		ClientDeleteRequest clientDeleteRequest = ClientDeleteRequest.parse(httpRequest);
 		resolveAndValidateClient(id, clientDeleteRequest);
