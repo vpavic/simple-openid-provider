@@ -118,7 +118,8 @@ public class AuthorizationEndpoint {
 	public String authorize(ServletWebRequest request, Authentication authentication, Model model)
 			throws GeneralException {
 		AuthenticationRequest authRequest = resolveAuthRequest(request);
-		OIDCClientInformation client = resolveClient(authRequest.getClientID());
+		ClientID clientId = authRequest.getClientID();
+		OIDCClientInformation client = resolveClient(clientId);
 		validateAuthRequest(authRequest, client, authentication);
 
 		Prompt prompt = authRequest.getPrompt();
@@ -142,11 +143,19 @@ public class AuthorizationEndpoint {
 		if (responseType.impliesCodeFlow()) {
 			authResponse = handleAuthorizationCodeFlow(authRequest, client, request, authentication);
 		}
-		else if (!responseType.contains(ResponseType.Value.CODE)) {
+		else if (responseType.impliesImplicitFlow()) {
 			authResponse = handleImplicitFlow(authRequest, client, request, authentication);
 		}
-		else {
+		else if (responseType.impliesHybridFlow()) {
 			authResponse = handleHybridFlow(authRequest, client, request, authentication);
+		}
+		else {
+			ErrorObject error = OAuth2Error.UNSUPPORTED_RESPONSE_TYPE;
+			URI redirectUri = authRequest.getRedirectionURI();
+			ResponseMode responseMode = authRequest.getResponseMode();
+			State state = authRequest.getState();
+
+			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
 		}
 
 		return prepareResponse(authResponse, model);
