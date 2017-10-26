@@ -93,10 +93,10 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@GetMapping(path = "/{id:.*}")
-	public ResponseEntity<String> getClientConfiguration(@PathVariable String id, HTTPRequest httpRequest)
+	public ResponseEntity<String> getClientConfiguration(@PathVariable ClientID id, HTTPRequest httpRequest)
 			throws Exception {
 		ClientReadRequest clientReadRequest = ClientReadRequest.parse(httpRequest);
-		OIDCClientInformation client = resolveAndValidateClient(new ClientID(id), clientReadRequest);
+		OIDCClientInformation client = resolveAndValidateClient(id, clientReadRequest);
 
 		// @formatter:off
 		return ResponseEntity.ok()
@@ -106,14 +106,13 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@PutMapping(path = "/{id:.*}")
-	public ResponseEntity<String> updateClientConfiguration(@PathVariable String id, HTTPRequest httpRequest)
+	public ResponseEntity<String> updateClientConfiguration(@PathVariable ClientID id, HTTPRequest httpRequest)
 			throws Exception {
 		OIDCClientUpdateRequest clientUpdateRequest = OIDCClientUpdateRequest.parse(httpRequest);
-		ClientID clientId = new ClientID(id);
-		resolveAndValidateClient(clientId, clientUpdateRequest);
+		resolveAndValidateClient(id, clientUpdateRequest);
 
 		OIDCClientMetadata clientMetadata = clientUpdateRequest.getOIDCClientMetadata();
-		OIDCClientInformation client = this.clientService.update(clientId, clientMetadata);
+		OIDCClientInformation client = this.clientService.update(id, clientMetadata);
 
 		// @formatter:off
 		return ResponseEntity.ok()
@@ -123,13 +122,12 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@DeleteMapping(path = "/{id:.*}")
-	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable String id, HTTPRequest httpRequest)
+	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable ClientID id, HTTPRequest httpRequest)
 			throws Exception {
 		ClientDeleteRequest clientDeleteRequest = ClientDeleteRequest.parse(httpRequest);
-		ClientID clientId = new ClientID(id);
-		resolveAndValidateClient(clientId, clientDeleteRequest);
+		resolveAndValidateClient(id, clientDeleteRequest);
 
-		this.clientRepository.deleteById(clientId);
+		this.clientRepository.deleteById(id);
 
 		// @formatter:off
 		return ResponseEntity.noContent()
