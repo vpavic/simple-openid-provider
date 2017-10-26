@@ -6,7 +6,6 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.TokenRevocationRequest;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
 import org.springframework.http.MediaType;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -49,8 +47,9 @@ public class TokenRevocationEndpoint {
 	}
 
 	@PostMapping
-	public ResponseEntity<Void> handleRevocationRequest(ServletWebRequest request) throws Exception {
-		TokenRevocationRequest revocationRequest = resolveRevocationRequest(request);
+	public ResponseEntity<Void> handleRevocationRequest(HTTPRequest httpRequest) throws Exception {
+		TokenRevocationRequest revocationRequest = TokenRevocationRequest.parse(httpRequest);
+		this.clientRequestValidator.validateRequest(revocationRequest);
 		Token token = revocationRequest.getToken();
 		RefreshToken refreshToken;
 
@@ -67,14 +66,6 @@ public class TokenRevocationEndpoint {
 		return ResponseEntity.ok()
 				.build();
 		// @formatter:on
-	}
-
-	private TokenRevocationRequest resolveRevocationRequest(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
-		TokenRevocationRequest revocationRequest = TokenRevocationRequest.parse(httpRequest);
-		this.clientRequestValidator.validateRequest(revocationRequest);
-
-		return revocationRequest;
 	}
 
 	@ExceptionHandler(InvalidClientException.class)

@@ -20,7 +20,6 @@ import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
@@ -45,7 +44,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -108,9 +106,9 @@ public class TokenEndpoint {
 	}
 
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> handleTokenRequest(ServletWebRequest request) throws Exception {
-		TokenRequest tokenRequest = resolveTokenRequest(request);
-
+	public ResponseEntity<String> handleTokenRequest(HTTPRequest httpRequest) throws Exception {
+		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
+		this.clientRequestValidator.validateRequest(tokenRequest);
 		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
 		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
 		Scope scope = tokenRequest.getScope();
@@ -138,14 +136,6 @@ public class TokenEndpoint {
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.body(tokenResponse.toJSONObject().toJSONString());
 		// @formatter:on
-	}
-
-	private TokenRequest resolveTokenRequest(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
-		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
-		this.clientRequestValidator.validateRequest(tokenRequest);
-
-		return tokenRequest;
 	}
 
 	private AccessTokenResponse handleAuthorizationCodeGrantType(AuthorizationCodeGrant authorizationCodeGrant)

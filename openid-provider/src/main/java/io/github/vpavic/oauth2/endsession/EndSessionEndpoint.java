@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.springframework.stereotype.Controller;
@@ -17,7 +18,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -51,10 +51,9 @@ public class EndSessionEndpoint {
 	}
 
 	@GetMapping
-	public String getLogoutPrompt(ServletWebRequest request, Model model) throws ParseException {
-		LogoutRequest logoutRequest = resolveLogoutRequest(request);
-
-		if (logoutRequest != null) {
+	public String getLogoutPrompt(HTTPRequest httpRequest, Model model) throws ParseException {
+		if (httpRequest.getQuery() != null) {
+			LogoutRequest logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
 			model.addAttribute("redirectURI", logoutRequest.getPostLogoutRedirectionURI());
 			model.addAttribute("state", logoutRequest.getState());
 		}
@@ -114,12 +113,6 @@ public class EndSessionEndpoint {
 		}
 
 		return LOGOUT_SUCCESS_VIEW_NAME;
-	}
-
-	private LogoutRequest resolveLogoutRequest(ServletWebRequest request) throws ParseException {
-		String query = request.getRequest().getQueryString();
-
-		return (query != null) ? LogoutRequest.parse(query) : null;
 	}
 
 	private String resolveDefaultPostLogoutRedirectUri() {

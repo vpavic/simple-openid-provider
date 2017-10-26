@@ -9,7 +9,6 @@ import com.nimbusds.oauth2.sdk.ProtectedResourceRequest;
 import com.nimbusds.oauth2.sdk.client.ClientDeleteRequest;
 import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -30,7 +29,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 
@@ -58,8 +56,7 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@GetMapping
-	public ResponseEntity<String> getClientRegistrations(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
+	public ResponseEntity<String> getClientRegistrations(HTTPRequest httpRequest) throws Exception {
 		String authorizationHeader = httpRequest.getAuthorization();
 
 		if (authorizationHeader == null) {
@@ -78,8 +75,7 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@PostMapping
-	public ResponseEntity<String> handleClientRegistrationRequest(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
+	public ResponseEntity<String> handleClientRegistrationRequest(HTTPRequest httpRequest) throws Exception {
 		OIDCClientRegistrationRequest registrationRequest = OIDCClientRegistrationRequest.parse(httpRequest);
 
 		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
@@ -97,10 +93,9 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@GetMapping(path = "/{id:.*}")
-	public ResponseEntity<String> getClientConfiguration(@PathVariable String id, ServletWebRequest request)
+	public ResponseEntity<String> getClientConfiguration(@PathVariable String id, HTTPRequest httpRequest)
 			throws Exception {
-		ClientReadRequest clientReadRequest = resolveReadRequest(request);
-
+		ClientReadRequest clientReadRequest = ClientReadRequest.parse(httpRequest);
 		OIDCClientInformation client = resolveAndValidateClient(new ClientID(id), clientReadRequest);
 
 		// @formatter:off
@@ -111,10 +106,9 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@PutMapping(path = "/{id:.*}")
-	public ResponseEntity<String> updateClientConfiguration(@PathVariable String id, ServletWebRequest request)
+	public ResponseEntity<String> updateClientConfiguration(@PathVariable String id, HTTPRequest httpRequest)
 			throws Exception {
-		OIDCClientUpdateRequest clientUpdateRequest = resolveUpdateRequest(request);
-
+		OIDCClientUpdateRequest clientUpdateRequest = OIDCClientUpdateRequest.parse(httpRequest);
 		ClientID clientId = new ClientID(id);
 		resolveAndValidateClient(clientId, clientUpdateRequest);
 
@@ -129,10 +123,9 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@DeleteMapping(path = "/{id:.*}")
-	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable String id, ServletWebRequest request)
+	public ResponseEntity<Void> deleteClientConfiguration(@PathVariable String id, HTTPRequest httpRequest)
 			throws Exception {
-		ClientDeleteRequest clientDeleteRequest = resolveDeleteRequest(request);
-
+		ClientDeleteRequest clientDeleteRequest = ClientDeleteRequest.parse(httpRequest);
 		ClientID clientId = new ClientID(id);
 		resolveAndValidateClient(clientId, clientDeleteRequest);
 
@@ -170,24 +163,6 @@ public class ClientRegistrationEndpoint {
 		object.put("clients", clientList);
 
 		return object;
-	}
-
-	private ClientReadRequest resolveReadRequest(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
-
-		return ClientReadRequest.parse(httpRequest);
-	}
-
-	private OIDCClientUpdateRequest resolveUpdateRequest(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
-
-		return OIDCClientUpdateRequest.parse(httpRequest);
-	}
-
-	private ClientDeleteRequest resolveDeleteRequest(ServletWebRequest request) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request.getRequest());
-
-		return ClientDeleteRequest.parse(httpRequest);
 	}
 
 	private OIDCClientInformation resolveAndValidateClient(ClientID clientId, ProtectedResourceRequest request)

@@ -21,8 +21,8 @@ import org.springframework.core.convert.converter.Converter;
  */
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)
-@Import({ CoreConfiguration.class, DiscoveryConfiguration.class, ClientRegistrationConfiguration.class,
-		LogoutConfiguration.class })
+@Import({ OpenIdProviderWebMvcConfiguration.class, CoreConfiguration.class, DiscoveryConfiguration.class,
+		ClientRegistrationConfiguration.class, LogoutConfiguration.class })
 public class OpenIdProviderConfiguration {
 
 	@Bean
