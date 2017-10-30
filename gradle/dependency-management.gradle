@@ -5,7 +5,7 @@ ext['hazelcast.version'] = '3.9'
 dependencyManagement {
 	dependencies {
 		dependency 'com.nimbusds:nimbus-jose-jwt:5.1'
-		dependency 'com.nimbusds:oauth2-oidc-sdk:5.38'
+		dependency 'com.nimbusds:oauth2-oidc-sdk:5.39'
 		dependency 'org.bouncycastle:bcprov-jdk15on:1.58'
 		dependency 'org.springframework.security:spring-security-jwt:1.0.8.RELEASE'
 		dependency 'org.springframework.security.oauth:spring-security-oauth2:2.2.0.RELEASE'
