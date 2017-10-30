@@ -1,9 +1,3 @@
-CREATE TABLE op_keys (
-	id BIGSERIAL PRIMARY KEY,
-	jwk TEXT NOT NULL,
-	expiry TIMESTAMP
-);
-
 CREATE TABLE op_clients (
 	id VARCHAR(100) PRIMARY KEY,
 	issue_date TIMESTAMP NOT NULL,

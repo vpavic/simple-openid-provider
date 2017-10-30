@@ -4,14 +4,15 @@ import com.hazelcast.core.HazelcastInstance;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcOperations;
 
 import io.github.vpavic.oauth2.EnableOpenIdProvider;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.jdbc.JdbcClientRepository;
-import io.github.vpavic.oauth2.jwk.JwkSetStore;
-import io.github.vpavic.oauth2.jwk.jdbc.JdbcJwkSetStore;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
+import io.github.vpavic.oauth2.jwk.ResourceJwkSetLoader;
 import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
 import io.github.vpavic.oauth2.token.IdTokenClaimsMapper;
@@ -27,14 +28,17 @@ import io.github.vpavic.op.oauth2.SubjectUserInfoMapper;
 @EnableOpenIdProvider
 public class OAuth2Configuration {
 
+	private final ResourceLoader resourceLoader;
+
 	private final OpenIdProviderProperties properties;
 
 	private final JdbcOperations jdbcOperations;
 
 	private final HazelcastInstance hazelcastInstance;
 
-	public OAuth2Configuration(OpenIdProviderProperties properties, ObjectProvider<JdbcOperations> jdbcOperations,
-			ObjectProvider<HazelcastInstance> hazelcastInstance) {
+	public OAuth2Configuration(ResourceLoader resourceLoader, OpenIdProviderProperties properties,
+			ObjectProvider<JdbcOperations> jdbcOperations, ObjectProvider<HazelcastInstance> hazelcastInstance) {
+		this.resourceLoader = resourceLoader;
 		this.properties = properties;
 		this.jdbcOperations = jdbcOperations.getObject();
 		this.hazelcastInstance = hazelcastInstance.getObject();
@@ -46,8 +50,8 @@ public class OAuth2Configuration {
 	}
 
 	@Bean
-	public JwkSetStore jwkSetStore() {
-		return new JdbcJwkSetStore(this.properties, this.jdbcOperations);
+	public JwkSetLoader jwkSetLoader() {
+		return new ResourceJwkSetLoader(this.resourceLoader.getResource("classpath:jwks.json"));
 	}
 
 	@Bean

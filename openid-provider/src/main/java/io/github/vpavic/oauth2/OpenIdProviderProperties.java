@@ -35,9 +35,6 @@ public class OpenIdProviderProperties {
 	private Issuer issuer = new Issuer("http://127.0.0.1:6432");
 
 	@Valid
-	private final Jwk jwk = new Jwk();
-
-	@Valid
 	private final Registration registration = new Registration();
 
 	@Valid
@@ -67,10 +64,6 @@ public class OpenIdProviderProperties {
 
 	public void setIssuer(Issuer issuer) {
 		this.issuer = issuer;
-	}
-
-	public Jwk getJwk() {
-		return this.jwk;
 	}
 
 	public Registration getRegistration() {
@@ -103,25 +96,6 @@ public class OpenIdProviderProperties {
 
 	public FrontChannelLogout getFrontChannelLogout() {
 		return this.frontChannelLogout;
-	}
-
-	@Validated
-	public static class Jwk {
-
-		/**
-		 * The retention period for decommissioned JWKs, in seconds.
-		 */
-		@Range(min = 1, max = 3600)
-		private int retentionPeriod = 1200;
-
-		public int getRetentionPeriod() {
-			return this.retentionPeriod;
-		}
-
-		public void setRetentionPeriod(int retentionPeriod) {
-			this.retentionPeriod = retentionPeriod;
-		}
-
 	}
 
 	@Validated
