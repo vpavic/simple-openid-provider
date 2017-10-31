@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -214,12 +215,12 @@ public class OpenIdProviderProperties {
 			this.acrs = acrs;
 		}
 
-		public Scope getSupportedScope() {
-			Scope supportedScope = new Scope();
-			this.openidScopes.forEach(value -> supportedScope.add(value.getValue()));
-			this.resourceScopes.keySet().forEach(value -> supportedScope.add(value.getValue()));
+		public List<Scope.Value> getSupportedScopes() {
+			List<Scope.Value> supportedScopes = new ArrayList<>();
+			supportedScopes.addAll(this.openidScopes);
+			supportedScopes.addAll(this.resourceScopes.keySet());
 
-			return supportedScope;
+			return supportedScopes;
 		}
 
 	}

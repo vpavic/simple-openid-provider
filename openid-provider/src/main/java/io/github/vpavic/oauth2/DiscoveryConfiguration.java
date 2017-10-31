@@ -140,7 +140,10 @@ public class DiscoveryConfiguration {
 	}
 
 	private Scope scope() {
-		return this.properties.getAuthorization().getSupportedScope();
+		Scope scope = new Scope();
+		scope.addAll(this.properties.getAuthorization().getSupportedScopes());
+
+		return scope;
 	}
 
 	private List<ResponseType> responseTypes() {

@@ -36,7 +36,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
@@ -71,9 +70,6 @@ public class AuthorizationEndpointTests {
 	private MockMvc mvc;
 
 	@MockBean
-	private OpenIdProviderProperties properties;
-
-	@MockBean
 	private ClientRepository clientRepository;
 
 	@MockBean
@@ -96,9 +92,6 @@ public class AuthorizationEndpointTests {
 	@Before
 	public void setUp() {
 		this.session = new MockHttpSession();
-
-		given(this.properties.getAuthorization()).willReturn(new OpenIdProviderProperties.Authorization());
-		given(this.properties.getSessionManagement()).willReturn(new OpenIdProviderProperties.SessionManagement());
 	}
 
 	@Test

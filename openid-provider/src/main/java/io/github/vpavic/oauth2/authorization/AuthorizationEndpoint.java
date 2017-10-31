@@ -2,6 +2,8 @@ package io.github.vpavic.oauth2.authorization;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -29,6 +31,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCError;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
@@ -43,7 +46,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
@@ -79,8 +81,6 @@ public class AuthorizationEndpoint {
 
 	private static final String FORM_POST_VIEW_NAME = "oauth2/form-post";
 
-	private final OpenIdProviderProperties properties;
-
 	private final ClientRepository clientRepository;
 
 	private final AuthorizationCodeService authorizationCodeService;
@@ -93,11 +93,16 @@ public class AuthorizationEndpoint {
 
 	private final UserInfoMapper userInfoMapper;
 
-	public AuthorizationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	private ACR acr = new ACR("1");
+
+	private boolean sessionManagementEnabled;
+
+	private List<Scope.Value> supportedScopes = Collections.singletonList(OIDCScopeValue.OPENID);
+
+	public AuthorizationEndpoint(ClientRepository clientRepository,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper,
 			UserInfoMapper userInfoMapper) {
-		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
@@ -105,13 +110,24 @@ public class AuthorizationEndpoint {
 		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
 
-		this.properties = properties;
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
 		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 		this.idTokenClaimsMapper = idTokenClaimsMapper;
 		this.userInfoMapper = userInfoMapper;
+	}
+
+	public void setAcr(ACR acr) {
+		this.acr = acr;
+	}
+
+	public void setSessionManagementEnabled(boolean sessionManagementEnabled) {
+		this.sessionManagementEnabled = sessionManagementEnabled;
+	}
+
+	public void setSupportedScopes(List<Scope.Value> supportedScopes) {
+		this.supportedScopes = supportedScopes;
 	}
 
 	@GetMapping
@@ -266,10 +282,10 @@ public class AuthorizationEndpoint {
 
 		String principal = authentication.getName();
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
-		ACR acr = this.properties.getAuthorization().getAcrs().get(0);
+		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
 		String sessionId = request.getSessionId();
-		State sessionState = this.properties.getSessionManagement().isEnabled() ? State.parse(sessionId) : null;
+		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId) : null;
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
@@ -290,10 +306,10 @@ public class AuthorizationEndpoint {
 
 		String principal = authentication.getName();
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
-		ACR acr = this.properties.getAuthorization().getAcrs().get(0);
+		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
 		String sessionId = request.getSessionId();
-		State sessionState = this.properties.getSessionManagement().isEnabled() ? State.parse(sessionId) : null;
+		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId) : null;
 
 		AccessToken accessToken = null;
 
@@ -326,10 +342,10 @@ public class AuthorizationEndpoint {
 
 		String principal = authentication.getName();
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
-		ACR acr = this.properties.getAuthorization().getAcrs().get(0);
+		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
 		String sessionId = request.getSessionId();
-		State sessionState = this.properties.getSessionManagement().isEnabled() ? State.parse(sessionId) : null;
+		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId) : null;
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
@@ -356,8 +372,7 @@ public class AuthorizationEndpoint {
 
 	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
 		Scope requestedScope = authRequest.getScope();
-		Scope supportedScope = this.properties.getAuthorization().getSupportedScope();
-		requestedScope.retainAll(supportedScope);
+		requestedScope.retainAll(this.supportedScopes);
 		Scope registeredScope = clientMetadata.getScope();
 		Scope resolvedScope;
 

@@ -78,8 +78,12 @@ public class CoreConfiguration {
 
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
-		return new AuthorizationEndpoint(this.properties, this.clientRepository, this.authorizationCodeService,
+		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository, this.authorizationCodeService,
 				tokenService(), this.accessTokenClaimsMapper, this.idTokenClaimsMapper, this.userInfoMapper);
+		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(0));
+		authorizationEndpoint.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
+		authorizationEndpoint.setSupportedScopes(this.properties.getAuthorization().getSupportedScopes());
+		return authorizationEndpoint;
 	}
 
 	@Bean
