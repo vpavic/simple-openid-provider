@@ -60,7 +60,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 			RefreshTokenContext context = this.jdbcOperations.queryForObject(SELECT_STATEMENT,
 					refreshTokenContextMapper, refreshToken.getValue());
 
-			if (context.isExpired()) {
+			if (context == null || context.isExpired()) {
 				throw new GeneralException(OAuth2Error.INVALID_GRANT);
 			}
 
