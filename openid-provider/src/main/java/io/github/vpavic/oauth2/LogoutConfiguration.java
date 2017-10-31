@@ -70,7 +70,7 @@ public class LogoutConfiguration {
 
 	}
 
-	static class SessionManagementCondition extends SpringBootCondition {
+	private static class SessionManagementCondition extends SpringBootCondition {
 
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
@@ -90,7 +90,7 @@ public class LogoutConfiguration {
 
 	}
 
-	static class FrontChannelLogoutCondition extends SpringBootCondition {
+	private static class FrontChannelLogoutCondition extends SpringBootCondition {
 
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {

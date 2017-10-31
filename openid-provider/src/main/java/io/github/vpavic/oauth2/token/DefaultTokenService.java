@@ -12,7 +12,6 @@ import java.util.Objects;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.KeyException;
-import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKMatcher;
@@ -243,7 +242,7 @@ public class DefaultTokenService implements TokenService {
 		}
 	}
 
-	private JWK resolveJwk(JWSAlgorithm algorithm) throws KeySourceException {
+	private JWK resolveJwk(JWSAlgorithm algorithm) {
 		// @formatter:off
 		JWKMatcher jwkMatcher = new JWKMatcher.Builder()
 				.keyType(KeyType.forAlgorithm(algorithm))

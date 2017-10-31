@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
-public final class RefreshTokenRequest {
+final class RefreshTokenRequest {
 
 	private final String principal;
 
@@ -13,7 +13,7 @@ public final class RefreshTokenRequest {
 
 	private final Scope scope;
 
-	public RefreshTokenRequest(String principal, ClientID clientId, Scope scope) {
+	RefreshTokenRequest(String principal, ClientID clientId, Scope scope) {
 		Objects.requireNonNull(principal, "principal must not be null");
 		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
