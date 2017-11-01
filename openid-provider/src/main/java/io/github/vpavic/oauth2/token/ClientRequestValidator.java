@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.client;
+package io.github.vpavic.oauth2.token;
 
 import java.security.PublicKey;
 import java.util.Collections;
@@ -20,13 +20,15 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
-public class ClientRequestValidator {
+import io.github.vpavic.oauth2.client.ClientRepository;
+
+class ClientRequestValidator {
 
 	private final Issuer issuer;
 
 	private final ClientRepository clientRepository;
 
-	public ClientRequestValidator(Issuer issuer, ClientRepository clientRepository) {
+	ClientRequestValidator(Issuer issuer, ClientRepository clientRepository) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
@@ -34,7 +36,7 @@ public class ClientRequestValidator {
 		this.clientRepository = clientRepository;
 	}
 
-	public void validateRequest(AbstractOptionallyIdentifiedRequest request) throws Exception {
+	void validateRequest(AbstractOptionallyIdentifiedRequest request) throws Exception {
 		ClientAuthentication clientAuthentication = request.getClientAuthentication();
 
 		OIDCClientInformation client = this.clientRepository.findById(

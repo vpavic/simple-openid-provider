@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.client.ClientRequestValidator;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Token Endpoint implementation.
