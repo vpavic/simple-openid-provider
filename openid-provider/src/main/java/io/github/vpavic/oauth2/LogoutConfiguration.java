@@ -37,7 +37,9 @@ public class LogoutConfiguration {
 
 	@Bean
 	public EndSessionEndpoint endSessionEndpoint() {
-		return new EndSessionEndpoint(this.properties, this.clientRepository);
+		EndSessionEndpoint endpoint = new EndSessionEndpoint(this.properties.getIssuer(), this.clientRepository);
+		endpoint.setFrontChannelLogoutEnabled(this.properties.getFrontChannelLogout().isEnabled());
+		return endpoint;
 	}
 
 	@Bean

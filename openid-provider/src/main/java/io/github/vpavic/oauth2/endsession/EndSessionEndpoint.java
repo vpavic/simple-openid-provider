@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.springframework.stereotype.Controller;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
 @Controller
@@ -38,16 +38,22 @@ public class EndSessionEndpoint {
 
 	private static final String LOGOUT_SUCCESS_VIEW_NAME = "oauth2/logout-success";
 
-	private final OpenIdProviderProperties properties;
+	private final Issuer issuer;
 
 	private final ClientRepository clientRepository;
 
-	public EndSessionEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository) {
-		Objects.requireNonNull(properties, "properties must not be null");
+	private boolean frontChannelLogoutEnabled;
+
+	public EndSessionEndpoint(Issuer issuer, ClientRepository clientRepository) {
+		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
-		this.properties = properties;
+		this.issuer = issuer;
 		this.clientRepository = clientRepository;
+	}
+
+	public void setFrontChannelLogoutEnabled(boolean frontChannelLogoutEnabled) {
+		this.frontChannelLogoutEnabled = frontChannelLogoutEnabled;
 	}
 
 	@GetMapping
@@ -98,7 +104,7 @@ public class EndSessionEndpoint {
 
 		model.addAttribute("postLogoutRedirectUri", postLogoutRedirectUri);
 
-		if (this.properties.getFrontChannelLogout().isEnabled()) {
+		if (this.frontChannelLogoutEnabled) {
 			String sessionId = request.getSessionId();
 
 			// @formatter:off
@@ -117,7 +123,7 @@ public class EndSessionEndpoint {
 
 	private String resolveDefaultPostLogoutRedirectUri() {
 		// @formatter:off
-		return UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue())
+		return UriComponentsBuilder.fromHttpUrl(this.issuer.getValue())
 				.path("/login")
 				.query("logout")
 				.toUriString();
@@ -127,7 +133,7 @@ public class EndSessionEndpoint {
 	private String buildFrontChannelLogoutUri(URI uri, String sessionId) {
 		// @formatter:off
 		return UriComponentsBuilder.fromUri(uri)
-				.queryParam("iss", this.properties.getIssuer())
+				.queryParam("iss", this.issuer)
 				.queryParam("sid", sessionId)
 				.toUriString();
 		// @formatter:on

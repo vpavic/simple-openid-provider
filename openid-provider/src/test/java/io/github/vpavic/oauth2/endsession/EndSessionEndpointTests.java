@@ -1,19 +1,25 @@
 package io.github.vpavic.oauth2.endsession;
 
-import org.junit.Rule;
+import com.nimbusds.oauth2.sdk.id.Issuer;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -23,25 +29,40 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(EndSessionEndpoint.class)
+@WebAppConfiguration
+@ContextConfiguration
 public class EndSessionEndpointTests {
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	@Autowired
+	private WebApplicationContext wac;
+
 	private MockMvc mvc;
 
-	@MockBean
-	private OpenIdProviderProperties properties;
-
-	@MockBean
-	private ClientRepository clientRepository;
+	@Before
+	public void setUp() {
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+	}
 
 	@Test
-	@WithMockUser
 	public void getEndSessionEndpointDisabled() throws Exception {
-		this.mvc.perform(get("/oauth2/check-session")).andExpect(status().isNotFound());
+		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk());
+	}
+
+	@Configuration
+	@EnableWebMvc
+	@Import(OpenIdProviderWebMvcConfiguration.class)
+	static class Config {
+
+		@Bean
+		public ClientRepository clientRepository() {
+			return mock(ClientRepository.class);
+		}
+
+		@Bean
+		public EndSessionEndpoint endSessionEndpoint() {
+			return new EndSessionEndpoint(new Issuer("http://example.com"), clientRepository());
+		}
+
 	}
 
 }
