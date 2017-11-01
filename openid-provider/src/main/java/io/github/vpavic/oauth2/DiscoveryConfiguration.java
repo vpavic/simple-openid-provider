@@ -25,11 +25,6 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.checksession.CheckSessionIframe;
@@ -91,6 +86,11 @@ public class DiscoveryConfiguration {
 	@Bean
 	public JwkSetEndpoint jwkSetEndpoint() {
 		return new JwkSetEndpoint(this.jwkSetLoader);
+	}
+
+	@Bean
+	public DiscoverySecurityConfiguration discoverySecurityConfiguration() {
+		return new DiscoverySecurityConfiguration();
 	}
 
 	private Issuer issuer() {
@@ -222,27 +222,6 @@ public class DiscoveryConfiguration {
 
 	private boolean supportsFrontChannelLogoutSession() {
 		return supportsFrontChannelLogout();
-	}
-
-	@Order(-4)
-	@Configuration
-	public static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.requestMatchers()
-					.antMatchers(HttpMethod.GET, DiscoveryEndpoint.PATH_MAPPING, JwkSetEndpoint.PATH_MAPPING)
-					.and()
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			// @formatter:on
-		}
-
 	}
 
 }

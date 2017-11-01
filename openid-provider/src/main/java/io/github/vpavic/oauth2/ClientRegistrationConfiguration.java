@@ -3,10 +3,6 @@ package io.github.vpavic.oauth2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 
 import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -28,7 +24,8 @@ public class ClientRegistrationConfiguration {
 
 	@Bean
 	public ClientService clientService() {
-		DefaultClientService clientService = new DefaultClientService(this.properties.getIssuer(), this.clientRepository);
+		DefaultClientService clientService = new DefaultClientService(this.properties.getIssuer(),
+				this.clientRepository);
 		clientService.setRefreshSecretOnUpdate(this.properties.getRegistration().isUpdateSecret());
 		clientService.setRefreshSecretOnUpdate(this.properties.getRegistration().isUpdateAccessToken());
 		return clientService;
@@ -42,25 +39,9 @@ public class ClientRegistrationConfiguration {
 		return endpoint;
 	}
 
-	@Order(-2)
-	@Configuration
-	public static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.antMatcher(ClientRegistrationEndpoint.PATH_MAPPING + "/**")
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.csrf()
-					.disable()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			// @formatter:on
-		}
-
+	@Bean
+	public ClientRegistrationSecurityConfiguration clientRegistrationSecurityConfiguration() {
+		return new ClientRegistrationSecurityConfiguration();
 	}
 
 }

@@ -18,7 +18,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -106,10 +105,9 @@ public class OpenIdProviderWebMvcConfiguration implements WebMvcConfigurer {
 			return HTTPRequest.class.equals(parameter.getParameterType());
 		}
 
-		@Nullable
 		@Override
-		public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
-				NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
+		public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+				NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 			return ServletUtils.createHTTPRequest((HttpServletRequest) webRequest.getNativeRequest());
 		}
 

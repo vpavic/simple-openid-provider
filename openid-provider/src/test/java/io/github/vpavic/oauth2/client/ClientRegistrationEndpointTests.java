@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -15,9 +16,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import io.github.vpavic.oauth2.ClientRegistrationSecurityConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 
 import static org.mockito.Mockito.mock;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 /**
  * Tests for {@link ClientRegistrationEndpoint}.
@@ -36,7 +39,7 @@ public class ClientRegistrationEndpointTests {
 
 	@Before
 	public void setUp() {
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).apply(springSecurity()).build();
 	}
 
 	@Test
@@ -46,7 +49,8 @@ public class ClientRegistrationEndpointTests {
 
 	@Configuration
 	@EnableWebMvc
-	@Import(OpenIdProviderWebMvcConfiguration.class)
+	@EnableWebSecurity
+	@Import({ OpenIdProviderWebMvcConfiguration.class, ClientRegistrationSecurityConfiguration.class })
 	static class Config {
 
 		@Bean

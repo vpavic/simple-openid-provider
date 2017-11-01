@@ -9,13 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 
 import io.github.vpavic.oauth2.LogoutConfiguration.LogoutCondition;
 import io.github.vpavic.oauth2.checksession.CheckSessionIframe;
@@ -48,28 +43,9 @@ public class LogoutConfiguration {
 		return new CheckSessionIframe();
 	}
 
-	@Order(-3)
-	@Configuration
-	public static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.requestMatchers()
-					.antMatchers(HttpMethod.GET, CheckSessionIframe.PATH_MAPPING)
-					.and()
-				.authorizeRequests()
-					.anyRequest().permitAll()
-					.and()
-				.headers()
-					.frameOptions().disable()
-					.and()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			// @formatter:on
-		}
-
+	@Bean
+	public LogoutSecurityConfiguration logoutSecurityConfiguration() {
+		return new LogoutSecurityConfiguration();
 	}
 
 	private static class SessionManagementCondition extends SpringBootCondition {
