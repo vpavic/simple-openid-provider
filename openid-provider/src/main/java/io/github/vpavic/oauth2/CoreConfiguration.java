@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2;
 
+import java.time.Duration;
 import java.util.Collections;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -53,9 +54,8 @@ public class CoreConfiguration {
 
 	private final UserInfoMapper userInfoMapper;
 
-	public CoreConfiguration(OpenIdProviderProperties properties,
-			ObjectProvider<ClientRepository> clientRepository, ObjectProvider<JwkSetLoader> jwkSetLoader,
-			ObjectProvider<AuthenticationManager> authenticationManager,
+	public CoreConfiguration(OpenIdProviderProperties properties, ObjectProvider<ClientRepository> clientRepository,
+			ObjectProvider<JwkSetLoader> jwkSetLoader, ObjectProvider<AuthenticationManager> authenticationManager,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
 			ObjectProvider<RefreshTokenStore> refreshTokenStore,
 			ObjectProvider<AccessTokenClaimsMapper> accessTokenClaimsMapper,
@@ -73,13 +73,22 @@ public class CoreConfiguration {
 
 	@Bean
 	public TokenService tokenService() {
-		return new DefaultTokenService(this.properties, this.jwkSetLoader, this.refreshTokenStore);
+		DefaultTokenService tokenService = new DefaultTokenService(this.properties.getIssuer(), this.jwkSetLoader,
+				this.refreshTokenStore);
+		tokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		tokenService.setAccessTokenLifetime(Duration.ofSeconds(this.properties.getAccessToken().getLifetime()));
+		tokenService.setRefreshTokenLifetime(Duration.ofSeconds(this.properties.getRefreshToken().getLifetime()));
+		tokenService.setIdTokenLifetime(Duration.ofSeconds(this.properties.getIdToken().getLifetime()));
+		tokenService.setFrontChannelLogoutEnabled(this.properties.getFrontChannelLogout().isEnabled());
+		tokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
+		return tokenService;
 	}
 
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
-		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository, this.authorizationCodeService,
-				tokenService(), this.accessTokenClaimsMapper, this.idTokenClaimsMapper, this.userInfoMapper);
+		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository,
+				this.authorizationCodeService, tokenService(), this.accessTokenClaimsMapper, this.idTokenClaimsMapper,
+				this.userInfoMapper);
 		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(0));
 		authorizationEndpoint.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
 		authorizationEndpoint.setSupportedScopes(this.properties.getAuthorization().getSupportedScopes());
@@ -88,14 +97,16 @@ public class CoreConfiguration {
 
 	@Bean
 	public TokenEndpoint tokenEndpoint() {
-		return new TokenEndpoint(this.properties, this.clientRepository, this.authorizationCodeService, tokenService(),
+		TokenEndpoint endpoint = new TokenEndpoint(this.properties.getIssuer(), this.clientRepository, this.authorizationCodeService, tokenService(),
 				this.authenticationManager, this.refreshTokenStore, this.accessTokenClaimsMapper,
 				this.idTokenClaimsMapper);
+		endpoint.setUpdateRefreshToken(this.properties.getRefreshToken().isUpdate());
+		return endpoint;
 	}
 
 	@Bean
 	public TokenRevocationEndpoint tokenRevocationEndpoint() {
-		return new TokenRevocationEndpoint(this.properties, this.clientRepository, this.refreshTokenStore);
+		return new TokenRevocationEndpoint(this.properties.getIssuer(), this.clientRepository, this.refreshTokenStore);
 	}
 
 	@Bean

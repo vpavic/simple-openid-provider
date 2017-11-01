@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2.token;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +47,6 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
@@ -56,19 +56,30 @@ public class DefaultTokenService implements TokenService {
 
 	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
 
-	private final OpenIdProviderProperties properties;
+	private final Issuer issuer;
 
 	private final JwkSetLoader jwkSetLoader;
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	public DefaultTokenService(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
-			RefreshTokenStore refreshTokenStore) {
-		Objects.requireNonNull(properties, "properties must not be null");
+	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
+
+	private Duration accessTokenLifetime = Duration.ofMinutes(10);
+
+	private Duration refreshTokenLifetime = Duration.ZERO;
+
+	private Duration idTokenLifetime = Duration.ofMinutes(15);
+
+	private Map<Scope.Value, String> resourceScopes = new HashMap<>();
+
+	private boolean frontChannelLogoutEnabled;
+
+	public DefaultTokenService(Issuer issuer, JwkSetLoader jwkSetLoader, RefreshTokenStore refreshTokenStore) {
+		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
-		this.properties = properties;
+		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
 		this.refreshTokenStore = refreshTokenStore;
 	}
@@ -76,27 +87,26 @@ public class DefaultTokenService implements TokenService {
 	@Override
 	public AccessToken createAccessToken(AccessTokenRequest accessTokenRequest) {
 		Instant now = Instant.now();
-		int tokenLifetime = this.properties.getAccessToken().getLifetime();
 
 		String principal = accessTokenRequest.getPrincipal();
 		OIDCClientInformation client = accessTokenRequest.getClient();
 		Scope scope = accessTokenRequest.getScope();
 		AccessTokenClaimsMapper accessTokenClaimsMapper = accessTokenRequest.getAccessTokenClaimsMapper();
 
-		Issuer issuer = new Issuer(this.properties.getIssuer());
+		Issuer issuer = new Issuer(this.issuer);
 		Subject subject = new Subject(principal);
 		List<Audience> audience = new ArrayList<>();
-		audience.add(new Audience(this.properties.getIssuer()));
+		audience.add(new Audience(this.issuer));
 
 		for (Scope.Value value : scope) {
-			String resource = this.properties.getAuthorization().getResourceScopes().get(value);
+			String resource = this.resourceScopes.get(value);
 
 			if (resource != null) {
 				audience.add(new Audience(resource));
 			}
 		}
 
-		Date expirationTime = Date.from(now.plusSeconds(tokenLifetime));
+		Date expirationTime = Date.from(now.plus(this.accessTokenLifetime));
 		Date issueTime = Date.from(now);
 		JWTID jwtId = new JWTID();
 		Map<String, Object> claims = new HashMap<>();
@@ -107,33 +117,32 @@ public class DefaultTokenService implements TokenService {
 		}
 
 		try {
-			JWSAlgorithm algorithm = this.properties.getAccessToken().getJwsAlgorithm();
 			JWTAssertionDetails details = new JWTAssertionDetails(issuer, subject, audience, expirationTime, null,
 					issueTime, jwtId, claims);
 			SignedJWT accessToken;
 
-			if (JWSAlgorithm.Family.HMAC_SHA.contains(algorithm)) {
+			if (JWSAlgorithm.Family.HMAC_SHA.contains(this.accessTokenJwsAlgorithm)) {
 				Secret secret = client.getSecret();
 
-				accessToken = JWTAssertionFactory.create(details, algorithm, secret);
+				accessToken = JWTAssertionFactory.create(details, this.accessTokenJwsAlgorithm, secret);
 			}
-			else if (JWSAlgorithm.Family.RSA.contains(algorithm)) {
-				RSAKey rsaKey = (RSAKey) resolveJwk(algorithm);
+			else if (JWSAlgorithm.Family.RSA.contains(this.accessTokenJwsAlgorithm)) {
+				RSAKey rsaKey = (RSAKey) resolveJwk(this.accessTokenJwsAlgorithm);
 
-				accessToken = JWTAssertionFactory.create(details, algorithm, rsaKey.toRSAPrivateKey(),
-						rsaKey.getKeyID(), jcaProvider);
+				accessToken = JWTAssertionFactory.create(details, this.accessTokenJwsAlgorithm,
+						rsaKey.toRSAPrivateKey(), rsaKey.getKeyID(), jcaProvider);
 			}
-			else if (JWSAlgorithm.Family.EC.contains(algorithm)) {
-				ECKey ecKey = (ECKey) resolveJwk(algorithm);
+			else if (JWSAlgorithm.Family.EC.contains(this.accessTokenJwsAlgorithm)) {
+				ECKey ecKey = (ECKey) resolveJwk(this.accessTokenJwsAlgorithm);
 
-				accessToken = JWTAssertionFactory.create(details, algorithm, ecKey.toECPrivateKey(), ecKey.getKeyID(),
-						jcaProvider);
+				accessToken = JWTAssertionFactory.create(details, this.accessTokenJwsAlgorithm, ecKey.toECPrivateKey(),
+						ecKey.getKeyID(), jcaProvider);
 			}
 			else {
-				throw new KeyException("Unsupported algorithm: " + algorithm);
+				throw new KeyException("Unsupported algorithm: " + this.accessTokenJwsAlgorithm);
 			}
 
-			return new BearerAccessToken(accessToken.serialize(), tokenLifetime, scope);
+			return new BearerAccessToken(accessToken.serialize(), this.accessTokenLifetime.getSeconds(), scope);
 		}
 		catch (JOSEException e) {
 			throw new RuntimeException(e);
@@ -144,10 +153,11 @@ public class DefaultTokenService implements TokenService {
 	public RefreshToken createRefreshToken(RefreshTokenRequest refreshTokenRequest) {
 		Instant now = Instant.now();
 		Scope scope = refreshTokenRequest.getScope();
-		int tokenLifetime = this.properties.getRefreshToken().getLifetime();
 
 		RefreshToken refreshToken = new RefreshToken();
-		Instant expiry = (tokenLifetime > 0) ? now.plusSeconds(tokenLifetime) : null;
+		Instant expiry = (!this.refreshTokenLifetime.isZero() && !this.refreshTokenLifetime.isNegative())
+				? now.plus(this.refreshTokenLifetime)
+				: null;
 		RefreshTokenContext context = new RefreshTokenContext(refreshTokenRequest.getPrincipal(),
 				refreshTokenRequest.getClientId(), scope, expiry);
 		this.refreshTokenStore.save(refreshToken, context);
@@ -168,10 +178,10 @@ public class DefaultTokenService implements TokenService {
 		OIDCClientInformation client = idTokenRequest.getClient();
 		ClientID clientId = client.getID();
 		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
-		Issuer issuer = new Issuer(this.properties.getIssuer());
+		Issuer issuer = new Issuer(this.issuer);
 		Subject subject = new Subject(principal);
 		List<Audience> audience = Audience.create(clientId.getValue());
-		Date expirationTime = Date.from(now.plusSeconds(this.properties.getIdToken().getLifetime()));
+		Date expirationTime = Date.from(now.plus(this.idTokenLifetime));
 		Date issueTime = Date.from(now);
 
 		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, subject, audience, expirationTime, issueTime);
@@ -181,7 +191,7 @@ public class DefaultTokenService implements TokenService {
 		claimsSet.setAMR(Collections.singletonList(idTokenRequest.getAmr()));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientId.getValue()));
 
-		if (this.properties.getFrontChannelLogout().isEnabled()) {
+		if (this.frontChannelLogoutEnabled) {
 			SessionID sessionId = new SessionID(idTokenRequest.getSessionId());
 			claimsSet.setSessionID(sessionId);
 		}
@@ -240,6 +250,30 @@ public class DefaultTokenService implements TokenService {
 		catch (ParseException | JOSEException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
+		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
+	}
+
+	public void setAccessTokenLifetime(Duration accessTokenLifetime) {
+		this.accessTokenLifetime = accessTokenLifetime;
+	}
+
+	public void setRefreshTokenLifetime(Duration refreshTokenLifetime) {
+		this.refreshTokenLifetime = refreshTokenLifetime;
+	}
+
+	public void setIdTokenLifetime(Duration idTokenLifetime) {
+		this.idTokenLifetime = idTokenLifetime;
+	}
+
+	public void setFrontChannelLogoutEnabled(boolean frontChannelLogoutEnabled) {
+		this.frontChannelLogoutEnabled = frontChannelLogoutEnabled;
+	}
+
+	public void setResourceScopes(Map<Scope.Value, String> resourceScopes) {
+		this.resourceScopes = resourceScopes;
 	}
 
 	private JWK resolveJwk(JWSAlgorithm algorithm) {

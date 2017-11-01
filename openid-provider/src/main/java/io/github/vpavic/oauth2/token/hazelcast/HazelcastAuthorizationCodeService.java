@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2.token.hazelcast;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -9,7 +10,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.token.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
 
@@ -17,22 +17,20 @@ public class HazelcastAuthorizationCodeService implements AuthorizationCodeServi
 
 	private static final String CODES_MAP = "op.authorizationCodes";
 
-	private final OpenIdProviderProperties properties;
-
 	private final IMap<String, AuthorizationCodeContext> codes;
 
-	public HazelcastAuthorizationCodeService(OpenIdProviderProperties properties, HazelcastInstance hazelcastInstance) {
-		Objects.requireNonNull(properties, "properties must not be null");
+	private Duration codeLifetime = Duration.ofMinutes(5);
+
+	public HazelcastAuthorizationCodeService(HazelcastInstance hazelcastInstance) {
 		Objects.requireNonNull(hazelcastInstance, "hazelcastInstance must not be null");
 
-		this.properties = properties;
 		this.codes = hazelcastInstance.getMap(CODES_MAP);
 	}
 
 	@Override
 	public AuthorizationCode create(AuthorizationCodeContext context) {
 		AuthorizationCode code = new AuthorizationCode();
-		this.codes.put(code.getValue(), context, this.properties.getCode().getLifetime(), TimeUnit.SECONDS);
+		this.codes.put(code.getValue(), context, this.codeLifetime.getSeconds(), TimeUnit.SECONDS);
 
 		return code;
 	}
@@ -46,6 +44,10 @@ public class HazelcastAuthorizationCodeService implements AuthorizationCodeServi
 		}
 
 		return context;
+	}
+
+	public void setCodeLifetime(Duration codeLifetime) {
+		this.codeLifetime = codeLifetime;
 	}
 
 }

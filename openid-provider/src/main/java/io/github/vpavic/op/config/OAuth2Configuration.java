@@ -1,5 +1,7 @@
 package io.github.vpavic.op.config;
 
+import java.time.Duration;
+
 import com.hazelcast.core.HazelcastInstance;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
@@ -61,7 +63,10 @@ public class OAuth2Configuration {
 
 	@Bean
 	public AuthorizationCodeService authorizationCodeService() {
-		return new HazelcastAuthorizationCodeService(this.properties, this.hazelcastInstance);
+		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+				this.hazelcastInstance);
+		authorizationCodeService.setCodeLifetime(Duration.ofSeconds(this.properties.getCode().getLifetime()));
+		return authorizationCodeService;
 	}
 
 	@Bean

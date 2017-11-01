@@ -21,6 +21,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -45,7 +46,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientRequestValidator;
 
@@ -63,7 +63,7 @@ public class TokenEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/token";
 
-	private final OpenIdProviderProperties properties;
+	private final Issuer issuer;
 
 	private final ClientRepository clientRepository;
 
@@ -81,11 +81,13 @@ public class TokenEndpoint {
 
 	private final ClientRequestValidator clientRequestValidator;
 
-	public TokenEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	private boolean updateRefreshToken;
+
+	public TokenEndpoint(Issuer issuer, ClientRepository clientRepository,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
 			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
 			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper) {
-		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
@@ -94,7 +96,7 @@ public class TokenEndpoint {
 		Objects.requireNonNull(accessTokenClaimsMapper, "claimsMapper must not be null");
 		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
-		this.properties = properties;
+		this.issuer = issuer;
 		this.clientRepository = clientRepository;
 		this.authorizationCodeService = authorizationCodeService;
 		this.tokenService = tokenService;
@@ -102,7 +104,11 @@ public class TokenEndpoint {
 		this.refreshTokenStore = refreshTokenStore;
 		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 		this.idTokenClaimsMapper = idTokenClaimsMapper;
-		this.clientRequestValidator = new ClientRequestValidator(properties.getIssuer(), clientRepository);
+		this.clientRequestValidator = new ClientRequestValidator(this.issuer, clientRepository);
+	}
+
+	public void setUpdateRefreshToken(boolean updateRefreshToken) {
+		this.updateRefreshToken = updateRefreshToken;
 	}
 
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -257,7 +263,7 @@ public class TokenEndpoint {
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken updatedRefreshToken = null;
 
-		if (this.properties.getRefreshToken().isUpdate()) {
+		if (this.updateRefreshToken) {
 			this.refreshTokenStore.revoke(refreshToken);
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
 			updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);

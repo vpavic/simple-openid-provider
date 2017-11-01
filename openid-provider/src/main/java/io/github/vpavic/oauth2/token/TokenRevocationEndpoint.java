@@ -6,6 +6,7 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.TokenRevocationRequest;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
 import org.springframework.http.MediaType;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientRequestValidator;
 
@@ -36,14 +36,14 @@ public class TokenRevocationEndpoint {
 
 	private final ClientRequestValidator clientRequestValidator;
 
-	public TokenRevocationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	public TokenRevocationEndpoint(Issuer issuer, ClientRepository clientRepository,
 			RefreshTokenStore refreshTokenStore) {
-		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
 		this.refreshTokenStore = refreshTokenStore;
-		this.clientRequestValidator = new ClientRequestValidator(properties.getIssuer(), clientRepository);
+		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
 	@PostMapping
