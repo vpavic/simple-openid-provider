@@ -19,6 +19,7 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import org.slf4j.Logger;
@@ -29,7 +30,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
@@ -38,19 +38,19 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
 
-	private final OpenIdProviderProperties properties;
+	private final Issuer issuer;
 
 	private final JwkSetLoader jwkSetLoader;
 
 	private final AuthenticationManager authenticationManager;
 
-	public BearerAccessTokenAuthenticationFilter(OpenIdProviderProperties properties, JwkSetLoader jwkSetLoader,
+	public BearerAccessTokenAuthenticationFilter(Issuer issuer, JwkSetLoader jwkSetLoader,
 			AuthenticationManager authenticationManager) {
-		Objects.requireNonNull(properties, "properties must not be null");
+		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 
-		this.properties = properties;
+		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
 		this.authenticationManager = authenticationManager;
 	}
@@ -68,13 +68,11 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
 
-			String issuer = this.properties.getIssuer().getValue();
-
-			if (!issuer.equals(claimsSet.getIssuer())) {
+			if (!this.issuer.getValue().equals(claimsSet.getIssuer())) {
 				throw new Exception("Invalid issuer");
 			}
 
-			if (!claimsSet.getAudience().contains(issuer)) {
+			if (!claimsSet.getAudience().contains(this.issuer.getValue())) {
 				throw new Exception("Invalid audience");
 			}
 

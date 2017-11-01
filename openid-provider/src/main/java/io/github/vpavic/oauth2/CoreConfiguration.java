@@ -164,7 +164,7 @@ public class CoreConfiguration {
 					Collections.singletonList(authenticationProvider));
 
 			BearerAccessTokenAuthenticationFilter authenticationFilter = new BearerAccessTokenAuthenticationFilter(
-					this.properties, this.jwkSetLoader, authenticationManager);
+					this.properties.getIssuer(), this.jwkSetLoader, authenticationManager);
 
 			// @formatter:off
 			http
