@@ -43,7 +43,7 @@ public class TokenRevocationEndpoint {
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
 		this.refreshTokenStore = refreshTokenStore;
-		this.clientRequestValidator = new ClientRequestValidator(properties, clientRepository);
+		this.clientRequestValidator = new ClientRequestValidator(properties.getIssuer(), clientRepository);
 	}
 
 	@PostMapping

@@ -21,7 +21,6 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -38,8 +37,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,17 +46,23 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.CoreConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,44 +72,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(TokenEndpoint.class)
-@Import(CoreConfiguration.TokenSecurityConfiguration.class)
+@WebAppConfiguration
+@ContextConfiguration
 public class TokenEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
+	private WebApplicationContext wac;
+
 	private MockMvc mvc;
 
-	@MockBean
-	private OpenIdProviderProperties properties;
-
-	@MockBean
+	@Autowired
 	private ClientRepository clientRepository;
 
-	@MockBean
+	@Autowired
 	private AuthorizationCodeService authorizationCodeService;
 
-	@MockBean
+	@Autowired
 	private TokenService tokenService;
 
-	@MockBean
+	@Autowired
 	private AuthenticationManager authenticationManager;
 
-	@MockBean
+	@Autowired
 	private RefreshTokenStore refreshTokenStore;
 
-	@MockBean
-	private AccessTokenClaimsMapper accessTokenClaimsMapper;
-
-	@MockBean
-	private IdTokenClaimsMapper idTokenClaimsMapper;
-
 	@Before
-	public void setUp() throws Exception {
-		given(this.properties.getIssuer()).willReturn(new Issuer("http://127.0.0.1"));
-		given(this.properties.getRefreshToken()).willReturn(new OpenIdProviderProperties.RefreshToken());
+	public void setUp() {
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
@@ -176,8 +173,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(client(ClientAuthenticationMethod.NONE));
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -203,8 +199,7 @@ public class TokenEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(client(ClientAuthenticationMethod.NONE));
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
@@ -347,6 +342,45 @@ public class TokenEndpointTests {
 
 		return new OIDCClientInformation(new ClientID("test-client"), new Date(), clientMetadata,
 				ClientAuthenticationMethod.NONE.equals(clientAuthenticationMethod) ? null : new Secret("test-secret"));
+	}
+
+	@Configuration
+	@EnableWebMvc
+	@Import(OpenIdProviderWebMvcConfiguration.class)
+	static class Config {
+
+		@Bean
+		public ClientRepository clientRepository() {
+			return mock(ClientRepository.class);
+		}
+
+		@Bean
+		public AuthorizationCodeService authorizationCodeService() {
+			return mock(AuthorizationCodeService.class);
+		}
+
+		@Bean
+		public TokenService tokenService() {
+			return mock(TokenService.class);
+		}
+
+		@Bean
+		public AuthenticationManager authenticationManager() {
+			return mock(AuthenticationManager.class);
+		}
+
+		@Bean
+		public RefreshTokenStore refreshTokenStore() {
+			return mock(RefreshTokenStore.class);
+		}
+
+		@Bean
+		public TokenEndpoint tokenEndpoint() {
+			return new TokenEndpoint(new OpenIdProviderProperties(), clientRepository(), authorizationCodeService(),
+					tokenService(), authenticationManager(), refreshTokenStore(), mock(AccessTokenClaimsMapper.class),
+					mock(IdTokenClaimsMapper.class));
+		}
+
 	}
 
 }

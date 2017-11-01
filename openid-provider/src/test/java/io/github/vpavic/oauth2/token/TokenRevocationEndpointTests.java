@@ -1,19 +1,25 @@
 package io.github.vpavic.oauth2.token;
 
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.CoreConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link TokenRevocationEndpoint}.
@@ -21,28 +27,36 @@ import io.github.vpavic.oauth2.client.ClientRepository;
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(TokenRevocationEndpoint.class)
-@Import(CoreConfiguration.TokenSecurityConfiguration.class)
+@WebAppConfiguration
+@ContextConfiguration
 public class TokenRevocationEndpointTests {
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	@Autowired
+	private WebApplicationContext wac;
+
 	private MockMvc mvc;
 
-	@MockBean
-	private OpenIdProviderProperties properties;
-
-	@MockBean
-	private ClientRepository clientRepository;
-
-	@MockBean
-	private RefreshTokenStore refreshTokenStore;
+	@Before
+	public void setUp() {
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+	}
 
 	@Test
 	public void test() {
 		// TODO
+	}
+
+	@Configuration
+	@EnableWebMvc
+	@Import(OpenIdProviderWebMvcConfiguration.class)
+	static class Config {
+
+		@Bean
+		public TokenRevocationEndpoint tokenRevocationEndpoint() {
+			return new TokenRevocationEndpoint(new OpenIdProviderProperties(), mock(ClientRepository.class),
+					mock(RefreshTokenStore.class));
+		}
+
 	}
 
 }

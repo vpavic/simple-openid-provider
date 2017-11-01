@@ -102,7 +102,7 @@ public class TokenEndpoint {
 		this.refreshTokenStore = refreshTokenStore;
 		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 		this.idTokenClaimsMapper = idTokenClaimsMapper;
-		this.clientRequestValidator = new ClientRequestValidator(properties, clientRepository);
+		this.clientRequestValidator = new ClientRequestValidator(properties.getIssuer(), clientRepository);
 	}
 
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)

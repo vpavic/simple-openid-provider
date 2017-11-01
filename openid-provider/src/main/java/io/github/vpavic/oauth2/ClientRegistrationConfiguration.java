@@ -28,12 +28,18 @@ public class ClientRegistrationConfiguration {
 
 	@Bean
 	public ClientService clientService() {
-		return new DefaultClientService(this.properties, this.clientRepository);
+		DefaultClientService clientService = new DefaultClientService(this.properties.getIssuer(), this.clientRepository);
+		clientService.setRefreshSecretOnUpdate(this.properties.getRegistration().isUpdateSecret());
+		clientService.setRefreshSecretOnUpdate(this.properties.getRegistration().isUpdateAccessToken());
+		return clientService;
 	}
 
 	@Bean
 	public ClientRegistrationEndpoint clientRegistrationEndpoint() {
-		return new ClientRegistrationEndpoint(this.properties, this.clientRepository, clientService());
+		ClientRegistrationEndpoint endpoint = new ClientRegistrationEndpoint(this.clientRepository, clientService());
+		endpoint.setAllowOpenRegistration(this.properties.getRegistration().isOpenRegistrationEnabled());
+		endpoint.setApiAccessToken(this.properties.getRegistration().getApiAccessToken());
+		return endpoint;
 	}
 
 	@Order(-2)

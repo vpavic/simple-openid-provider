@@ -30,29 +30,35 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
-
 @Controller
 @RequestMapping(path = ClientRegistrationEndpoint.PATH_MAPPING)
 public class ClientRegistrationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/register";
 
-	private final OpenIdProviderProperties properties;
-
 	private final ClientRepository clientRepository;
 
 	private final ClientService clientService;
 
-	public ClientRegistrationEndpoint(OpenIdProviderProperties properties, ClientRepository clientRepository,
+	private boolean allowOpenRegistration;
+
+	private BearerAccessToken apiAccessToken;
+
+	public ClientRegistrationEndpoint(ClientRepository clientRepository,
 			ClientService clientService) {
-		Objects.requireNonNull(properties, "properties must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(clientService, "clientService must not be null");
 
-		this.properties = properties;
 		this.clientRepository = clientRepository;
 		this.clientService = clientService;
+	}
+
+	public void setAllowOpenRegistration(boolean allowOpenRegistration) {
+		this.allowOpenRegistration = allowOpenRegistration;
+	}
+
+	public void setApiAccessToken(BearerAccessToken apiAccessToken) {
+		this.apiAccessToken = apiAccessToken;
 	}
 
 	@GetMapping
@@ -78,7 +84,7 @@ public class ClientRegistrationEndpoint {
 	public ResponseEntity<String> handleClientRegistrationRequest(HTTPRequest httpRequest) throws Exception {
 		OIDCClientRegistrationRequest registrationRequest = OIDCClientRegistrationRequest.parse(httpRequest);
 
-		if (!this.properties.getRegistration().isOpenRegistrationEnabled()) {
+		if (!this.allowOpenRegistration) {
 			validateAccessToken(registrationRequest.getAccessToken());
 		}
 
@@ -147,7 +153,7 @@ public class ClientRegistrationEndpoint {
 	}
 
 	private void validateAccessToken(AccessToken requestAccessToken) throws GeneralException {
-		BearerAccessToken apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+		BearerAccessToken apiAccessToken = this.apiAccessToken;
 
 		if (requestAccessToken == null || !requestAccessToken.equals(apiAccessToken)) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
@@ -170,7 +176,7 @@ public class ClientRegistrationEndpoint {
 		if (client != null) {
 			AccessToken requestAccessToken = request.getAccessToken();
 			BearerAccessToken registrationAccessToken = client.getRegistrationAccessToken();
-			BearerAccessToken apiAccessToken = this.properties.getRegistration().getApiAccessToken();
+			BearerAccessToken apiAccessToken = this.apiAccessToken;
 
 			if (requestAccessToken.equals(registrationAccessToken) || requestAccessToken.equals(apiAccessToken)) {
 				return client;

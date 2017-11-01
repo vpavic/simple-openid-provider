@@ -17,21 +17,20 @@ import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.client.ClientType;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
 
 public class ClientRequestValidator {
 
-	private final OpenIdProviderProperties properties;
+	private final Issuer issuer;
 
 	private final ClientRepository clientRepository;
 
-	public ClientRequestValidator(OpenIdProviderProperties properties, ClientRepository clientRepository) {
-		Objects.requireNonNull(properties, "properties must not be null");
+	public ClientRequestValidator(Issuer issuer, ClientRepository clientRepository) {
+		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 
-		this.properties = properties;
+		this.issuer = issuer;
 		this.clientRepository = clientRepository;
 	}
 
@@ -52,7 +51,7 @@ public class ClientRequestValidator {
 
 			ClientAuthenticationVerifier<OIDCClientInformation> verifier = new ClientAuthenticationVerifier<>(
 					new ClientInformationCredentialsSelector(), null,
-					Collections.singleton(new Audience(this.properties.getIssuer())));
+					Collections.singleton(new Audience(this.issuer)));
 
 			Context<OIDCClientInformation> context = new Context<>();
 			context.set(client);

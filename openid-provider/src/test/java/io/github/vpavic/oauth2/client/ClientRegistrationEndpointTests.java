@@ -10,8 +10,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import io.github.vpavic.oauth2.OpenIdProviderProperties;
-
 /**
  * Tests for {@link ClientRegistrationEndpoint}.
  *
@@ -26,9 +24,6 @@ public class ClientRegistrationEndpointTests {
 
 	@Autowired
 	private MockMvc mvc;
-
-	@MockBean
-	private OpenIdProviderProperties properties;
 
 	@MockBean
 	private ClientRepository clientRepository;
