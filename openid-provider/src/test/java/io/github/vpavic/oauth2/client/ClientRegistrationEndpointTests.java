@@ -1,14 +1,23 @@
 package io.github.vpavic.oauth2.client;
 
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link ClientRegistrationEndpoint}.
@@ -16,24 +25,35 @@ import org.springframework.test.web.servlet.MockMvc;
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(ClientRegistrationEndpoint.class)
+@WebAppConfiguration
+@ContextConfiguration
 public class ClientRegistrationEndpointTests {
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	@Autowired
+	private WebApplicationContext wac;
+
 	private MockMvc mvc;
 
-	@MockBean
-	private ClientRepository clientRepository;
-
-	@MockBean
-	private ClientService clientService;
+	@Before
+	public void setUp() {
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+	}
 
 	@Test
 	public void test() {
 		// TODO
+	}
+
+	@Configuration
+	@EnableWebMvc
+	@Import(OpenIdProviderWebMvcConfiguration.class)
+	static class Config {
+
+		@Bean
+		public ClientRegistrationEndpoint clientRegistrationEndpoint() {
+			return new ClientRegistrationEndpoint(mock(ClientRepository.class), mock(ClientService.class));
+		}
+
 	}
 
 }

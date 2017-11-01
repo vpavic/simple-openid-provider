@@ -70,7 +70,7 @@
 		<!-- Imports -->
 		<module name="AvoidStarImportCheck"/>
 		<module name="AvoidStaticImportCheck">
-			<property name="excludes" value="org.assertj.core.api.Assertions.*, org.hamcrest.CoreMatchers.*, org.hamcrest.Matchers.*, org.mockito.Mockito.*, org.mockito.BDDMockito.*, org.mockito.Matchers.*, org.mockito.ArgumentMatchers.*, org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*, org.springframework.test.web.servlet.result.MockMvcResultMatchers.*"/>
+			<property name="excludes" value="org.assertj.core.api.Assertions.*, org.hamcrest.CoreMatchers.*, org.hamcrest.Matchers.*, org.mockito.Mockito.*, org.mockito.BDDMockito.*, org.mockito.Matchers.*, org.mockito.ArgumentMatchers.*, org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*, org.springframework.test.web.servlet.result.MockMvcResultMatchers.*, org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*"/>
 		</module>
 		<module name="IllegalImportCheck"/>
 		<module name="RedundantImportCheck"/>

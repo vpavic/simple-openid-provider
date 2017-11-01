@@ -28,14 +28,22 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
@@ -48,6 +56,8 @@ import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
@@ -60,37 +70,32 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(AuthorizationEndpoint.class)
+@WebAppConfiguration
+@ContextConfiguration
 public class AuthorizationEndpointTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
+	private WebApplicationContext wac;
+
 	private MockMvc mvc;
 
-	@MockBean
+	@Autowired
 	private ClientRepository clientRepository;
 
-	@MockBean
+	@Autowired
 	private AuthorizationCodeService authorizationCodeService;
 
-	@MockBean
+	@Autowired
 	private TokenService tokenService;
-
-	@MockBean
-	private AccessTokenClaimsMapper accessTokenClaimsMapper;
-
-	@MockBean
-	private IdTokenClaimsMapper idTokenClaimsMapper;
-
-	@MockBean
-	private UserInfoMapper userInfoMapper;
 
 	private MockHttpSession session;
 
 	@Before
 	public void setUp() {
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).apply(springSecurity()).build();
 		this.session = new MockHttpSession();
 	}
 
@@ -270,8 +275,7 @@ public class AuthorizationEndpointTests {
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(implicitWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
@@ -306,8 +310,7 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 		State state = new State();
 
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(implicitWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
@@ -324,8 +327,7 @@ public class AuthorizationEndpointTests {
 	public void implicitWithIdTokenAndToken_withoutScope_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(implicitWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?response_type=id_token token&client_id=test-client&redirect_uri=http://example.com")
@@ -337,8 +339,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutClientId_isError() throws Exception {
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(implicitWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&redirect_uri=http://example.com&nonce=test")
@@ -349,8 +350,7 @@ public class AuthorizationEndpointTests {
 	@Test
 	@WithMockUser
 	public void implicitWithIdTokenAndToken_withoutRedirectUri_isError() throws Exception {
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(implicitWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&nonce=test")
@@ -363,8 +363,7 @@ public class AuthorizationEndpointTests {
 	public void implicitWithIdTokenAndToken_withoutNonce_isError() throws Exception {
 		ErrorObject error = OAuth2Error.INVALID_REQUEST;
 
-		given(this.clientRepository.findById(any(ClientID.class)))
-				.willReturn(implicitWithIdTokenAndTokenClient());
+		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com")
@@ -525,6 +524,35 @@ public class AuthorizationEndpointTests {
 	private static OIDCClientInformation hybridWithTokenClient() {
 		return client(new ResponseType(ResponseType.Value.CODE, ResponseType.Value.TOKEN),
 				new Scope(OIDCScopeValue.OPENID));
+	}
+
+	@Configuration
+	@EnableWebMvc
+	@EnableWebSecurity
+	@Import(OpenIdProviderWebMvcConfiguration.class)
+	static class Config {
+
+		@Bean
+		public ClientRepository clientRepository() {
+			return mock(ClientRepository.class);
+		}
+
+		@Bean
+		public AuthorizationCodeService authorizationCodeService() {
+			return mock(AuthorizationCodeService.class);
+		}
+
+		@Bean
+		public TokenService tokenService() {
+			return mock(TokenService.class);
+		}
+
+		@Bean
+		public AuthorizationEndpoint authorizationEndpoint() {
+			return new AuthorizationEndpoint(clientRepository(), authorizationCodeService(), tokenService(),
+					mock(AccessTokenClaimsMapper.class), mock(IdTokenClaimsMapper.class), mock(UserInfoMapper.class));
+		}
+
 	}
 
 }
