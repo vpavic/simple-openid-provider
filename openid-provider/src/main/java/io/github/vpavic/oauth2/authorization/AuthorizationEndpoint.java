@@ -38,7 +38,6 @@ import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,7 +66,6 @@ import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
-@Controller
 @RequestMapping(path = AuthorizationEndpoint.PATH_MAPPING)
 public class AuthorizationEndpoint {
 

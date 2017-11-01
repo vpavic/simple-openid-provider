@@ -8,7 +8,6 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Vedran Pavic
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
-@Controller
 @RequestMapping(path = UserInfoEndpoint.PATH_MAPPING)
 public class UserInfoEndpoint {
 

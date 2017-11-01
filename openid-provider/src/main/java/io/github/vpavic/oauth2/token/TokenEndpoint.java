@@ -41,7 +41,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,13 +55,10 @@ import io.github.vpavic.oauth2.client.ClientRepository;
  * @see <a href="https://tools.ietf.org/html/rfc7636">RFC 7636: Proof Key for Code Exchange by OAuth Public Clients</a>
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
-@Controller
 @RequestMapping(path = TokenEndpoint.PATH_MAPPING)
 public class TokenEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/token";
-
-	private final Issuer issuer;
 
 	private final ClientRepository clientRepository;
 
@@ -95,7 +91,6 @@ public class TokenEndpoint {
 		Objects.requireNonNull(accessTokenClaimsMapper, "claimsMapper must not be null");
 		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
-		this.issuer = issuer;
 		this.clientRepository = clientRepository;
 		this.authorizationCodeService = authorizationCodeService;
 		this.tokenService = tokenService;
@@ -103,7 +98,7 @@ public class TokenEndpoint {
 		this.refreshTokenStore = refreshTokenStore;
 		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 		this.idTokenClaimsMapper = idTokenClaimsMapper;
-		this.clientRequestValidator = new ClientRequestValidator(this.issuer, clientRepository);
+		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
 	public void setUpdateRefreshToken(boolean updateRefreshToken) {

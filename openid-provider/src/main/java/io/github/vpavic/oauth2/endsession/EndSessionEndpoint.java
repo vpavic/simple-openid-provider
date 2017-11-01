@@ -13,7 +13,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +23,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 
-@Controller
 @RequestMapping(path = EndSessionEndpoint.PATH_MAPPING)
 public class EndSessionEndpoint {
 
