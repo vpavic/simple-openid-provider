@@ -1,14 +1,19 @@
 package io.github.vpavic.op.config;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.time.Duration;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.util.FileCopyUtils;
 
 import io.github.vpavic.oauth2.EnableOpenIdProvider;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
@@ -16,7 +21,6 @@ import io.github.vpavic.oauth2.claim.UserClaimsLoader;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.jdbc.JdbcClientRepository;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
-import io.github.vpavic.oauth2.jwk.ResourceJwkSetLoader;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
 import io.github.vpavic.oauth2.token.RefreshTokenStore;
 import io.github.vpavic.oauth2.token.hazelcast.HazelcastAuthorizationCodeService;
@@ -25,6 +29,8 @@ import io.github.vpavic.oauth2.token.jdbc.JdbcRefreshTokenStore;
 @Configuration
 @EnableOpenIdProvider
 public class OAuth2Configuration {
+
+	private static final String JWK_SET_LOCATION = "classpath:jwks.json";
 
 	private final ResourceLoader resourceLoader;
 
@@ -49,7 +55,17 @@ public class OAuth2Configuration {
 
 	@Bean
 	public JwkSetLoader jwkSetLoader() {
-		return new ResourceJwkSetLoader(this.resourceLoader.getResource("classpath:jwks.json"));
+		return () -> {
+			try {
+				Resource jwkSetResource = this.resourceLoader.getResource(JWK_SET_LOCATION);
+				String jwkSetJson = new String(FileCopyUtils.copyToByteArray(jwkSetResource.getInputStream()));
+
+				return JWKSet.parse(jwkSetJson);
+			}
+			catch (IOException | ParseException e) {
+				throw new RuntimeException(e);
+			}
+		};
 	}
 
 	@Bean
