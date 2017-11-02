@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
@@ -43,9 +44,10 @@ public class LogoutConfiguration {
 		return new CheckSessionIframe();
 	}
 
-	@Bean
-	public LogoutSecurityConfiguration logoutSecurityConfiguration() {
-		return new LogoutSecurityConfiguration();
+	@Configuration
+	@Import(LogoutSecurityConfiguration.class)
+	static class SecurityConfiguration {
+
 	}
 
 	private static class SessionManagementCondition extends SpringBootCondition {

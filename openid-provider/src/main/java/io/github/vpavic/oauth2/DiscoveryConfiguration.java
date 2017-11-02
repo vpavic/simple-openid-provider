@@ -25,6 +25,7 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.checksession.CheckSessionIframe;
@@ -38,6 +39,7 @@ import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
 
 @Configuration
+@Import(DiscoverySecurityConfiguration.class)
 public class DiscoveryConfiguration {
 
 	private final OpenIdProviderProperties properties;
@@ -86,11 +88,6 @@ public class DiscoveryConfiguration {
 	@Bean
 	public JwkSetEndpoint jwkSetEndpoint() {
 		return new JwkSetEndpoint(this.jwkSetLoader);
-	}
-
-	@Bean
-	public DiscoverySecurityConfiguration discoverySecurityConfiguration() {
-		return new DiscoverySecurityConfiguration();
 	}
 
 	private Issuer issuer() {

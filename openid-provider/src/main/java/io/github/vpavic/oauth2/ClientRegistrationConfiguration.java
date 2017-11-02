@@ -3,6 +3,7 @@ package io.github.vpavic.oauth2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -10,6 +11,7 @@ import io.github.vpavic.oauth2.client.ClientService;
 import io.github.vpavic.oauth2.client.DefaultClientService;
 
 @Configuration
+@Import(ClientRegistrationSecurityConfiguration.class)
 public class ClientRegistrationConfiguration {
 
 	private final OpenIdProviderProperties properties;
@@ -37,11 +39,6 @@ public class ClientRegistrationConfiguration {
 		endpoint.setAllowOpenRegistration(this.properties.getRegistration().isOpenRegistrationEnabled());
 		endpoint.setApiAccessToken(this.properties.getRegistration().getApiAccessToken());
 		return endpoint;
-	}
-
-	@Bean
-	public ClientRegistrationSecurityConfiguration clientRegistrationSecurityConfiguration() {
-		return new ClientRegistrationSecurityConfiguration();
 	}
 
 }
