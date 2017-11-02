@@ -5,8 +5,8 @@ import java.time.Duration;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -19,10 +19,12 @@ import io.github.vpavic.oauth2.token.RefreshTokenStore;
 import io.github.vpavic.oauth2.token.TokenEndpoint;
 import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.userinfo.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
 import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
 @Configuration
+@Import({ TokenSecurityConfiguration.class, UserInfoSecurityConfiguration.class })
 public class CoreConfiguration {
 
 	private final OpenIdProviderProperties properties;
@@ -30,8 +32,6 @@ public class CoreConfiguration {
 	private final ClientRepository clientRepository;
 
 	private final JwkSetLoader jwkSetLoader;
-
-	private final UserDetailsService userDetailsService;
 
 	private final AuthenticationManager authenticationManager;
 
@@ -46,8 +46,7 @@ public class CoreConfiguration {
 	private final UserInfoMapper userInfoMapper;
 
 	public CoreConfiguration(OpenIdProviderProperties properties, ObjectProvider<ClientRepository> clientRepository,
-			ObjectProvider<JwkSetLoader> jwkSetLoader, ObjectProvider<UserDetailsService> userDetailsService,
-			ObjectProvider<AuthenticationManager> authenticationManager,
+			ObjectProvider<JwkSetLoader> jwkSetLoader, ObjectProvider<AuthenticationManager> authenticationManager,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
 			ObjectProvider<RefreshTokenStore> refreshTokenStore,
 			ObjectProvider<AccessTokenClaimsMapper> accessTokenClaimsMapper,
@@ -55,7 +54,6 @@ public class CoreConfiguration {
 		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
 		this.jwkSetLoader = jwkSetLoader.getObject();
-		this.userDetailsService = userDetailsService.getObject();
 		this.authenticationManager = authenticationManager.getObject();
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.refreshTokenStore = refreshTokenStore.getObject();
@@ -108,14 +106,11 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public TokenSecurityConfiguration tokenSecurityConfiguration() {
-		return new TokenSecurityConfiguration();
-	}
-
-	@Bean
-	public UserInfoSecurityConfiguration userInfoSecurityConfiguration() {
-		return new UserInfoSecurityConfiguration(this.userDetailsService, this.properties.getIssuer(),
-				this.jwkSetLoader);
+	public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
+		BearerAccessTokenAuthenticationFilter filter = new BearerAccessTokenAuthenticationFilter(
+				this.properties.getIssuer(), this.jwkSetLoader);
+		filter.setJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		return filter;
 	}
 
 }

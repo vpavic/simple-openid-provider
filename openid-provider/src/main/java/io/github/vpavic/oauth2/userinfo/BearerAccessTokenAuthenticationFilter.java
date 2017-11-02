@@ -2,6 +2,7 @@ package io.github.vpavic.oauth2.userinfo;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,8 +25,6 @@ import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -42,17 +41,14 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private final JwkSetLoader jwkSetLoader;
 
-	private final AuthenticationManager authenticationManager;
+	private JWSAlgorithm jwsAlgorithm = JWSAlgorithm.RS256;
 
-	public BearerAccessTokenAuthenticationFilter(Issuer issuer, JwkSetLoader jwkSetLoader,
-			AuthenticationManager authenticationManager) {
+	public BearerAccessTokenAuthenticationFilter(Issuer issuer, JwkSetLoader jwkSetLoader) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
-		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 
 		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
-		this.authenticationManager = authenticationManager;
 	}
 
 	@Override
@@ -63,7 +59,7 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
 
 			ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
-			JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256,
+			JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(this.jwsAlgorithm,
 					(jwkSelector, context) -> jwkSelector.select(this.jwkSetLoader.load()));
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
@@ -87,16 +83,20 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			}
 
 			String username = claimsSet.getSubject();
-			PreAuthenticatedAuthenticationToken authToken = new PreAuthenticatedAuthenticationToken(username, "");
-			authToken.setDetails(claimsSet);
-			Authentication authResult = this.authenticationManager.authenticate(authToken);
-			SecurityContextHolder.getContext().setAuthentication(authResult);
+			PreAuthenticatedAuthenticationToken authentication = new PreAuthenticatedAuthenticationToken(username, "",
+					Collections.emptyList());
+			authentication.setDetails(claimsSet);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 		catch (Exception e) {
 			logger.debug("Bearer authentication attempt failed: {}", e.getMessage());
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	public void setJwsAlgorithm(JWSAlgorithm jwsAlgorithm) {
+		this.jwsAlgorithm = jwsAlgorithm;
 	}
 
 }
