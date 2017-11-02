@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import io.github.vpavic.oauth2.claim.UserClaimsLoader;
 
 /**
  * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.
@@ -25,21 +28,22 @@ public class UserInfoEndpoint {
 
 	private static final String SCOPE_CLAIM = "scope";
 
-	private final UserInfoMapper userInfoMapper;
+	private final UserClaimsLoader userClaimsLoader;
 
-	public UserInfoEndpoint(UserInfoMapper userInfoMapper) {
-		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
+	public UserInfoEndpoint(UserClaimsLoader userClaimsLoader) {
+		Objects.requireNonNull(userClaimsLoader, "userClaimsLoader must not be null");
 
-		this.userInfoMapper = userInfoMapper;
+		this.userClaimsLoader = userClaimsLoader;
 	}
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
 	public ResponseEntity<String> getUserInfo(Authentication authentication) throws Exception {
-		String principal = authentication.getName();
 		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
+
+		Subject subject = new Subject(claimsSet.getSubject());
 		Scope scope = Scope.parse(claimsSet.getStringListClaim(SCOPE_CLAIM));
-		UserInfo userInfo = this.userInfoMapper.map(principal, scope);
+		UserInfo userInfo = this.userClaimsLoader.load(subject, scope);
 
 		// @formatter:off
 		return ResponseEntity.ok()

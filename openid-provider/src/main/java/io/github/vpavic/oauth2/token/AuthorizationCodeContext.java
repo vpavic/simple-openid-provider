@@ -6,15 +6,17 @@ import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
 
 public class AuthorizationCodeContext implements Serializable {
 
-	private final String principal;
+	private final Subject subject;
 
 	private final ClientID clientId;
 
@@ -26,7 +28,7 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final AMR amr;
 
-	private final String sessionId;
+	private final SessionID sessionId;
 
 	private final CodeChallenge codeChallenge;
 
@@ -34,10 +36,10 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final Nonce nonce;
 
-	public AuthorizationCodeContext(String principal, ClientID clientId, Scope scope, Instant authenticationTime,
-			ACR acr, AMR amr, String sessionId, CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod,
+	public AuthorizationCodeContext(Subject subject, ClientID clientId, Scope scope, Instant authenticationTime,
+			ACR acr, AMR amr, SessionID sessionId, CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod,
 			Nonce nonce) {
-		Objects.requireNonNull(principal, "principal must not be null");
+		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
@@ -45,7 +47,7 @@ public class AuthorizationCodeContext implements Serializable {
 		Objects.requireNonNull(amr, "amr must not be null");
 		Objects.requireNonNull(sessionId, "sessionId must not be null");
 
-		this.principal = principal;
+		this.subject = subject;
 		this.clientId = clientId;
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
@@ -57,8 +59,8 @@ public class AuthorizationCodeContext implements Serializable {
 		this.nonce = nonce;
 	}
 
-	public String getPrincipal() {
-		return this.principal;
+	public Subject getSubject() {
+		return this.subject;
 	}
 
 	public ClientID getClientId() {
@@ -81,7 +83,7 @@ public class AuthorizationCodeContext implements Serializable {
 		return this.amr;
 	}
 
-	public String getSessionId() {
+	public SessionID getSessionId() {
 		return this.sessionId;
 	}
 

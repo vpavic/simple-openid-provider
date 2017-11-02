@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -47,18 +48,22 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import io.github.vpavic.oauth2.claim.UserClaimsLoader;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
-import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
 public class DefaultTokenService implements TokenService {
 
 	private static final String SCOPE_CLAIM = "scope";
+
+	private static final Scope DEFAULT_SCOPE = new Scope(OIDCScopeValue.OPENID);
 
 	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
 
 	private final Issuer issuer;
 
 	private final JwkSetLoader jwkSetLoader;
+
+	private final UserClaimsLoader userClaimsLoader;
 
 	private final RefreshTokenStore refreshTokenStore;
 
@@ -74,13 +79,16 @@ public class DefaultTokenService implements TokenService {
 
 	private boolean frontChannelLogoutEnabled;
 
-	public DefaultTokenService(Issuer issuer, JwkSetLoader jwkSetLoader, RefreshTokenStore refreshTokenStore) {
+	public DefaultTokenService(Issuer issuer, JwkSetLoader jwkSetLoader, UserClaimsLoader userClaimsLoader,
+			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
+		Objects.requireNonNull(userClaimsLoader, "userClaimsLoader must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
 		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
+		this.userClaimsLoader = userClaimsLoader;
 		this.refreshTokenStore = refreshTokenStore;
 	}
 
@@ -88,13 +96,11 @@ public class DefaultTokenService implements TokenService {
 	public AccessToken createAccessToken(AccessTokenRequest accessTokenRequest) {
 		Instant now = Instant.now();
 
-		String principal = accessTokenRequest.getPrincipal();
+		Subject subject = accessTokenRequest.getSubject();
 		OIDCClientInformation client = accessTokenRequest.getClient();
 		Scope scope = accessTokenRequest.getScope();
-		AccessTokenClaimsMapper accessTokenClaimsMapper = accessTokenRequest.getAccessTokenClaimsMapper();
 
 		Issuer issuer = new Issuer(this.issuer);
-		Subject subject = new Subject(principal);
 		List<Audience> audience = new ArrayList<>();
 		audience.add(new Audience(this.issuer));
 
@@ -108,17 +114,13 @@ public class DefaultTokenService implements TokenService {
 
 		Date expirationTime = Date.from(now.plus(this.accessTokenLifetime));
 		Date issueTime = Date.from(now);
-		JWTID jwtId = new JWTID();
-		Map<String, Object> claims = new HashMap<>();
-		claims.put(SCOPE_CLAIM, scope);
-
-		if (accessTokenClaimsMapper != null) {
-			claims.putAll(accessTokenClaimsMapper.map(principal));
-		}
+		JWTID jwtId = new JWTID(UUID.randomUUID().toString());
+		UserInfo userInfo = this.userClaimsLoader.load(subject, DEFAULT_SCOPE);
+		userInfo.setClaim(SCOPE_CLAIM, scope);
 
 		try {
-			JWTAssertionDetails details = new JWTAssertionDetails(issuer, subject, audience, expirationTime, null,
-					issueTime, jwtId, claims);
+			JWTAssertionDetails details = new JWTAssertionDetails(issuer, userInfo.getSubject(), audience,
+					expirationTime, null, issueTime, jwtId, userInfo.toJSONObject());
 			SignedJWT accessToken;
 
 			if (JWSAlgorithm.Family.HMAC_SHA.contains(this.accessTokenJwsAlgorithm)) {
@@ -158,7 +160,7 @@ public class DefaultTokenService implements TokenService {
 		Instant expiry = (!this.refreshTokenLifetime.isZero() && !this.refreshTokenLifetime.isNegative())
 				? now.plus(this.refreshTokenLifetime)
 				: null;
-		RefreshTokenContext context = new RefreshTokenContext(refreshTokenRequest.getPrincipal(),
+		RefreshTokenContext context = new RefreshTokenContext(refreshTokenRequest.getSubject(),
 				refreshTokenRequest.getClientId(), scope, expiry);
 		this.refreshTokenStore.save(refreshToken, context);
 
@@ -168,31 +170,28 @@ public class DefaultTokenService implements TokenService {
 	@Override
 	public JWT createIdToken(IdTokenRequest idTokenRequest) {
 		Instant now = Instant.now();
-		Scope scope = idTokenRequest.getScope();
-
-		if (!scope.contains(OIDCScopeValue.OPENID)) {
-			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OPENID + "' is required");
-		}
-
-		String principal = idTokenRequest.getPrincipal();
+		Subject subject = idTokenRequest.getSubject();
 		OIDCClientInformation client = idTokenRequest.getClient();
 		ClientID clientId = client.getID();
 		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
 		Issuer issuer = new Issuer(this.issuer);
-		Subject subject = new Subject(principal);
+		UserInfo userInfo = this.userClaimsLoader.load(subject,
+				idTokenRequest.hasAccessToken() ? DEFAULT_SCOPE : idTokenRequest.getScope());
 		List<Audience> audience = Audience.create(clientId.getValue());
 		Date expirationTime = Date.from(now.plus(this.idTokenLifetime));
 		Date issueTime = Date.from(now);
 
-		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, subject, audience, expirationTime, issueTime);
+		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, userInfo.getSubject(), audience, expirationTime,
+				issueTime);
 		claimsSet.setAuthenticationTime(Date.from(idTokenRequest.getAuthenticationTime()));
 		claimsSet.setNonce(idTokenRequest.getNonce());
 		claimsSet.setACR(idTokenRequest.getAcr());
 		claimsSet.setAMR(Collections.singletonList(idTokenRequest.getAmr()));
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientId.getValue()));
+		claimsSet.putAll(userInfo);
 
 		if (this.frontChannelLogoutEnabled) {
-			SessionID sessionId = new SessionID(idTokenRequest.getSessionId());
+			SessionID sessionId = idTokenRequest.getSessionId();
 			claimsSet.setSessionID(sessionId);
 		}
 
@@ -208,20 +207,6 @@ public class DefaultTokenService implements TokenService {
 		if (code != null) {
 			CodeHash codeHash = CodeHash.compute(code, algorithm);
 			claimsSet.setCodeHash(codeHash);
-		}
-
-		IdTokenClaimsMapper idTokenClaimsMapper = idTokenRequest.getIdTokenClaimsMapper();
-
-		if (idTokenClaimsMapper != null) {
-			Map<String, Object> claims = idTokenClaimsMapper.map(principal);
-			claims.forEach(claimsSet::setClaim);
-		}
-
-		UserInfoMapper userInfoMapper = idTokenRequest.getUserInfoMapper();
-
-		if (userInfoMapper != null) {
-			UserInfo userInfo = userInfoMapper.map(principal, scope);
-			userInfo.toJSONObject().forEach(claimsSet::setClaim);
 		}
 
 		try {

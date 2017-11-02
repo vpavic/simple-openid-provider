@@ -6,10 +6,11 @@ import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 
 public class RefreshTokenContext implements Serializable {
 
-	private final String principal;
+	private final Subject subject;
 
 	private final ClientID clientId;
 
@@ -17,19 +18,19 @@ public class RefreshTokenContext implements Serializable {
 
 	private final Instant expiry;
 
-	public RefreshTokenContext(String principal, ClientID clientId, Scope scope, Instant expiry) {
-		Objects.requireNonNull(principal, "principal must not be null");
+	public RefreshTokenContext(Subject subject, ClientID clientId, Scope scope, Instant expiry) {
+		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 
-		this.principal = principal;
+		this.subject = subject;
 		this.clientId = clientId;
 		this.scope = scope;
 		this.expiry = expiry;
 	}
 
-	public String getPrincipal() {
-		return this.principal;
+	public Subject getSubject() {
+		return this.subject;
 	}
 
 	public ClientID getClientId() {

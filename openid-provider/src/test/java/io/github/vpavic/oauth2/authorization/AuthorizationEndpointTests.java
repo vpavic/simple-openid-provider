@@ -45,14 +45,11 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
-import io.github.vpavic.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
-import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -549,8 +546,7 @@ public class AuthorizationEndpointTests {
 
 		@Bean
 		public AuthorizationEndpoint authorizationEndpoint() {
-			return new AuthorizationEndpoint(clientRepository(), authorizationCodeService(), tokenService(),
-					mock(AccessTokenClaimsMapper.class), mock(IdTokenClaimsMapper.class), mock(UserInfoMapper.class));
+			return new AuthorizationEndpoint(clientRepository(), authorizationCodeService(), tokenService());
 		}
 
 	}

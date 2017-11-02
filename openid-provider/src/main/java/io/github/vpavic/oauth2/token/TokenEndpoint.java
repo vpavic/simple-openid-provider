@@ -22,6 +22,7 @@ import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -33,6 +34,7 @@ import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.springframework.http.MediaType;
@@ -70,34 +72,25 @@ public class TokenEndpoint {
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	private final AccessTokenClaimsMapper accessTokenClaimsMapper;
-
-	private final IdTokenClaimsMapper idTokenClaimsMapper;
-
 	private final ClientRequestValidator clientRequestValidator;
 
 	private boolean updateRefreshToken;
 
 	public TokenEndpoint(Issuer issuer, ClientRepository clientRepository,
 			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
-			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore,
-			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper) {
+			AuthenticationManager authenticationManager, RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
-		Objects.requireNonNull(accessTokenClaimsMapper, "claimsMapper must not be null");
-		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
 		this.clientRepository = clientRepository;
 		this.authorizationCodeService = authorizationCodeService;
 		this.tokenService = tokenService;
 		this.authenticationManager = authenticationManager;
 		this.refreshTokenStore = refreshTokenStore;
-		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
-		this.idTokenClaimsMapper = idTokenClaimsMapper;
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
@@ -164,29 +157,28 @@ public class TokenEndpoint {
 			}
 		}
 
-		String principal = context.getPrincipal();
+		Subject subject = context.getSubject();
 		ClientID clientId = context.getClientId();
 		Scope scope = context.getScope();
 		Instant authenticationTime = context.getAuthenticationTime();
 		ACR acr = context.getAcr();
 		AMR amr = context.getAmr();
-		String sessionId = context.getSessionId();
+		SessionID sessionId = context.getSessionId();
 		Nonce nonce = context.getNonce();
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
-				this.accessTokenClaimsMapper);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
 		if (client.getOIDCMetadata().getGrantTypes().contains(GrantType.REFRESH_TOKEN)
 				|| scope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
-			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(subject, clientId, scope);
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
 
-		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, client, scope, authenticationTime, acr, amr,
-				this.idTokenClaimsMapper, sessionId, nonce, accessToken, null, null);
+		IdTokenRequest idTokenRequest = new IdTokenRequest(subject, client, scope, authenticationTime, acr, amr,
+				sessionId, nonce, accessToken, null);
 		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 		OIDCTokens tokens = new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 
@@ -209,17 +201,16 @@ public class TokenEndpoint {
 			throw new GeneralException(OAuth2Error.INVALID_GRANT);
 		}
 
-		String principal = authentication.getName();
+		Subject subject = new Subject(authentication.getName());
 		ClientID clientId = clientAuthentication.getClientID();
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
-				this.accessTokenClaimsMapper);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
 		if (client.getOIDCMetadata().getGrantTypes().contains(GrantType.REFRESH_TOKEN)) {
-			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(subject, clientId, scope);
 			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
 
@@ -231,11 +222,10 @@ public class TokenEndpoint {
 	private AccessTokenResponse handleClientCredentialsGrantType(ClientAuthentication clientAuthentication,
 			Scope scope) {
 		ClientID clientId = clientAuthentication.getClientID();
-		String principal = clientId.getValue();
+		Subject subject = new Subject(clientId.getValue());
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
-				this.accessTokenClaimsMapper);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		Tokens tokens = new Tokens(accessToken, null);
 
@@ -247,19 +237,18 @@ public class TokenEndpoint {
 		RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
 
 		RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
-		String principal = context.getPrincipal();
+		Subject subject = context.getSubject();
 		ClientID clientId = context.getClientId();
 		Scope scope = context.getScope();
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
-		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
-				this.accessTokenClaimsMapper);
+		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken updatedRefreshToken = null;
 
 		if (this.updateRefreshToken) {
 			this.refreshTokenStore.revoke(refreshToken);
-			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(principal, clientId, scope);
+			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(subject, clientId, scope);
 			updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
 		}
 

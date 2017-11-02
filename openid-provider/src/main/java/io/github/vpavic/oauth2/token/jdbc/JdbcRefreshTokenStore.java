@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -21,9 +22,9 @@ import io.github.vpavic.oauth2.token.RefreshTokenStore;
 
 public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
-	private static final String INSERT_STATEMENT = "INSERT INTO op_refresh_tokens(token, principal, client_id, scope, expiry) VALUES (?, ?, ?, ?, ?)";
+	private static final String INSERT_STATEMENT = "INSERT INTO op_refresh_tokens(token, subject, client_id, scope, expiry) VALUES (?, ?, ?, ?, ?)";
 
-	private static final String SELECT_STATEMENT = "SELECT principal, client_id, scope, expiry FROM op_refresh_tokens WHERE token = ?";
+	private static final String SELECT_STATEMENT = "SELECT subject, client_id, scope, expiry FROM op_refresh_tokens WHERE token = ?";
 
 	private static final String DELETE_STATEMENT = "DELETE FROM op_refresh_tokens WHERE token = ?";
 
@@ -46,7 +47,7 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 		this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
 			ps.setString(1, refreshToken.getValue());
-			ps.setString(2, context.getPrincipal());
+			ps.setString(2, context.getSubject().getValue());
 			ps.setString(3, context.getClientId().getValue());
 			ps.setString(4, context.getScope().toString());
 			ps.setLong(5, (expiry != null) ? expiry.getEpochSecond() : 0);
@@ -88,12 +89,12 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 		@Override
 		public RefreshTokenContext mapRow(ResultSet rs, int rowNum) throws SQLException {
-			String principal = rs.getString(1);
+			String subject = rs.getString(1);
 			String clientId = rs.getString(2);
 			String scope = rs.getString(3);
 			long expiry = rs.getLong(4);
 
-			return new RefreshTokenContext(principal, new ClientID(clientId), Scope.parse(scope),
+			return new RefreshTokenContext(new Subject(subject), new ClientID(clientId), Scope.parse(scope),
 					expiry > 0 ? Instant.ofEpochSecond(expiry) : null);
 		}
 

@@ -3,6 +3,7 @@ package io.github.vpavic.op.config;
 import java.time.Duration;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,20 +12,15 @@ import org.springframework.jdbc.core.JdbcOperations;
 
 import io.github.vpavic.oauth2.EnableOpenIdProvider;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
+import io.github.vpavic.oauth2.claim.UserClaimsLoader;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.jdbc.JdbcClientRepository;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.jwk.ResourceJwkSetLoader;
-import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
-import io.github.vpavic.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.RefreshTokenStore;
 import io.github.vpavic.oauth2.token.hazelcast.HazelcastAuthorizationCodeService;
 import io.github.vpavic.oauth2.token.jdbc.JdbcRefreshTokenStore;
-import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
-import io.github.vpavic.op.oauth2.NullAccessTokenClaimsMapper;
-import io.github.vpavic.op.oauth2.NullIdTokenClaimsMapper;
-import io.github.vpavic.op.oauth2.SubjectUserInfoMapper;
 
 @Configuration
 @EnableOpenIdProvider
@@ -70,18 +66,8 @@ public class OAuth2Configuration {
 	}
 
 	@Bean
-	public AccessTokenClaimsMapper accessTokenClaimsMapper() {
-		return new NullAccessTokenClaimsMapper();
-	}
-
-	@Bean
-	public IdTokenClaimsMapper idTokenClaimsMapper() {
-		return new NullIdTokenClaimsMapper();
-	}
-
-	@Bean
-	public UserInfoMapper userInfoMapper() {
-		return new SubjectUserInfoMapper();
+	public UserClaimsLoader userClaimsLoader() {
+		return (subject, scope) -> new UserInfo(subject);
 	}
 
 }

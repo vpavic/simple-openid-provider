@@ -21,6 +21,7 @@ import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -35,6 +36,7 @@ import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.security.core.Authentication;
@@ -46,14 +48,11 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.token.AccessTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
-import io.github.vpavic.oauth2.token.IdTokenClaimsMapper;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
-import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Authorization Endpoint implementation.
@@ -85,35 +84,21 @@ public class AuthorizationEndpoint {
 
 	private final TokenService tokenService;
 
-	private final AccessTokenClaimsMapper accessTokenClaimsMapper;
-
-	private final IdTokenClaimsMapper idTokenClaimsMapper;
-
-	private final UserInfoMapper userInfoMapper;
-
 	private ACR acr = new ACR("1");
 
 	private boolean sessionManagementEnabled;
 
 	private List<Scope.Value> supportedScopes = Collections.singletonList(OIDCScopeValue.OPENID);
 
-	public AuthorizationEndpoint(ClientRepository clientRepository,
-			AuthorizationCodeService authorizationCodeService, TokenService tokenService,
-			AccessTokenClaimsMapper accessTokenClaimsMapper, IdTokenClaimsMapper idTokenClaimsMapper,
-			UserInfoMapper userInfoMapper) {
+	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
+			TokenService tokenService) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
-		Objects.requireNonNull(accessTokenClaimsMapper, "accessTokenClaimsMapper must not be null");
-		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
-		Objects.requireNonNull(userInfoMapper, "userInfoMapper must not be null");
 
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
-		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
-		this.idTokenClaimsMapper = idTokenClaimsMapper;
-		this.userInfoMapper = userInfoMapper;
 	}
 
 	public void setAcr(ACR acr) {
@@ -278,14 +263,14 @@ public class AuthorizationEndpoint {
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
 
-		String principal = authentication.getName();
+		Subject subject = new Subject(authentication.getName());
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
-		String sessionId = request.getSessionId();
-		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId) : null;
+		SessionID sessionId = new SessionID(request.getSessionId());
+		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientId, scope, authenticationTime,
+		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
 
@@ -302,24 +287,22 @@ public class AuthorizationEndpoint {
 		State state = authRequest.getState();
 		Nonce nonce = authRequest.getNonce();
 
-		String principal = authentication.getName();
+		Subject subject = new Subject(authentication.getName());
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
-		String sessionId = request.getSessionId();
-		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId) : null;
+		SessionID sessionId = new SessionID(request.getSessionId());
+		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
 		AccessToken accessToken = null;
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
-					this.accessTokenClaimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		}
 
-		IdTokenRequest idTokenRequest = new IdTokenRequest(principal, client, scope, authenticationTime, acr, amr,
-				this.idTokenClaimsMapper, sessionId, nonce, accessToken, null,
-				(responseType.size() == 1) ? this.userInfoMapper : null);
+		IdTokenRequest idTokenRequest = new IdTokenRequest(subject, client, scope, authenticationTime, acr, amr,
+				sessionId, nonce, accessToken, null);
 		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 
 		return new AuthenticationSuccessResponse(redirectionUri, null, idToken, accessToken, state, sessionState,
@@ -338,29 +321,28 @@ public class AuthorizationEndpoint {
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
 
-		String principal = authentication.getName();
+		Subject subject = new Subject(authentication.getName());
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
-		String sessionId = request.getSessionId();
-		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId) : null;
+		SessionID sessionId = new SessionID(request.getSessionId());
+		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(principal, clientId, scope, authenticationTime,
+		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
 		AccessToken accessToken = null;
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
-			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(principal, client, scope,
-					this.accessTokenClaimsMapper);
+			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		}
 
 		JWT idToken = null;
 
 		if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
-			IdTokenRequest idTokenRequest = new IdTokenRequest(principal, client, scope, authenticationTime, acr, amr,
-					this.idTokenClaimsMapper, sessionId, nonce, accessToken, code, null);
+			IdTokenRequest idTokenRequest = new IdTokenRequest(subject, client, scope, authenticationTime, acr, amr,
+					sessionId, nonce, accessToken, code);
 			idToken = this.tokenService.createIdToken(idTokenRequest);
 		}
 

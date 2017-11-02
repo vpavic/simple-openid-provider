@@ -9,7 +9,7 @@ CREATE TABLE op_clients (
 
 CREATE TABLE op_refresh_tokens (
 	token VARCHAR(43) PRIMARY KEY,
-	principal VARCHAR(30) NOT NULL,
+	subject VARCHAR(30) NOT NULL,
 	client_id VARCHAR(100) NOT NULL,
 	scope VARCHAR(200) NOT NULL,
 	expiry BIGINT NOT NULL

@@ -22,6 +22,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
@@ -30,6 +31,7 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.junit.Before;
@@ -118,8 +120,8 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId, scope, Instant.now(),
-				new ACR("1"), AMR.PWD, "test", null, null, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, scope,
+				Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -144,8 +146,9 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com")));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId,
-				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, "test", null, null, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null,
+				null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -170,8 +173,8 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientId,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId,
-				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, "test",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
 				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
@@ -196,8 +199,8 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientId,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext("user", clientId,
-				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, "test",
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
 				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
@@ -299,8 +302,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext("user", clientId, new Scope(OIDCScopeValue.OPENID), null));
+		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(
+				new RefreshTokenContext(new Subject("user"), clientId, new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -321,8 +324,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.refreshTokenStore.load(any(RefreshToken.class)))
-				.willReturn(new RefreshTokenContext("user", clientId, new Scope(OIDCScopeValue.OPENID), null));
+		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(
+				new RefreshTokenContext(new Subject("user"), clientId, new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -381,8 +384,7 @@ public class TokenEndpointTests {
 		@Bean
 		public TokenEndpoint tokenEndpoint() {
 			return new TokenEndpoint(new Issuer("http://example.com"), clientRepository(), authorizationCodeService(),
-					tokenService(), authenticationManager(), refreshTokenStore(), mock(AccessTokenClaimsMapper.class),
-					mock(IdTokenClaimsMapper.class));
+					tokenService(), authenticationManager(), refreshTokenStore());
 		}
 
 	}

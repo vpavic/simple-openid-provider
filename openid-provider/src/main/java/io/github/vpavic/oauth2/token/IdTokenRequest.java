@@ -5,17 +5,18 @@ import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-
-import io.github.vpavic.oauth2.userinfo.UserInfoMapper;
 
 public final class IdTokenRequest {
 
-	private final String principal;
+	private final Subject subject;
 
 	private final OIDCClientInformation client;
 
@@ -27,7 +28,7 @@ public final class IdTokenRequest {
 
 	private final AMR amr;
 
-	private final String sessionId;
+	private final SessionID sessionId;
 
 	private final Nonce nonce;
 
@@ -35,37 +36,33 @@ public final class IdTokenRequest {
 
 	private final AuthorizationCode code;
 
-	private final IdTokenClaimsMapper idTokenClaimsMapper;
-
-	private final UserInfoMapper userInfoMapper;
-
-	public IdTokenRequest(String principal, OIDCClientInformation client, Scope scope, Instant authenticationTime,
-			ACR acr, AMR amr, IdTokenClaimsMapper idTokenClaimsMapper, String sessionId, Nonce nonce,
-			AccessToken accessToken, AuthorizationCode code, UserInfoMapper userInfoMapper) {
-		Objects.requireNonNull(principal, "principal must not be null");
+	public IdTokenRequest(Subject subject, OIDCClientInformation client, Scope scope, Instant authenticationTime,
+			ACR acr, AMR amr, SessionID sessionId, Nonce nonce, AccessToken accessToken, AuthorizationCode code) {
+		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(client, "client must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
 		Objects.requireNonNull(amr, "amr must not be null");
-		Objects.requireNonNull(idTokenClaimsMapper, "idTokenClaimsMapper must not be null");
 
-		this.principal = principal;
+		if (!scope.contains(OIDCScopeValue.OPENID)) {
+			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OPENID + "' is required");
+		}
+
+		this.subject = subject;
 		this.client = client;
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
 		this.amr = amr;
-		this.idTokenClaimsMapper = idTokenClaimsMapper;
 		this.sessionId = sessionId;
 		this.nonce = nonce;
 		this.accessToken = accessToken;
 		this.code = code;
-		this.userInfoMapper = userInfoMapper;
 	}
 
-	public String getPrincipal() {
-		return this.principal;
+	public Subject getSubject() {
+		return this.subject;
 	}
 
 	public OIDCClientInformation getClient() {
@@ -88,11 +85,7 @@ public final class IdTokenRequest {
 		return this.amr;
 	}
 
-	public IdTokenClaimsMapper getIdTokenClaimsMapper() {
-		return this.idTokenClaimsMapper;
-	}
-
-	public String getSessionId() {
+	public SessionID getSessionId() {
 		return this.sessionId;
 	}
 
@@ -108,8 +101,8 @@ public final class IdTokenRequest {
 		return this.code;
 	}
 
-	public UserInfoMapper getUserInfoMapper() {
-		return this.userInfoMapper;
+	public boolean hasAccessToken() {
+		return this.accessToken != null;
 	}
 
 }

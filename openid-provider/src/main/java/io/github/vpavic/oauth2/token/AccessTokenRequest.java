@@ -3,33 +3,29 @@ package io.github.vpavic.oauth2.token;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 public final class AccessTokenRequest {
 
-	private final String principal;
+	private final Subject subject;
 
 	private final OIDCClientInformation client;
 
 	private final Scope scope;
 
-	private final AccessTokenClaimsMapper accessTokenClaimsMapper;
-
-	public AccessTokenRequest(String principal, OIDCClientInformation client, Scope scope,
-			AccessTokenClaimsMapper accessTokenClaimsMapper) {
-		Objects.requireNonNull(principal, "principal must not be null");
+	public AccessTokenRequest(Subject subject, OIDCClientInformation client, Scope scope) {
+		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(client, "client must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
-		Objects.requireNonNull(accessTokenClaimsMapper, "accessTokenClaimsMapper must not be null");
 
-		this.principal = principal;
+		this.subject = subject;
 		this.client = client;
 		this.scope = scope;
-		this.accessTokenClaimsMapper = accessTokenClaimsMapper;
 	}
 
-	public String getPrincipal() {
-		return this.principal;
+	public Subject getSubject() {
+		return this.subject;
 	}
 
 	public OIDCClientInformation getClient() {
@@ -38,10 +34,6 @@ public final class AccessTokenRequest {
 
 	public Scope getScope() {
 		return this.scope;
-	}
-
-	public AccessTokenClaimsMapper getAccessTokenClaimsMapper() {
-		return this.accessTokenClaimsMapper;
 	}
 
 }
