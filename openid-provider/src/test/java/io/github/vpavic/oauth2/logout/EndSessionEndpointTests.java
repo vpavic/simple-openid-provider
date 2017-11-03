@@ -23,10 +23,9 @@ import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -52,7 +51,7 @@ public class EndSessionEndpointTests {
 	@Test
 	public void getEndSessionEndpoint() throws Exception {
 		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk())
-				.andExpect(content().string(containsString("<title>Sign out</title>")));
+				.andExpect(forwardedUrl("/logout"));
 	}
 
 	@Configuration
