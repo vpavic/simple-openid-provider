@@ -39,13 +39,17 @@ import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
@@ -76,7 +80,9 @@ public class AuthorizationEndpoint {
 
 	private static final String LOGIN_REDIRECT_URI = "redirect:/login";
 
-	private static final String FORM_POST_VIEW_NAME = "oauth2/form-post";
+	private static final String FORM_POST_PATH = "/form-post";
+
+	private static final String FORM_POST_FORWARD_URI = "forward:" + PATH_MAPPING + FORM_POST_PATH;
 
 	private final ClientRepository clientRepository;
 
@@ -114,8 +120,7 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public String authorize(ServletWebRequest request, Authentication authentication, Model model)
-			throws GeneralException {
+	public ModelAndView authorize(ServletWebRequest request, Authentication authentication) throws GeneralException {
 		AuthenticationRequest authRequest = resolveAuthRequest(request);
 		ClientID clientId = authRequest.getClientID();
 		OIDCClientInformation client = resolveClient(clientId);
@@ -124,14 +129,14 @@ public class AuthorizationEndpoint {
 		Prompt prompt = authRequest.getPrompt();
 
 		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
-			return redirectToLoginPage(request, authRequest);
+			return loginRedirect(request, authRequest);
 		}
 
 		int maxAge = authRequest.getMaxAge();
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 
 		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
-			return redirectToLoginPage(request, authRequest);
+			return loginRedirect(request, authRequest);
 		}
 
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
@@ -157,7 +162,23 @@ public class AuthorizationEndpoint {
 			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
 		}
 
-		return prepareResponse(authResponse, model);
+		return authResponse(authResponse);
+	}
+
+	@GetMapping(path = FORM_POST_PATH)
+	public ResponseEntity<String> formPost(ServletWebRequest request) {
+		AuthorizationResponse authResponse = (AuthorizationResponse) request.getAttribute("authResponse",
+				RequestAttributes.SCOPE_REQUEST);
+
+		if (authResponse == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(MediaType.TEXT_HTML)
+				.body(prepareFormPostPage(authResponse));
+		// @formatter:on
 	}
 
 	private AuthenticationRequest resolveAuthRequest(ServletWebRequest request) throws GeneralException {
@@ -230,7 +251,7 @@ public class AuthorizationEndpoint {
 		}
 	}
 
-	private String redirectToLoginPage(ServletWebRequest request, AuthenticationRequest authRequest) {
+	private ModelAndView loginRedirect(ServletWebRequest request, AuthenticationRequest authRequest) {
 		Prompt prompt = authRequest.getPrompt();
 		String authRequestQuery;
 
@@ -250,7 +271,7 @@ public class AuthorizationEndpoint {
 		String authRequestUri = PATH_MAPPING + "?" + authRequestQuery;
 		request.setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri, RequestAttributes.SCOPE_SESSION);
 
-		return LOGIN_REDIRECT_URI;
+		return new ModelAndView(LOGIN_REDIRECT_URI);
 	}
 
 	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
@@ -372,22 +393,67 @@ public class AuthorizationEndpoint {
 		return resolvedScope;
 	}
 
-	private String prepareResponse(AuthorizationResponse authResponse, Model model) {
+	private ModelAndView authResponse(AuthorizationResponse authResponse) {
 		if (ResponseMode.FORM_POST.equals(authResponse.getResponseMode())) {
-			model.addAttribute("authResponse", authResponse);
+			return new ModelAndView(FORM_POST_FORWARD_URI, Collections.singletonMap("authResponse", authResponse));
+		}
+		else {
+			return new ModelAndView("redirect:" + authResponse.toURI());
+		}
+	}
 
-			return FORM_POST_VIEW_NAME;
+	private String prepareFormPostPage(AuthorizationResponse authResponse) {
+		State state = authResponse.getState();
+		AuthorizationCode code = null;
+		AccessToken accessToken = null;
+		JWT idToken = null;
+		State sessionState = null;
+
+		if (authResponse instanceof AuthenticationSuccessResponse) {
+			AuthenticationSuccessResponse authSuccessResponse = (AuthenticationSuccessResponse) authResponse;
+			code = authSuccessResponse.getAuthorizationCode();
+			accessToken = authSuccessResponse.getAccessToken();
+			idToken = authSuccessResponse.getIDToken();
+			sessionState = authSuccessResponse.getSessionState();
 		}
 
-		return "redirect:" + authResponse.toURI();
+		StringBuilder sb = new StringBuilder();
+		sb.append("<!DOCTYPE html>");
+		sb.append("<html>");
+		sb.append("<head>");
+		sb.append("<meta charset=\"utf-8\">");
+		sb.append("<title>Form Post</title>");
+		sb.append("</head>");
+		sb.append("<body onload=\"document.forms[0].submit()\">");
+		sb.append("<form method=\"post\" action=\"").append(authResponse.getRedirectionURI()).append("\">");
+		if (code != null) {
+			sb.append("<input type=\"hidden\" name=\"code\" value=\"").append(code).append("\"/>");
+		}
+		if (accessToken != null) {
+			sb.append("<input type=\"hidden\" name=\"access_token\" value=\"").append(accessToken).append("\"/>");
+		}
+		if (idToken != null) {
+			sb.append("<input type=\"hidden\" name=\"id_token\" value=\"").append(idToken).append("\"/>");
+		}
+		if (state != null) {
+			sb.append("<input type=\"hidden\" name=\"state\" value=\"").append(state).append("\"/>");
+		}
+		if (sessionState != null) {
+			sb.append("<input type=\"hidden\" name=\"session_state\" value=\"").append(sessionState).append("\"/>");
+		}
+		sb.append("</form>");
+		sb.append("</body>");
+		sb.append("</html>");
+
+		return sb.toString();
 	}
 
 	@ExceptionHandler(GeneralException.class)
-	public String handleGeneralException(GeneralException e, Model model) {
+	public ModelAndView handleGeneralException(GeneralException e) {
 		AuthenticationErrorResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
 				e.getErrorObject(), e.getState(), e.getResponseMode());
 
-		return prepareResponse(authResponse, model);
+		return authResponse(authResponse);
 	}
 
 }
