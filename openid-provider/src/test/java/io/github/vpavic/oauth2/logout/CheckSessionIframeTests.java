@@ -51,8 +51,9 @@ public class CheckSessionIframeTests {
 
 	@Test
 	public void getCheckSessionIframe() throws Exception {
-		this.mvc.perform(get("/oauth2/check-session")).andExpect(status().isOk())
-				.andExpect(content().string(containsString("<title>OIDC Provider</title>")));
+		this.mvc.perform(get(CheckSessionIframe.PATH_MAPPING)).andExpect(status().isOk())
+				.andExpect(content().string(containsString("<title>Check Session Iframe</title>")))
+				.andExpect(content().string(containsString("var cookie = getCookie(\"sid\");")));
 	}
 
 	@Configuration
@@ -85,7 +86,7 @@ public class CheckSessionIframeTests {
 
 		@Bean
 		public CheckSessionIframe endSessionEndpoint() {
-			return new CheckSessionIframe();
+			return new CheckSessionIframe("sid");
 		}
 
 	}

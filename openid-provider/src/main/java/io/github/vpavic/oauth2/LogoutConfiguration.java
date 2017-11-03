@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -22,26 +23,31 @@ import io.github.vpavic.oauth2.logout.EndSessionEndpoint;
 @Conditional(LogoutCondition.class)
 public class LogoutConfiguration {
 
-	private final OpenIdProviderProperties properties;
+	private final ServerProperties serverProperties;
+
+	private final OpenIdProviderProperties providerProperties;
 
 	private final ClientRepository clientRepository;
 
-	public LogoutConfiguration(OpenIdProviderProperties properties, ObjectProvider<ClientRepository> clientRepository) {
-		this.properties = properties;
+	public LogoutConfiguration(ServerProperties serverProperties, OpenIdProviderProperties providerProperties,
+			ObjectProvider<ClientRepository> clientRepository) {
+		this.serverProperties = serverProperties;
+		this.providerProperties = providerProperties;
 		this.clientRepository = clientRepository.getObject();
 	}
 
 	@Bean
 	public EndSessionEndpoint endSessionEndpoint() {
-		EndSessionEndpoint endpoint = new EndSessionEndpoint(this.properties.getIssuer(), this.clientRepository);
-		endpoint.setFrontChannelLogoutEnabled(this.properties.getFrontChannelLogout().isEnabled());
+		EndSessionEndpoint endpoint = new EndSessionEndpoint(this.providerProperties.getIssuer(),
+				this.clientRepository);
+		endpoint.setFrontChannelLogoutEnabled(this.providerProperties.getFrontChannelLogout().isEnabled());
 		return endpoint;
 	}
 
 	@Bean
 	@Conditional(SessionManagementCondition.class)
 	public CheckSessionIframe checkSessionIframe() {
-		return new CheckSessionIframe();
+		return new CheckSessionIframe(this.serverProperties.getSession().getCookie().getName());
 	}
 
 	@Configuration

@@ -24,6 +24,7 @@ public class LogoutSecurityConfiguration extends WebSecurityConfigurerAdapter {
 				.anyRequest().permitAll()
 				.and()
 			.headers()
+				.cacheControl().disable()
 				.frameOptions().disable()
 				.and()
 			.sessionManagement()
