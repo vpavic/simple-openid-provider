@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.checksession;
+package io.github.vpavic.oauth2.logout;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

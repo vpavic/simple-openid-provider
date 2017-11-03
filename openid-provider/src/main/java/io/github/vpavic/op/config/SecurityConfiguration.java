@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.authentication.logout.ForwardLogoutSuccessHandler;
 
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
-import io.github.vpavic.oauth2.endsession.EndSessionEndpoint;
+import io.github.vpavic.oauth2.logout.EndSessionEndpoint;
 import io.github.vpavic.op.login.LoginFormController;
 
 @Configuration

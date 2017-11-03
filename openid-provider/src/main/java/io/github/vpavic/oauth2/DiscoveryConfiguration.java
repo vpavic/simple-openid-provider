@@ -28,12 +28,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
-import io.github.vpavic.oauth2.checksession.CheckSessionIframe;
 import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.oauth2.discovery.DiscoveryEndpoint;
 import io.github.vpavic.oauth2.discovery.JwkSetEndpoint;
-import io.github.vpavic.oauth2.endsession.EndSessionEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
+import io.github.vpavic.oauth2.logout.CheckSessionIframe;
+import io.github.vpavic.oauth2.logout.EndSessionEndpoint;
 import io.github.vpavic.oauth2.token.TokenEndpoint;
 import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;

@@ -1,6 +1,5 @@
-package io.github.vpavic.oauth2.endsession;
+package io.github.vpavic.oauth2.logout;
 
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -20,24 +20,24 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
+import io.github.vpavic.oauth2.LogoutSecurityConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
-import io.github.vpavic.oauth2.client.ClientRepository;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.Mockito.mock;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link EndSessionEndpoint}.
+ * Tests for {@link CheckSessionIframe}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class EndSessionEndpointTests {
+public class CheckSessionIframeTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -46,18 +46,19 @@ public class EndSessionEndpointTests {
 
 	@Before
 	public void setUp() {
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).apply(springSecurity()).build();
 	}
 
 	@Test
-	public void getEndSessionEndpoint() throws Exception {
-		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk())
-				.andExpect(content().string(containsString("<title>Sign out</title>")));
+	public void getCheckSessionIframe() throws Exception {
+		this.mvc.perform(get("/oauth2/check-session")).andExpect(status().isOk())
+				.andExpect(content().string(containsString("<title>OIDC Provider</title>")));
 	}
 
 	@Configuration
 	@EnableWebMvc
-	@Import(OpenIdProviderWebMvcConfiguration.class)
+	@EnableWebSecurity
+	@Import({ OpenIdProviderWebMvcConfiguration.class, LogoutSecurityConfiguration.class })
 	static class Config {
 
 		@Bean
@@ -83,13 +84,8 @@ public class EndSessionEndpointTests {
 		}
 
 		@Bean
-		public ClientRepository clientRepository() {
-			return mock(ClientRepository.class);
-		}
-
-		@Bean
-		public EndSessionEndpoint endSessionEndpoint() {
-			return new EndSessionEndpoint(new Issuer("http://example.com"), clientRepository());
+		public CheckSessionIframe endSessionEndpoint() {
+			return new CheckSessionIframe();
 		}
 
 	}

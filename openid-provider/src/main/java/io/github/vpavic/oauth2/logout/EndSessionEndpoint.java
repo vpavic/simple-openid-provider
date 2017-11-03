@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.endsession;
+package io.github.vpavic.oauth2.logout;
 
 import java.net.URI;
 import java.util.Collections;
