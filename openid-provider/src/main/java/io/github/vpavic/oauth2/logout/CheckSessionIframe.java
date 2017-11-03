@@ -6,9 +6,10 @@ import java.util.Objects;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.text.StrSubstitutor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * Check session iframe endpoint implementation.
@@ -111,9 +112,12 @@ public class CheckSessionIframe {
 	}
 
 	@GetMapping
-	@ResponseBody
-	public String checkSession() {
-		return this.checkSessionIframe;
+	public ResponseEntity<String> checkSession() {
+		// @formatter:off
+		return ResponseEntity.ok()
+				.contentType(MediaType.TEXT_HTML)
+				.body(this.checkSessionIframe);
+		// @formatter:on
 	}
 
 }
