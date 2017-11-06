@@ -15,11 +15,13 @@ public final class ClaimHelper {
 
 	public static Set<String> resolveClaims(Scope scope, Map<Scope.Value, List<String>> scopeClaims) {
 		Set<String> claims = new HashSet<>();
-		for (Scope.Value scopeValue : scope) {
-			if (scopeValue instanceof OIDCScopeValue) {
-				claims.addAll(((OIDCScopeValue) scopeValue).getClaimNames());
+		for (OIDCScopeValue scopeValue : OIDCScopeValue.values()) {
+			if (scope.contains(scopeValue.getValue())) {
+				claims.addAll(scopeValue.getClaimNames());
 			}
-			if (scopeClaims.containsKey(scopeValue)) {
+		}
+		for (Scope.Value scopeValue : scopeClaims.keySet()) {
+			if (scope.contains(scopeValue)) {
 				claims.addAll(scopeClaims.get(scopeValue));
 			}
 		}
