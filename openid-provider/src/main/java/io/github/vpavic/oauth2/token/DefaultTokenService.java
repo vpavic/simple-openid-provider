@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import com.nimbusds.jose.JOSEException;
@@ -48,14 +50,17 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import io.github.vpavic.oauth2.claim.UserClaimsLoader;
+import io.github.vpavic.oauth2.claim.ClaimHelper;
+import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 public class DefaultTokenService implements TokenService {
 
-	private static final String SCOPE_CLAIM = "scope";
+	private static final String CLAIM_SCOPE = "scp";
 
-	private static final Scope DEFAULT_SCOPE = new Scope(OIDCScopeValue.OPENID);
+	private static final String CLAIM_CLIENT_ID = "cid";
+
+	private static final Scope SCOPE_OPENID = new Scope(OIDCScopeValue.OPENID);
 
 	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
 
@@ -63,32 +68,36 @@ public class DefaultTokenService implements TokenService {
 
 	private final JwkSetLoader jwkSetLoader;
 
-	private final UserClaimsLoader userClaimsLoader;
+	private final ClaimSource claimSource;
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
+	private Map<Scope.Value, String> resourceScopes = new HashMap<>();
 
 	private Duration accessTokenLifetime = Duration.ofMinutes(10);
+
+	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
+
+	private List<String> accessTokenSubjectClaims = new ArrayList<>();
 
 	private Duration refreshTokenLifetime = Duration.ZERO;
 
 	private Duration idTokenLifetime = Duration.ofMinutes(15);
 
-	private Map<Scope.Value, String> resourceScopes = new HashMap<>();
+	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
 	private boolean frontChannelLogoutEnabled;
 
-	public DefaultTokenService(Issuer issuer, JwkSetLoader jwkSetLoader, UserClaimsLoader userClaimsLoader,
+	public DefaultTokenService(Issuer issuer, JwkSetLoader jwkSetLoader, ClaimSource claimSource,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
-		Objects.requireNonNull(userClaimsLoader, "userClaimsLoader must not be null");
+		Objects.requireNonNull(claimSource, "claimSource must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 
 		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
-		this.userClaimsLoader = userClaimsLoader;
+		this.claimSource = claimSource;
 		this.refreshTokenStore = refreshTokenStore;
 	}
 
@@ -115,8 +124,9 @@ public class DefaultTokenService implements TokenService {
 		Date expirationTime = Date.from(now.plus(this.accessTokenLifetime));
 		Date issueTime = Date.from(now);
 		JWTID jwtId = new JWTID(UUID.randomUUID().toString());
-		UserInfo userInfo = this.userClaimsLoader.load(subject, DEFAULT_SCOPE);
-		userInfo.setClaim(SCOPE_CLAIM, scope);
+		UserInfo userInfo = this.claimSource.load(subject, new HashSet<>(this.accessTokenSubjectClaims));
+		userInfo.setClaim(CLAIM_SCOPE, scope);
+		userInfo.setClaim(CLAIM_CLIENT_ID, client.getID());
 
 		try {
 			JWTAssertionDetails details = new JWTAssertionDetails(issuer, userInfo.getSubject(), audience,
@@ -175,8 +185,7 @@ public class DefaultTokenService implements TokenService {
 		ClientID clientId = client.getID();
 		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
 		Issuer issuer = new Issuer(this.issuer);
-		UserInfo userInfo = this.userClaimsLoader.load(subject,
-				idTokenRequest.hasAccessToken() ? DEFAULT_SCOPE : idTokenRequest.getScope());
+		UserInfo userInfo = this.claimSource.load(subject, resolveClaims(idTokenRequest));
 		List<Audience> audience = Audience.create(clientId.getValue());
 		Date expirationTime = Date.from(now.plus(this.idTokenLifetime));
 		Date issueTime = Date.from(now);
@@ -237,12 +246,20 @@ public class DefaultTokenService implements TokenService {
 		}
 	}
 
-	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
-		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
+	public void setResourceScopes(Map<Scope.Value, String> resourceScopes) {
+		this.resourceScopes = resourceScopes;
 	}
 
 	public void setAccessTokenLifetime(Duration accessTokenLifetime) {
 		this.accessTokenLifetime = accessTokenLifetime;
+	}
+
+	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
+		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
+	}
+
+	public void setAccessTokenSubjectClaims(List<String> accessTokenSubjectClaims) {
+		this.accessTokenSubjectClaims = accessTokenSubjectClaims;
 	}
 
 	public void setRefreshTokenLifetime(Duration refreshTokenLifetime) {
@@ -253,12 +270,18 @@ public class DefaultTokenService implements TokenService {
 		this.idTokenLifetime = idTokenLifetime;
 	}
 
+	public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {
+		this.scopeClaims = scopeClaims;
+	}
+
 	public void setFrontChannelLogoutEnabled(boolean frontChannelLogoutEnabled) {
 		this.frontChannelLogoutEnabled = frontChannelLogoutEnabled;
 	}
 
-	public void setResourceScopes(Map<Scope.Value, String> resourceScopes) {
-		this.resourceScopes = resourceScopes;
+	private Set<String> resolveClaims(IdTokenRequest idTokenRequest) {
+		Scope scope = (idTokenRequest.getAccessToken() != null) ? SCOPE_OPENID : idTokenRequest.getScope();
+
+		return ClaimHelper.resolveClaims(scope, this.scopeClaims);
 	}
 
 	private JWK resolveJwk(JWSAlgorithm algorithm) {

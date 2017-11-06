@@ -1,11 +1,12 @@
 package io.github.vpavic.oauth2.claim;
 
-import com.nimbusds.oauth2.sdk.Scope;
+import java.util.Set;
+
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 
-public interface UserClaimsLoader {
+public interface ClaimSource {
 
-	UserInfo load(Subject subject, Scope scope);
+	UserInfo load(Subject subject, Set<String> claims);
 
 }

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
-import io.github.vpavic.oauth2.claim.UserClaimsLoader;
+import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.token.AuthorizationCodeService;
@@ -37,31 +37,33 @@ public class CoreConfiguration {
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	private final UserClaimsLoader userClaimsLoader;
+	private final ClaimSource claimSource;
 
 	public CoreConfiguration(OpenIdProviderProperties properties, ObjectProvider<ClientRepository> clientRepository,
 			ObjectProvider<JwkSetLoader> jwkSetLoader, ObjectProvider<AuthenticationManager> authenticationManager,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
-			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<UserClaimsLoader> userClaimsLoader) {
+			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<ClaimSource> claimSource) {
 		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
 		this.jwkSetLoader = jwkSetLoader.getObject();
 		this.authenticationManager = authenticationManager.getObject();
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.refreshTokenStore = refreshTokenStore.getObject();
-		this.userClaimsLoader = userClaimsLoader.getObject();
+		this.claimSource = claimSource.getObject();
 	}
 
 	@Bean
 	public TokenService tokenService() {
 		DefaultTokenService tokenService = new DefaultTokenService(this.properties.getIssuer(), this.jwkSetLoader,
-				this.userClaimsLoader, this.refreshTokenStore);
-		tokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+				this.claimSource, this.refreshTokenStore);
+		tokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
 		tokenService.setAccessTokenLifetime(Duration.ofSeconds(this.properties.getAccessToken().getLifetime()));
+		tokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		tokenService.setAccessTokenSubjectClaims(this.properties.getAccessToken().getSubjectClaims());
 		tokenService.setRefreshTokenLifetime(Duration.ofSeconds(this.properties.getRefreshToken().getLifetime()));
 		tokenService.setIdTokenLifetime(Duration.ofSeconds(this.properties.getIdToken().getLifetime()));
+		tokenService.setScopeClaims(this.properties.getClaim().getScopeClaims());
 		tokenService.setFrontChannelLogoutEnabled(this.properties.getFrontChannelLogout().isEnabled());
-		tokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
 		return tokenService;
 	}
 
@@ -90,7 +92,9 @@ public class CoreConfiguration {
 
 	@Bean
 	public UserInfoEndpoint userInfoEndpoint() {
-		return new UserInfoEndpoint(this.userClaimsLoader);
+		UserInfoEndpoint endpoint = new UserInfoEndpoint(this.claimSource);
+		endpoint.setScopeClaims(this.properties.getClaim().getScopeClaims());
+		return endpoint;
 	}
 
 	@Bean

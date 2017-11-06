@@ -17,7 +17,7 @@ import org.springframework.util.FileCopyUtils;
 
 import io.github.vpavic.oauth2.EnableOpenIdProvider;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
-import io.github.vpavic.oauth2.claim.UserClaimsLoader;
+import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.jdbc.JdbcClientRepository;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
@@ -82,8 +82,8 @@ public class OAuth2Configuration {
 	}
 
 	@Bean
-	public UserClaimsLoader userClaimsLoader() {
-		return (subject, scope) -> new UserInfo(subject);
+	public ClaimSource claimSource() {
+		return (subject, claims) -> new UserInfo(subject);
 	}
 
 }

@@ -18,7 +18,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.UserInfoSecurityConfiguration;
-import io.github.vpavic.oauth2.claim.UserClaimsLoader;
+import io.github.vpavic.oauth2.claim.ClaimSource;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -61,7 +61,7 @@ public class UserInfoEndpointTests {
 
 		@Bean
 		public UserInfoEndpoint userInfoEndpoint() {
-			return new UserInfoEndpoint(mock(UserClaimsLoader.class));
+			return new UserInfoEndpoint(mock(ClaimSource.class));
 		}
 
 	}

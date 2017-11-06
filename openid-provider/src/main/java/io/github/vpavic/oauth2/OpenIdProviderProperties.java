@@ -39,9 +39,6 @@ public class OpenIdProviderProperties {
 	private final Registration registration = new Registration();
 
 	@Valid
-	private final IdToken idToken = new IdToken();
-
-	@Valid
 	private final Authorization authorization = new Authorization();
 
 	@Valid
@@ -52,6 +49,12 @@ public class OpenIdProviderProperties {
 
 	@Valid
 	private final RefreshToken refreshToken = new RefreshToken();
+
+	@Valid
+	private final IdToken idToken = new IdToken();
+
+	@Valid
+	private final Claim claim = new Claim();
 
 	@Valid
 	private final SessionManagement sessionManagement = new SessionManagement();
@@ -71,10 +74,6 @@ public class OpenIdProviderProperties {
 		return this.registration;
 	}
 
-	public IdToken getIdToken() {
-		return this.idToken;
-	}
-
 	public Authorization getAuthorization() {
 		return this.authorization;
 	}
@@ -89,6 +88,14 @@ public class OpenIdProviderProperties {
 
 	public RefreshToken getRefreshToken() {
 		return this.refreshToken;
+	}
+
+	public IdToken getIdToken() {
+		return this.idToken;
+	}
+
+	public Claim getClaim() {
+		return this.claim;
 	}
 
 	public SessionManagement getSessionManagement() {
@@ -157,25 +164,6 @@ public class OpenIdProviderProperties {
 	}
 
 	@Validated
-	public static class IdToken {
-
-		/**
-		 * The default ID Token lifetime, in seconds.
-		 */
-		@Range(min = 1, max = 3600)
-		private int lifetime = 900;
-
-		public int getLifetime() {
-			return this.lifetime;
-		}
-
-		public void setLifetime(int lifetime) {
-			this.lifetime = lifetime;
-		}
-
-	}
-
-	@Validated
 	public static class Authorization {
 
 		/**
@@ -229,7 +217,7 @@ public class OpenIdProviderProperties {
 	public static class AuthorizationCode {
 
 		/**
-		 * The default Authorization Code lifetime, in seconds.
+		 * Default Authorization Code lifetime, in seconds.
 		 */
 		@Range(min = 1, max = 600)
 		private int lifetime = 300;
@@ -248,12 +236,20 @@ public class OpenIdProviderProperties {
 	public static class AccessToken {
 
 		/**
-		 * The default Access Token lifetime, in seconds.
+		 * Default Access Token lifetime, in seconds.
 		 */
 		@Range(min = 1, max = 3600)
 		private int lifetime = 600;
 
+		/**
+		 * JWS algorithm used for signing Access Tokens.
+		 */
 		private JWSAlgorithm jwsAlgorithm = JWSAlgorithm.RS256;
+
+		/**
+		 * Comma-separated list of subject claims to be included in Access Tokens.
+		 */
+		private List<String> subjectClaims = new ArrayList<>();
 
 		public int getLifetime() {
 			return this.lifetime;
@@ -271,13 +267,21 @@ public class OpenIdProviderProperties {
 			this.jwsAlgorithm = jwsAlgorithm;
 		}
 
+		public List<String> getSubjectClaims() {
+			return this.subjectClaims;
+		}
+
+		public void setSubjectClaims(List<String> subjectClaims) {
+			this.subjectClaims = subjectClaims;
+		}
+
 	}
 
 	@Validated
 	public static class RefreshToken {
 
 		/**
-		 * The default Refresh Token lifetime, in seconds, zero implies no expiration.
+		 * Default Refresh Token lifetime, in seconds, zero implies no expiration.
 		 */
 		@Range(min = 0, max = Integer.MAX_VALUE)
 		private int lifetime;
@@ -301,6 +305,43 @@ public class OpenIdProviderProperties {
 
 		public void setUpdate(boolean update) {
 			this.update = update;
+		}
+
+	}
+
+	@Validated
+	public static class IdToken {
+
+		/**
+		 * Default ID Token lifetime, in seconds.
+		 */
+		@Range(min = 1, max = 3600)
+		private int lifetime = 900;
+
+		public int getLifetime() {
+			return this.lifetime;
+		}
+
+		public void setLifetime(int lifetime) {
+			this.lifetime = lifetime;
+		}
+
+	}
+
+	@Validated
+	public static class Claim {
+
+		/**
+		 * Mappings of scopes to custom claims.
+		 */
+		private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
+
+		public Map<Scope.Value, List<String>> getScopeClaims() {
+			return this.scopeClaims;
+		}
+
+		public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {
+			this.scopeClaims = scopeClaims;
 		}
 
 	}

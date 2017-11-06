@@ -101,8 +101,4 @@ public final class IdTokenRequest {
 		return this.code;
 	}
 
-	public boolean hasAccessToken() {
-		return this.accessToken != null;
-	}
-
 }

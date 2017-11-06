@@ -1,6 +1,10 @@
 package io.github.vpavic.oauth2.userinfo;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.Scope;
@@ -13,7 +17,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import io.github.vpavic.oauth2.claim.UserClaimsLoader;
+import io.github.vpavic.oauth2.claim.ClaimHelper;
+import io.github.vpavic.oauth2.claim.ClaimSource;
 
 /**
  * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.
@@ -28,12 +33,18 @@ public class UserInfoEndpoint {
 
 	private static final String SCOPE_CLAIM = "scope";
 
-	private final UserClaimsLoader userClaimsLoader;
+	private final ClaimSource claimSource;
 
-	public UserInfoEndpoint(UserClaimsLoader userClaimsLoader) {
-		Objects.requireNonNull(userClaimsLoader, "userClaimsLoader must not be null");
+	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
-		this.userClaimsLoader = userClaimsLoader;
+	public UserInfoEndpoint(ClaimSource claimSource) {
+		Objects.requireNonNull(claimSource, "claimSource must not be null");
+
+		this.claimSource = claimSource;
+	}
+
+	public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {
+		this.scopeClaims = scopeClaims;
 	}
 
 	@CrossOrigin
@@ -43,7 +54,8 @@ public class UserInfoEndpoint {
 
 		Subject subject = new Subject(claimsSet.getSubject());
 		Scope scope = Scope.parse(claimsSet.getStringListClaim(SCOPE_CLAIM));
-		UserInfo userInfo = this.userClaimsLoader.load(subject, scope);
+		Set<String> claims = ClaimHelper.resolveClaims(scope, this.scopeClaims);
+		UserInfo userInfo = this.claimSource.load(subject, claims);
 
 		// @formatter:off
 		return ResponseEntity.ok()
