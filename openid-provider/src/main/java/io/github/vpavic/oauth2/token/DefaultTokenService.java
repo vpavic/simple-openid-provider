@@ -130,7 +130,7 @@ public class DefaultTokenService implements TokenService {
 
 		try {
 			JWTAssertionDetails details = new JWTAssertionDetails(issuer, userInfo.getSubject(), audience,
-					expirationTime, null, issueTime, jwtId, userInfo.toJSONObject());
+					expirationTime, issueTime, issueTime, jwtId, userInfo.toJSONObject());
 			SignedJWT accessToken;
 
 			if (JWSAlgorithm.Family.HMAC_SHA.contains(this.accessTokenJwsAlgorithm)) {
