@@ -8,17 +8,16 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
-import io.github.vpavic.oauth2.userinfo.BearerAccessTokenAuthenticationFilter;
+import io.github.vpavic.oauth2.userinfo.UserInfoAuthenticationFilter;
 import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
 
 @Order(-1)
 @Configuration
 public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private final BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter;
+	private final UserInfoAuthenticationFilter userInfoAuthenticationFilter;
 
-	public UserInfoSecurityConfiguration(
-			ObjectProvider<BearerAccessTokenAuthenticationFilter> userInfoAuthenticationFilter) {
+	public UserInfoSecurityConfiguration(ObjectProvider<UserInfoAuthenticationFilter> userInfoAuthenticationFilter) {
 		this.userInfoAuthenticationFilter = userInfoAuthenticationFilter.getObject();
 	}
 

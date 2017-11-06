@@ -18,7 +18,7 @@ import io.github.vpavic.oauth2.token.RefreshTokenStore;
 import io.github.vpavic.oauth2.token.TokenEndpoint;
 import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.token.TokenService;
-import io.github.vpavic.oauth2.userinfo.BearerAccessTokenAuthenticationFilter;
+import io.github.vpavic.oauth2.userinfo.UserInfoAuthenticationFilter;
 import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
 
 @Configuration
@@ -98,9 +98,9 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
-		BearerAccessTokenAuthenticationFilter filter = new BearerAccessTokenAuthenticationFilter(
-				this.properties.getIssuer(), this.jwkSetLoader);
+	public UserInfoAuthenticationFilter userInfoAuthenticationFilter() {
+		UserInfoAuthenticationFilter filter = new UserInfoAuthenticationFilter(this.properties.getIssuer(),
+				this.jwkSetLoader);
 		filter.setJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
 		return filter;
 	}

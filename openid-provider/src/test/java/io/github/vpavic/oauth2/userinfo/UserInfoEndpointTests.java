@@ -55,8 +55,8 @@ public class UserInfoEndpointTests {
 	static class Config {
 
 		@Bean
-		public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
-			return mock(BearerAccessTokenAuthenticationFilter.class);
+		public UserInfoAuthenticationFilter userInfoAuthenticationFilter() {
+			return mock(UserInfoAuthenticationFilter.class);
 		}
 
 		@Bean
