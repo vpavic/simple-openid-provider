@@ -31,7 +31,7 @@ public class UserInfoEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/userinfo";
 
-	private static final String SCOPE_CLAIM = "scope";
+	public static final String CLAIM_SCOPE = "scp";
 
 	private final ClaimSource claimSource;
 
@@ -53,7 +53,7 @@ public class UserInfoEndpoint {
 		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
 
 		Subject subject = new Subject(claimsSet.getSubject());
-		Scope scope = Scope.parse(claimsSet.getStringListClaim(SCOPE_CLAIM));
+		Scope scope = Scope.parse(claimsSet.getStringListClaim(CLAIM_SCOPE));
 		Set<String> claims = ClaimHelper.resolveClaims(scope, this.scopeClaims);
 		UserInfo userInfo = this.claimSource.load(subject, claims);
 

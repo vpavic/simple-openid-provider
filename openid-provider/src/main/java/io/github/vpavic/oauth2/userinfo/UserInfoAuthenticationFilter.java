@@ -33,8 +33,6 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 public class UserInfoAuthenticationFilter extends OncePerRequestFilter {
 
-	private static final String CLAIM_SCOPE = "scp";
-
 	private static final Logger logger = LoggerFactory.getLogger(UserInfoAuthenticationFilter.class);
 
 	private final Issuer issuer;
@@ -76,7 +74,7 @@ public class UserInfoAuthenticationFilter extends OncePerRequestFilter {
 				throw new Exception("Access token has expired");
 			}
 
-			List<String> scopes = claimsSet.getStringListClaim(CLAIM_SCOPE);
+			List<String> scopes = claimsSet.getStringListClaim(UserInfoEndpoint.CLAIM_SCOPE);
 
 			if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
 				throw new Exception("Invalid scope");
