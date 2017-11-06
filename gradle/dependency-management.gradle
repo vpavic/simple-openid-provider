@@ -1,7 +1,5 @@
 apply plugin: 'io.spring.dependency-management'
 
-ext['hazelcast.version'] = '3.9'
-
 dependencyManagement {
 	dependencies {
 		dependency 'com.nimbusds:nimbus-jose-jwt:5.1'

@@ -51,14 +51,15 @@ public class SecurityConfiguration {
 	@Bean
 	public UserDetailsService userDetailsService() {
 		SecurityProperties.User userProperties = this.properties.getUser();
+		String password = userProperties.getPassword();
 
 		if (userProperties.isDefaultPassword()) {
-			logger.info(String.format("Using default security password:%n%n%s%n", userProperties.getPassword()));
+			logger.info(String.format("Using default security password:%n%n%s%n", password));
 		}
 
 		// @formatter:off
 		UserDetails user = User.withUsername(userProperties.getName())
-				.password(userProperties.getPassword())
+				.password("{noop}" + password)
 				.roles("USER")
 				.build();
 		// @formatter:on
