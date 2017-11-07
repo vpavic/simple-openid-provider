@@ -192,7 +192,10 @@ public class AuthorizationEndpoint {
 			URI redirectUri = e.getRedirectionURI();
 
 			if (clientId == null || redirectUri == null) {
-				throw new AuthorizationRequestException(e.getErrorObject());
+				ErrorObject error = e.getErrorObject();
+
+				throw new ResponseStatusException(HttpStatus.valueOf(error.getHTTPStatusCode()),
+						error.getDescription());
 			}
 
 			OIDCClientInformation client = resolveClient(clientId);
@@ -208,9 +211,7 @@ public class AuthorizationEndpoint {
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 
 		if (client == null) {
-			ErrorObject error = OAuth2Error.INVALID_REQUEST
-					.setDescription("Invalid \"client_id\" parameter: " + clientId);
-			throw new AuthorizationRequestException(error);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid \"client_id\" parameter: " + clientId);
 		}
 
 		return client;
@@ -220,9 +221,8 @@ public class AuthorizationEndpoint {
 		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectUri)) {
-			ErrorObject error = OAuth2Error.INVALID_REQUEST
-					.setDescription("Invalid \"redirect_uri\" parameter: " + redirectUri);
-			throw new AuthorizationRequestException(error);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Invalid \"redirect_uri\" parameter: " + redirectUri);
 		}
 	}
 
