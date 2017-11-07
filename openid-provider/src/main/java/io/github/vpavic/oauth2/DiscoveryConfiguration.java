@@ -27,16 +27,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
-import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
-import io.github.vpavic.oauth2.discovery.DiscoveryEndpoint;
-import io.github.vpavic.oauth2.discovery.JwkSetEndpoint;
+import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
+import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
+import io.github.vpavic.oauth2.endpoint.DiscoveryEndpoint;
+import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
+import io.github.vpavic.oauth2.endpoint.JwkSetEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
+import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
-import io.github.vpavic.oauth2.logout.CheckSessionIframe;
-import io.github.vpavic.oauth2.logout.EndSessionEndpoint;
-import io.github.vpavic.oauth2.token.TokenEndpoint;
-import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
-import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
 
 @Configuration
 @Import(DiscoverySecurityConfiguration.class)

@@ -7,8 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
-import io.github.vpavic.oauth2.token.TokenEndpoint;
-import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
 
 @Order(0)
 @Configuration

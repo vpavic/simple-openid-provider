@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.userinfo;
+package io.github.vpavic.oauth2.endpoint;
 
 import java.util.HashMap;
 import java.util.List;

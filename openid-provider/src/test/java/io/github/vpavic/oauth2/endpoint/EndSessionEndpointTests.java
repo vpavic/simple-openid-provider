@@ -1,5 +1,6 @@
-package io.github.vpavic.oauth2.userinfo;
+package io.github.vpavic.oauth2.endpoint;
 
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -7,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -17,21 +17,22 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
-import io.github.vpavic.oauth2.UserInfoSecurityConfiguration;
-import io.github.vpavic.oauth2.claim.ClaimSource;
+import io.github.vpavic.oauth2.client.ClientRepository;
 
 import static org.mockito.Mockito.mock;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link UserInfoEndpoint}.
+ * Tests for {@link EndSessionEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class UserInfoEndpointTests {
+public class EndSessionEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -40,28 +41,28 @@ public class UserInfoEndpointTests {
 
 	@Before
 	public void setUp() {
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).apply(springSecurity()).build();
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
-	public void test() {
-		// TODO
+	public void getEndSessionEndpoint() throws Exception {
+		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk())
+				.andExpect(forwardedUrl("/logout"));
 	}
 
 	@Configuration
 	@EnableWebMvc
-	@EnableWebSecurity
-	@Import({ OpenIdProviderWebMvcConfiguration.class, UserInfoSecurityConfiguration.class })
+	@Import(OpenIdProviderWebMvcConfiguration.class)
 	static class Config {
 
 		@Bean
-		public UserInfoAuthenticationFilter userInfoAuthenticationFilter() {
-			return mock(UserInfoAuthenticationFilter.class);
+		public ClientRepository clientRepository() {
+			return mock(ClientRepository.class);
 		}
 
 		@Bean
-		public UserInfoEndpoint userInfoEndpoint() {
-			return new UserInfoEndpoint(mock(ClaimSource.class));
+		public EndSessionEndpoint endSessionEndpoint() {
+			return new EndSessionEndpoint(new Issuer("http://example.com"), clientRepository());
 		}
 
 	}

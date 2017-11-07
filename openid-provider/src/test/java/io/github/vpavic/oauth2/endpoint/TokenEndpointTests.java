@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.token;
+package io.github.vpavic.oauth2.endpoint;
 
 import java.net.URI;
 import java.time.Instant;
@@ -64,6 +64,11 @@ import io.github.vpavic.oauth2.TokenSecurityConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.IdTokenRequest;
+import io.github.vpavic.oauth2.token.RefreshTokenContext;
+import io.github.vpavic.oauth2.token.RefreshTokenStore;
+import io.github.vpavic.oauth2.token.TokenService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

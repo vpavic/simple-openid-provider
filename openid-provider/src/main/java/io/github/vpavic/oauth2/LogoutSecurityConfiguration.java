@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
-import io.github.vpavic.oauth2.logout.CheckSessionIframe;
+import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 
 @Order(-3)
 @Configuration

@@ -16,8 +16,8 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import io.github.vpavic.oauth2.LogoutConfiguration.LogoutCondition;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.logout.CheckSessionIframe;
-import io.github.vpavic.oauth2.logout.EndSessionEndpoint;
+import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
+import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
 
 @Configuration
 @Conditional(LogoutCondition.class)

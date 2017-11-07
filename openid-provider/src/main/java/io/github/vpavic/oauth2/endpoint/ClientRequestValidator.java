@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.token;
+package io.github.vpavic.oauth2.endpoint;
 
 import java.security.PublicKey;
 import java.util.Collections;

@@ -1,6 +1,5 @@
-package io.github.vpavic.oauth2.token;
+package io.github.vpavic.oauth2.endpoint;
 
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,22 +16,23 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import io.github.vpavic.oauth2.ClientRegistrationSecurityConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
-import io.github.vpavic.oauth2.TokenSecurityConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.client.ClientService;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 /**
- * Tests for {@link TokenRevocationEndpoint}.
+ * Tests for {@link ClientRegistrationEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class TokenRevocationEndpointTests {
+public class ClientRegistrationEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -52,13 +52,12 @@ public class TokenRevocationEndpointTests {
 	@Configuration
 	@EnableWebMvc
 	@EnableWebSecurity
-	@Import({ OpenIdProviderWebMvcConfiguration.class, TokenSecurityConfiguration.class })
+	@Import({ OpenIdProviderWebMvcConfiguration.class, ClientRegistrationSecurityConfiguration.class })
 	static class Config {
 
 		@Bean
-		public TokenRevocationEndpoint tokenRevocationEndpoint() {
-			return new TokenRevocationEndpoint(new Issuer("http://example.com"), mock(ClientRepository.class),
-					mock(RefreshTokenStore.class));
+		public ClientRegistrationEndpoint clientRegistrationEndpoint() {
+			return new ClientRegistrationEndpoint(mock(ClientRepository.class), mock(ClientService.class));
 		}
 
 	}

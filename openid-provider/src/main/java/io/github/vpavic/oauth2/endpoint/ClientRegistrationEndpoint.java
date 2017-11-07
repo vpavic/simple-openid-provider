@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.client;
+package io.github.vpavic.oauth2.endpoint;
 
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +28,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.client.ClientService;
 
 @RequestMapping(path = ClientRegistrationEndpoint.PATH_MAPPING)
 public class ClientRegistrationEndpoint {

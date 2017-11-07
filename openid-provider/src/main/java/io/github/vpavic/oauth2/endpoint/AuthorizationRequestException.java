@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.authorization;
+package io.github.vpavic.oauth2.endpoint;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import org.springframework.http.HttpStatus;

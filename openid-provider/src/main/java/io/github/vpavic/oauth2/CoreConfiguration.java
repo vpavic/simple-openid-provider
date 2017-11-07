@@ -8,18 +8,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 
-import io.github.vpavic.oauth2.authorization.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
+import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.RefreshTokenStore;
-import io.github.vpavic.oauth2.token.TokenEndpoint;
-import io.github.vpavic.oauth2.token.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.token.TokenService;
 import io.github.vpavic.oauth2.userinfo.UserInfoAuthenticationFilter;
-import io.github.vpavic.oauth2.userinfo.UserInfoEndpoint;
 
 @Configuration
 @Import({ TokenSecurityConfiguration.class, UserInfoSecurityConfiguration.class })

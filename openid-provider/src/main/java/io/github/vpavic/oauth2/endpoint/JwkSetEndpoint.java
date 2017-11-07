@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.discovery;
+package io.github.vpavic.oauth2.endpoint;
 
 import java.util.Objects;
 

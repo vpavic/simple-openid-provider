@@ -1,7 +1,10 @@
-package io.github.vpavic.oauth2.client;
+package io.github.vpavic.oauth2.endpoint;
 
+import com.nimbusds.jose.jwk.JWKSet;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,26 +19,37 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.ClientRegistrationSecurityConfiguration;
+import io.github.vpavic.oauth2.DiscoverySecurityConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link ClientRegistrationEndpoint}.
+ * Tests for {@link JwkSetEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class ClientRegistrationEndpointTests {
+public class JwkSetEndpointTests {
+
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
 	private WebApplicationContext wac;
 
 	private MockMvc mvc;
+
+	@Autowired
+	private JwkSetLoader jwkSetLoader;
 
 	@Before
 	public void setUp() {
@@ -43,19 +57,26 @@ public class ClientRegistrationEndpointTests {
 	}
 
 	@Test
-	public void test() {
-		// TODO
+	public void getKeys() throws Exception {
+		given(this.jwkSetLoader.load()).willReturn(new JWKSet());
+
+		this.mvc.perform(get("/oauth2/keys")).andExpect(status().isOk()).andExpect(jsonPath("$.keys").isEmpty());
 	}
 
 	@Configuration
 	@EnableWebMvc
 	@EnableWebSecurity
-	@Import({ OpenIdProviderWebMvcConfiguration.class, ClientRegistrationSecurityConfiguration.class })
+	@Import({ OpenIdProviderWebMvcConfiguration.class, DiscoverySecurityConfiguration.class })
 	static class Config {
 
 		@Bean
-		public ClientRegistrationEndpoint clientRegistrationEndpoint() {
-			return new ClientRegistrationEndpoint(mock(ClientRepository.class), mock(ClientService.class));
+		public JwkSetLoader jwkSetLoader() {
+			return mock(JwkSetLoader.class);
+		}
+
+		@Bean
+		public JwkSetEndpoint jwkSetEndpoint() {
+			return new JwkSetEndpoint(jwkSetLoader());
 		}
 
 	}

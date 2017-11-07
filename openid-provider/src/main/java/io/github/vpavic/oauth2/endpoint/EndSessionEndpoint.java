@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.logout;
+package io.github.vpavic.oauth2.endpoint;
 
 import java.net.URI;
 import java.util.ArrayList;

@@ -7,8 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
-import io.github.vpavic.oauth2.discovery.DiscoveryEndpoint;
-import io.github.vpavic.oauth2.discovery.JwkSetEndpoint;
+import io.github.vpavic.oauth2.endpoint.DiscoveryEndpoint;
+import io.github.vpavic.oauth2.endpoint.JwkSetEndpoint;
 
 @Order(-4)
 @Configuration

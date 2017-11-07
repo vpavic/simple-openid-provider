@@ -5,10 +5,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import io.github.vpavic.oauth2.client.ClientRegistrationEndpoint;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientService;
 import io.github.vpavic.oauth2.client.DefaultClientService;
+import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
 
 @Configuration
 @Import(ClientRegistrationSecurityConfiguration.class)

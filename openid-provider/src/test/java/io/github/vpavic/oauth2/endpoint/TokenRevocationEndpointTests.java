@@ -1,10 +1,8 @@
-package io.github.vpavic.oauth2.discovery;
+package io.github.vpavic.oauth2.endpoint;
 
-import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,37 +17,28 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.DiscoverySecurityConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
-import io.github.vpavic.oauth2.jwk.JwkSetLoader;
+import io.github.vpavic.oauth2.TokenSecurityConfiguration;
+import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.token.RefreshTokenStore;
 
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link JwkSetEndpoint}.
+ * Tests for {@link TokenRevocationEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class JwkSetEndpointTests {
-
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+public class TokenRevocationEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
 
 	private MockMvc mvc;
-
-	@Autowired
-	private JwkSetLoader jwkSetLoader;
 
 	@Before
 	public void setUp() {
@@ -57,26 +46,20 @@ public class JwkSetEndpointTests {
 	}
 
 	@Test
-	public void getKeys() throws Exception {
-		given(this.jwkSetLoader.load()).willReturn(new JWKSet());
-
-		this.mvc.perform(get("/oauth2/keys")).andExpect(status().isOk()).andExpect(jsonPath("$.keys").isEmpty());
+	public void test() {
+		// TODO
 	}
 
 	@Configuration
 	@EnableWebMvc
 	@EnableWebSecurity
-	@Import({ OpenIdProviderWebMvcConfiguration.class, DiscoverySecurityConfiguration.class })
+	@Import({ OpenIdProviderWebMvcConfiguration.class, TokenSecurityConfiguration.class })
 	static class Config {
 
 		@Bean
-		public JwkSetLoader jwkSetLoader() {
-			return mock(JwkSetLoader.class);
-		}
-
-		@Bean
-		public JwkSetEndpoint jwkSetEndpoint() {
-			return new JwkSetEndpoint(jwkSetLoader());
+		public TokenRevocationEndpoint tokenRevocationEndpoint() {
+			return new TokenRevocationEndpoint(new Issuer("http://example.com"), mock(ClientRepository.class),
+					mock(RefreshTokenStore.class));
 		}
 
 	}
