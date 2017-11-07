@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import io.github.vpavic.oauth2.authentication.ClientRequestValidator;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.token.RefreshTokenStore;
 

@@ -18,8 +18,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.UserInfoSecurityConfiguration;
+import io.github.vpavic.oauth2.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.oauth2.claim.ClaimSource;
-import io.github.vpavic.oauth2.userinfo.UserInfoAuthenticationFilter;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -56,8 +56,8 @@ public class UserInfoEndpointTests {
 	static class Config {
 
 		@Bean
-		public UserInfoAuthenticationFilter userInfoAuthenticationFilter() {
-			return mock(UserInfoAuthenticationFilter.class);
+		public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
+			return mock(BearerAccessTokenAuthenticationFilter.class);
 		}
 
 		@Bean

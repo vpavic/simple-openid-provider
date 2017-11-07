@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.userinfo;
+package io.github.vpavic.oauth2.authentication;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -32,17 +32,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
-public class UserInfoAuthenticationFilter extends OncePerRequestFilter {
+public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
-	private static final Logger logger = LoggerFactory.getLogger(UserInfoAuthenticationFilter.class);
+	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
 
 	private final Issuer issuer;
 
 	private final JwkSetLoader jwkSetLoader;
 
-	private JWSAlgorithm jwsAlgorithm = JWSAlgorithm.RS256;
+	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
 
-	public UserInfoAuthenticationFilter(Issuer issuer, JwkSetLoader jwkSetLoader) {
+	public BearerAccessTokenAuthenticationFilter(Issuer issuer, JwkSetLoader jwkSetLoader) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 
@@ -58,7 +58,7 @@ public class UserInfoAuthenticationFilter extends OncePerRequestFilter {
 			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
 
 			ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
-			JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(this.jwsAlgorithm,
+			JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(this.accessTokenJwsAlgorithm,
 					(jwkSelector, context) -> jwkSelector.select(this.jwkSetLoader.load()));
 			jwtProcessor.setJWSKeySelector(keySelector);
 			JWTClaimsSet claimsSet = jwtProcessor.process(userInfoRequest.getAccessToken().getValue(), null);
@@ -94,8 +94,8 @@ public class UserInfoAuthenticationFilter extends OncePerRequestFilter {
 		filterChain.doFilter(request, response);
 	}
 
-	public void setJwsAlgorithm(JWSAlgorithm jwsAlgorithm) {
-		this.jwsAlgorithm = jwsAlgorithm;
+	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
+		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
 	}
 
 }

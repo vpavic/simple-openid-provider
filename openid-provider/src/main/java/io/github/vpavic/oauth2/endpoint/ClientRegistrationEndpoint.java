@@ -45,8 +45,7 @@ public class ClientRegistrationEndpoint {
 
 	private BearerAccessToken apiAccessToken;
 
-	public ClientRegistrationEndpoint(ClientRepository clientRepository,
-			ClientService clientService) {
+	public ClientRegistrationEndpoint(ClientRepository clientRepository, ClientService clientService) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(clientService, "clientService must not be null");
 

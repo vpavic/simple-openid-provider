@@ -8,17 +8,18 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
+import io.github.vpavic.oauth2.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
-import io.github.vpavic.oauth2.userinfo.UserInfoAuthenticationFilter;
 
 @Order(-1)
 @Configuration
 public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private final UserInfoAuthenticationFilter userInfoAuthenticationFilter;
+	private final BearerAccessTokenAuthenticationFilter bearerAccessTokenAuthenticationFilter;
 
-	public UserInfoSecurityConfiguration(ObjectProvider<UserInfoAuthenticationFilter> userInfoAuthenticationFilter) {
-		this.userInfoAuthenticationFilter = userInfoAuthenticationFilter.getObject();
+	public UserInfoSecurityConfiguration(
+			ObjectProvider<BearerAccessTokenAuthenticationFilter> userInfoAuthenticationFilter) {
+		this.bearerAccessTokenAuthenticationFilter = userInfoAuthenticationFilter.getObject();
 	}
 
 	@Override
@@ -36,7 +37,7 @@ public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter 
 			.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
-			.addFilterBefore(this.userInfoAuthenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
+			.addFilterBefore(this.bearerAccessTokenAuthenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
 		// @formatter:on
 	}
 
