@@ -63,7 +63,7 @@ public class EndSessionEndpoint {
 
 		if (httpRequest.getQuery() != null) {
 			LogoutRequest logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
-			model.put("redirectURI", logoutRequest.getPostLogoutRedirectionURI());
+			model.put("redirectUri", logoutRequest.getPostLogoutRedirectionURI());
 			model.put("state", logoutRequest.getState());
 		}
 
@@ -160,7 +160,7 @@ public class EndSessionEndpoint {
 		sb.append("<body>");
 		for (String frontChannelLogoutUri : frontChannelLogoutUris) {
 			sb.append("<iframe style=\"display:block; visibility:hidden\" src=\"").append(frontChannelLogoutUri)
-					.append("></iframe>");
+					.append("\"></iframe>");
 		}
 		sb.append("</body>");
 		sb.append("</html>");
