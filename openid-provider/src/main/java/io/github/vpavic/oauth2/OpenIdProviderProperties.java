@@ -2,7 +2,6 @@ package io.github.vpavic.oauth2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,10 +177,10 @@ public class OpenIdProviderProperties {
 		private Map<Scope.Value, String> resourceScopes = new HashMap<>();
 
 		/**
-		 * Comma-separated list of supported ACRs.
+		 * Mappings of supported levels of assurance to ACRs.
 		 */
 		@NotEmpty
-		private List<ACR> acrs = Collections.singletonList(new ACR("1"));
+		private Map<Integer, ACR> acrs = defaultAcrs();
 
 		public List<Scope.Value> getOpenidScopes() {
 			return this.openidScopes;
@@ -195,11 +194,11 @@ public class OpenIdProviderProperties {
 			return this.resourceScopes;
 		}
 
-		public List<ACR> getAcrs() {
+		public Map<Integer, ACR> getAcrs() {
 			return this.acrs;
 		}
 
-		public void setAcrs(List<ACR> acrs) {
+		public void setAcrs(Map<Integer, ACR> acrs) {
 			this.acrs = acrs;
 		}
 
@@ -209,6 +208,12 @@ public class OpenIdProviderProperties {
 			supportedScopes.addAll(this.resourceScopes.keySet());
 
 			return supportedScopes;
+		}
+
+		private static Map<Integer, ACR> defaultAcrs() {
+			Map<Integer, ACR> acrs = new HashMap<>();
+			acrs.put(1, new ACR("1"));
+			return acrs;
 		}
 
 	}

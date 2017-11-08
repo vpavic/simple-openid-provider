@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -166,7 +167,7 @@ public class DiscoveryConfiguration {
 	}
 
 	private List<ACR> acrs() {
-		return this.properties.getAuthorization().getAcrs();
+		return new ArrayList<>(this.properties.getAuthorization().getAcrs().values());
 	}
 
 	private List<ClientAuthenticationMethod> tokenEndpointAuthMethods() {

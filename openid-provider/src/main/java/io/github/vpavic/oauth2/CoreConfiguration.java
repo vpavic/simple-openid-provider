@@ -71,7 +71,7 @@ public class CoreConfiguration {
 	public AuthorizationEndpoint authorizationEndpoint() {
 		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository,
 				this.authorizationCodeService, tokenService());
-		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(0));
+		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(1));
 		authorizationEndpoint.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
 		authorizationEndpoint.setSupportedScopes(this.properties.getAuthorization().getSupportedScopes());
 		return authorizationEndpoint;
