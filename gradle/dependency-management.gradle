@@ -3,7 +3,7 @@ apply plugin: 'io.spring.dependency-management'
 dependencyManagement {
 	dependencies {
 		dependency 'com.nimbusds:nimbus-jose-jwt:5.1'
-		dependency 'com.nimbusds:oauth2-oidc-sdk:5.41'
+		dependency 'com.nimbusds:oauth2-oidc-sdk:5.41.1'
 		dependency 'org.apache.commons:commons-text:1.1'
 		dependency 'org.bouncycastle:bcprov-jdk15on:1.58'
 		dependency 'org.springframework.security:spring-security-jwt:1.0.8.RELEASE'
