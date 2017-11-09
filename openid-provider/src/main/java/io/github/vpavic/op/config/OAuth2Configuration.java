@@ -19,12 +19,12 @@ import io.github.vpavic.oauth2.EnableOpenIdProvider;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.client.jdbc.JdbcClientRepository;
-import io.github.vpavic.oauth2.code.AuthorizationCodeService;
-import io.github.vpavic.oauth2.code.hazelcast.HazelcastAuthorizationCodeService;
+import io.github.vpavic.oauth2.client.JdbcClientRepository;
+import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.code.HazelcastAuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.refresh.JdbcRefreshTokenStore;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
-import io.github.vpavic.oauth2.token.RefreshTokenStore;
-import io.github.vpavic.oauth2.token.jdbc.JdbcRefreshTokenStore;
 
 @Configuration
 @EnableOpenIdProvider

@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.grant;
+package io.github.vpavic.oauth2.grant.refresh;
 
 import java.util.Objects;
 
@@ -16,10 +16,9 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.oauth2.token.RefreshTokenContext;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
-import io.github.vpavic.oauth2.token.RefreshTokenStore;
 import io.github.vpavic.oauth2.token.TokenService;
 
 public class RefreshTokenGrantHandler implements GrantHandler {

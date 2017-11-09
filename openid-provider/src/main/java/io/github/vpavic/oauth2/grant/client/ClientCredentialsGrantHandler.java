@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.grant;
+package io.github.vpavic.oauth2.grant.client;
 
 import java.util.Objects;
 
@@ -15,6 +15,7 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
 

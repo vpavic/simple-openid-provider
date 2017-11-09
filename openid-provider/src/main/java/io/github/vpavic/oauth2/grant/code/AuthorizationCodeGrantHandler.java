@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.grant;
+package io.github.vpavic.oauth2.grant.code;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -28,8 +28,7 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.code.AuthorizationCodeContext;
-import io.github.vpavic.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
@@ -55,8 +54,8 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 	}
 
 	@Override
-	public Tokens grant(AuthorizationGrant authorizationGrant, Scope scope,
-			ClientAuthentication clientAuthentication) throws GeneralException {
+	public Tokens grant(AuthorizationGrant authorizationGrant, Scope scope, ClientAuthentication clientAuthentication)
+			throws GeneralException {
 		if (!(authorizationGrant instanceof AuthorizationCodeGrant)) {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}

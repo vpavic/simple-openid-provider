@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.authentication.ClientRequestValidator;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.token.RefreshTokenStore;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 
 /**
  * OAuth 2.0 compatible Token Revocation Endpoint implementation.

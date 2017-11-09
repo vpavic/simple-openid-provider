@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.code.hazelcast;
+package io.github.vpavic.oauth2.grant.code;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -9,9 +9,6 @@ import com.hazelcast.core.IMap;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-
-import io.github.vpavic.oauth2.code.AuthorizationCodeContext;
-import io.github.vpavic.oauth2.code.AuthorizationCodeService;
 
 public class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
 

@@ -20,7 +20,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.TokenSecurityConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.token.RefreshTokenStore;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;

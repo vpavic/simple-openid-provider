@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2.grant;
+package io.github.vpavic.oauth2.grant.password;
 
 import java.util.Objects;
 
@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;

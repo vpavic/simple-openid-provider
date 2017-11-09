@@ -52,6 +52,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import io.github.vpavic.oauth2.claim.ClaimHelper;
 import io.github.vpavic.oauth2.claim.ClaimSource;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenContext;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 public class DefaultTokenService implements TokenService {

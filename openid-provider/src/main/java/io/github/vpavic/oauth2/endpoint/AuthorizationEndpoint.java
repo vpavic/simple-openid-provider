@@ -52,8 +52,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.code.AuthorizationCodeContext;
-import io.github.vpavic.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
+import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;

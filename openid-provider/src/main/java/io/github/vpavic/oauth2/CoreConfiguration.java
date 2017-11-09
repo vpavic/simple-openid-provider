@@ -17,19 +17,19 @@ import org.springframework.security.authentication.AuthenticationManager;
 import io.github.vpavic.oauth2.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
-import io.github.vpavic.oauth2.grant.AuthorizationCodeGrantHandler;
-import io.github.vpavic.oauth2.grant.ClientCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.GrantHandler;
-import io.github.vpavic.oauth2.grant.RefreshTokenGrantHandler;
-import io.github.vpavic.oauth2.grant.ResourceOwnerPasswordCredentialsGrantHandler;
+import io.github.vpavic.oauth2.grant.client.ClientCredentialsGrantHandler;
+import io.github.vpavic.oauth2.grant.code.AuthorizationCodeGrantHandler;
+import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.password.ResourceOwnerPasswordCredentialsGrantHandler;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.token.DefaultTokenService;
-import io.github.vpavic.oauth2.token.RefreshTokenStore;
 import io.github.vpavic.oauth2.token.TokenService;
 
 @Configuration
