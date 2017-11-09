@@ -10,12 +10,13 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.util.FileCopyUtils;
 
-import io.github.vpavic.oauth2.EnableOpenIdProvider;
+import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -27,7 +28,7 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 @Configuration
-@EnableOpenIdProvider
+@Import(OpenIdProviderConfiguration.class)
 public class OAuth2Configuration {
 
 	private static final String JWK_SET_LOCATION = "classpath:jwks.json";
