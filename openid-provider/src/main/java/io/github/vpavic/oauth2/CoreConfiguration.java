@@ -1,7 +1,13 @@
 package io.github.vpavic.oauth2;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
+import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
+import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +22,11 @@ import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
+import io.github.vpavic.oauth2.grant.AuthorizationCodeGrantHandler;
+import io.github.vpavic.oauth2.grant.ClientCredentialsGrantHandler;
+import io.github.vpavic.oauth2.grant.GrantHandler;
+import io.github.vpavic.oauth2.grant.RefreshTokenGrantHandler;
+import io.github.vpavic.oauth2.grant.ResourceOwnerPasswordCredentialsGrantHandler;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.RefreshTokenStore;
@@ -79,10 +90,23 @@ public class CoreConfiguration {
 
 	@Bean
 	public TokenEndpoint tokenEndpoint() {
-		TokenEndpoint endpoint = new TokenEndpoint(this.properties.getIssuer(), this.clientRepository,
-				this.authorizationCodeService, tokenService(), this.authenticationManager, this.refreshTokenStore);
-		endpoint.setUpdateRefreshToken(this.properties.getRefreshToken().isUpdate());
-		return endpoint;
+		AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
+				this.clientRepository, tokenService(), this.authorizationCodeService);
+		ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
+				this.clientRepository, tokenService(), this.authenticationManager);
+		ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
+				this.clientRepository, tokenService());
+		RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(this.clientRepository,
+				tokenService(), this.refreshTokenStore);
+		refreshTokenGrantHandler.setUpdateRefreshToken(this.properties.getRefreshToken().isUpdate());
+
+		Map<Class<?>, GrantHandler> grantHandlers = new HashMap<>();
+		grantHandlers.put(AuthorizationCodeGrant.class, authorizationCodeGrantHandler);
+		grantHandlers.put(ResourceOwnerPasswordCredentialsGrant.class, passwordCredentialsGrantHandler);
+		grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
+		grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
+
+		return new TokenEndpoint(grantHandlers, this.properties.getIssuer(), this.clientRepository);
 	}
 
 	@Bean

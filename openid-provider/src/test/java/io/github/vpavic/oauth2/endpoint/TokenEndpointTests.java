@@ -4,6 +4,8 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -64,6 +66,11 @@ import io.github.vpavic.oauth2.TokenSecurityConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.AuthorizationCodeGrantHandler;
+import io.github.vpavic.oauth2.grant.ClientCredentialsGrantHandler;
+import io.github.vpavic.oauth2.grant.GrantHandler;
+import io.github.vpavic.oauth2.grant.RefreshTokenGrantHandler;
+import io.github.vpavic.oauth2.grant.ResourceOwnerPasswordCredentialsGrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.RefreshTokenContext;
@@ -390,8 +397,22 @@ public class TokenEndpointTests {
 
 		@Bean
 		public TokenEndpoint tokenEndpoint() {
-			return new TokenEndpoint(new Issuer("http://example.com"), clientRepository(), authorizationCodeService(),
-					tokenService(), authenticationManager(), refreshTokenStore());
+			AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
+					clientRepository(), tokenService(), authorizationCodeService());
+			ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
+					clientRepository(), tokenService(), authenticationManager());
+			ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
+					clientRepository(), tokenService());
+			RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(clientRepository(),
+					tokenService(), refreshTokenStore());
+
+			Map<Class<?>, GrantHandler> grantHandlers = new HashMap<>();
+			grantHandlers.put(AuthorizationCodeGrant.class, authorizationCodeGrantHandler);
+			grantHandlers.put(ResourceOwnerPasswordCredentialsGrant.class, passwordCredentialsGrantHandler);
+			grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
+			grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
+
+			return new TokenEndpoint(grantHandlers, new Issuer("http://example.com"), clientRepository());
 		}
 
 	}
