@@ -112,22 +112,19 @@ public class TokenEndpoint {
 		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
 		this.clientRequestValidator.validateRequest(tokenRequest);
 		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
-		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
-		Scope scope = tokenRequest.getScope();
 		AccessTokenResponse tokenResponse;
 
 		if (authorizationGrant instanceof AuthorizationCodeGrant) {
-			tokenResponse = handleAuthorizationCodeGrantType((AuthorizationCodeGrant) authorizationGrant);
+			tokenResponse = handleAuthorizationCodeGrantType(tokenRequest);
 		}
 		else if (authorizationGrant instanceof ResourceOwnerPasswordCredentialsGrant) {
-			tokenResponse = handleResourceOwnerPasswordCredentialsGrantType(
-					(ResourceOwnerPasswordCredentialsGrant) authorizationGrant, clientAuthentication, scope);
+			tokenResponse = handleResourceOwnerPasswordCredentialsGrantType(tokenRequest);
 		}
 		else if (authorizationGrant instanceof ClientCredentialsGrant) {
-			tokenResponse = handleClientCredentialsGrantType(clientAuthentication, scope);
+			tokenResponse = handleClientCredentialsGrantType(tokenRequest);
 		}
 		else if (authorizationGrant instanceof RefreshTokenGrant) {
-			tokenResponse = handleRefreshTokenGrantType((RefreshTokenGrant) authorizationGrant);
+			tokenResponse = handleRefreshTokenGrantType(tokenRequest);
 		}
 		else {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
@@ -140,10 +137,14 @@ public class TokenEndpoint {
 		// @formatter:on
 	}
 
-	private AccessTokenResponse handleAuthorizationCodeGrantType(AuthorizationCodeGrant authorizationCodeGrant)
-			throws GeneralException {
+	private AccessTokenResponse handleAuthorizationCodeGrantType(TokenRequest tokenRequest) throws GeneralException {
+		if (!(tokenRequest.getAuthorizationGrant() instanceof AuthorizationCodeGrant)) {
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+		}
+
+		AuthorizationCodeGrant authorizationGrant = (AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant();
 		AuthorizationCodeContext context = this.authorizationCodeService
-				.consume(authorizationCodeGrant.getAuthorizationCode());
+				.consume(authorizationGrant.getAuthorizationCode());
 
 		if (context == null) {
 			throw new GeneralException(OAuth2Error.INVALID_GRANT);
@@ -158,7 +159,7 @@ public class TokenEndpoint {
 				codeChallengeMethod = CodeChallengeMethod.PLAIN;
 			}
 
-			CodeVerifier codeVerifier = authorizationCodeGrant.getCodeVerifier();
+			CodeVerifier codeVerifier = authorizationGrant.getCodeVerifier();
 
 			if (codeVerifier == null
 					|| !codeChallenge.equals(CodeChallenge.compute(codeChallengeMethod, codeVerifier))) {
@@ -194,11 +195,19 @@ public class TokenEndpoint {
 		return new OIDCTokenResponse(tokens);
 	}
 
-	private AccessTokenResponse handleResourceOwnerPasswordCredentialsGrantType(
-			ResourceOwnerPasswordCredentialsGrant passwordCredentialsGrant, ClientAuthentication clientAuthentication,
-			Scope scope) throws GeneralException {
-		String username = passwordCredentialsGrant.getUsername();
-		Secret password = passwordCredentialsGrant.getPassword();
+	private AccessTokenResponse handleResourceOwnerPasswordCredentialsGrantType(TokenRequest tokenRequest)
+			throws GeneralException {
+		if (!(tokenRequest.getAuthorizationGrant() instanceof ResourceOwnerPasswordCredentialsGrant)) {
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+		}
+
+		ResourceOwnerPasswordCredentialsGrant authorizationGrant = (ResourceOwnerPasswordCredentialsGrant) tokenRequest
+				.getAuthorizationGrant();
+
+		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+		Scope scope = tokenRequest.getScope();
+		String username = authorizationGrant.getUsername();
+		Secret password = authorizationGrant.getPassword();
 
 		Authentication authentication;
 
@@ -228,8 +237,14 @@ public class TokenEndpoint {
 		return new AccessTokenResponse(tokens);
 	}
 
-	private AccessTokenResponse handleClientCredentialsGrantType(ClientAuthentication clientAuthentication,
-			Scope scope) {
+	private AccessTokenResponse handleClientCredentialsGrantType(TokenRequest tokenRequest) throws GeneralException {
+		if (!(tokenRequest.getAuthorizationGrant() instanceof ClientCredentialsGrant)) {
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+		}
+
+		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+		Scope scope = tokenRequest.getScope();
+
 		ClientID clientId = clientAuthentication.getClientID();
 		Subject subject = new Subject(clientId.getValue());
 
@@ -241,9 +256,13 @@ public class TokenEndpoint {
 		return new AccessTokenResponse(tokens);
 	}
 
-	private AccessTokenResponse handleRefreshTokenGrantType(RefreshTokenGrant refreshTokenGrant)
-			throws GeneralException {
-		RefreshToken refreshToken = refreshTokenGrant.getRefreshToken();
+	private AccessTokenResponse handleRefreshTokenGrantType(TokenRequest tokenRequest) throws GeneralException {
+		if (!(tokenRequest.getAuthorizationGrant() instanceof RefreshTokenGrant)) {
+			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+		}
+
+		RefreshTokenGrant authorizationGrant = (RefreshTokenGrant) tokenRequest.getAuthorizationGrant();
+		RefreshToken refreshToken = authorizationGrant.getRefreshToken();
 
 		RefreshTokenContext context = this.refreshTokenStore.load(refreshToken);
 		Subject subject = context.getSubject();
