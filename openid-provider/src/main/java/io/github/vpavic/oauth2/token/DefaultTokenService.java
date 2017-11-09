@@ -111,7 +111,6 @@ public class DefaultTokenService implements TokenService {
 		OIDCClientInformation client = accessTokenRequest.getClient();
 		Scope scope = accessTokenRequest.getScope();
 
-		Issuer issuer = new Issuer(this.issuer);
 		List<Audience> audience = new ArrayList<>();
 		audience.add(new Audience(this.issuer));
 
@@ -131,7 +130,7 @@ public class DefaultTokenService implements TokenService {
 		userInfo.setClaim(CLAIM_CLIENT_ID, client.getID());
 
 		try {
-			JWTAssertionDetails details = new JWTAssertionDetails(issuer, userInfo.getSubject(), audience,
+			JWTAssertionDetails details = new JWTAssertionDetails(this.issuer, userInfo.getSubject(), audience,
 					expirationTime, issueTime, issueTime, jwtId, userInfo.toJSONObject());
 			SignedJWT accessToken;
 
@@ -186,13 +185,12 @@ public class DefaultTokenService implements TokenService {
 		OIDCClientInformation client = idTokenRequest.getClient();
 		ClientID clientId = client.getID();
 		JWSAlgorithm algorithm = client.getOIDCMetadata().getIDTokenJWSAlg();
-		Issuer issuer = new Issuer(this.issuer);
 		UserInfo userInfo = this.claimSource.load(subject, resolveClaims(idTokenRequest));
 		List<Audience> audience = Audience.create(clientId.getValue());
 		Date expirationTime = Date.from(now.plus(this.idTokenLifetime));
 		Date issueTime = Date.from(now);
 
-		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(issuer, userInfo.getSubject(), audience, expirationTime,
+		IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(this.issuer, userInfo.getSubject(), audience, expirationTime,
 				issueTime);
 		claimsSet.setAuthenticationTime(Date.from(idTokenRequest.getAuthenticationTime()));
 		claimsSet.setNonce(idTokenRequest.getNonce());
