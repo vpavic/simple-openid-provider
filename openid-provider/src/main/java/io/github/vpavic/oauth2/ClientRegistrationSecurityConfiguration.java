@@ -16,7 +16,9 @@ public class ClientRegistrationSecurityConfiguration extends WebSecurityConfigur
 	protected void configure(HttpSecurity http) throws Exception {
 		// @formatter:off
 		http
-			.antMatcher(ClientRegistrationEndpoint.PATH_MAPPING + "/**")
+			.requestMatchers()
+				.antMatchers(ClientRegistrationEndpoint.PATH_MAPPING, ClientRegistrationEndpoint.PATH_MAPPING + "/**")
+				.and()
 			.authorizeRequests()
 				.anyRequest().permitAll()
 				.and()
