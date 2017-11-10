@@ -1,6 +1,10 @@
 package io.github.vpavic.oauth2;
 
-import org.springframework.beans.factory.ObjectProvider;
+import java.util.Objects;
+
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.oauth2.sdk.id.Issuer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,16 +14,24 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 
 import io.github.vpavic.oauth2.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 @Order(-1)
 @Configuration
 public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private final BearerAccessTokenAuthenticationFilter bearerAccessTokenAuthenticationFilter;
+	private final Issuer issuer;
 
-	public UserInfoSecurityConfiguration(
-			ObjectProvider<BearerAccessTokenAuthenticationFilter> userInfoAuthenticationFilter) {
-		this.bearerAccessTokenAuthenticationFilter = userInfoAuthenticationFilter.getObject();
+	private final JwkSetLoader jwkSetLoader;
+
+	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
+
+	public UserInfoSecurityConfiguration(Issuer issuer, JwkSetLoader jwkSetLoader) {
+		Objects.requireNonNull(issuer, "issuer must not be null");
+		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
+
+		this.issuer = issuer;
+		this.jwkSetLoader = jwkSetLoader;
 	}
 
 	@Override
@@ -37,8 +49,20 @@ public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter 
 			.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
-			.addFilterBefore(this.bearerAccessTokenAuthenticationFilter, AbstractPreAuthenticatedProcessingFilter.class);
+			.addFilterBefore(userInfoAuthenticationFilter(), AbstractPreAuthenticatedProcessingFilter.class);
 		// @formatter:on
+	}
+
+	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
+		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
+	}
+
+	@Bean
+	public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
+		BearerAccessTokenAuthenticationFilter filter = new BearerAccessTokenAuthenticationFilter(this.issuer,
+				this.jwkSetLoader);
+		filter.setAccessTokenJwsAlgorithm(this.accessTokenJwsAlgorithm);
+		return filter;
 	}
 
 }

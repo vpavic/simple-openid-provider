@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 
-import io.github.vpavic.oauth2.authentication.BearerAccessTokenAuthenticationFilter;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
@@ -33,7 +32,7 @@ import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.TokenService;
 
 @Configuration
-@Import({ TokenSecurityConfiguration.class, UserInfoSecurityConfiguration.class })
+@Import(TokenSecurityConfiguration.class)
 public class CoreConfiguration {
 
 	private final OpenIdProviderProperties properties;
@@ -122,11 +121,11 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
-		BearerAccessTokenAuthenticationFilter filter = new BearerAccessTokenAuthenticationFilter(
+	public UserInfoSecurityConfiguration userInfoSecurityConfiguration() {
+		UserInfoSecurityConfiguration userInfoSecurityConfiguration = new UserInfoSecurityConfiguration(
 				this.properties.getIssuer(), this.jwkSetLoader);
-		filter.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
-		return filter;
+		userInfoSecurityConfiguration.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		return userInfoSecurityConfiguration;
 	}
 
 }
