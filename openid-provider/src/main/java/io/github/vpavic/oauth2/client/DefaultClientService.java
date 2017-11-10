@@ -10,29 +10,27 @@ import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 public class DefaultClientService implements ClientService {
 
-	private final Issuer issuer;
-
 	private final ClientRepository clientRepository;
+
+	private final String registrationUriTemplate;
 
 	private boolean refreshSecretOnUpdate;
 
 	private boolean refreshAccessTokenOnUpdate;
 
-	public DefaultClientService(Issuer issuer, ClientRepository clientRepository) {
-		Objects.requireNonNull(issuer, "issuer must not be null");
+	public DefaultClientService(ClientRepository clientRepository, String registrationUriTemplate) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
+		Objects.requireNonNull(registrationUriTemplate, "registrationUriTemplate must not be null");
 
-		this.issuer = issuer;
 		this.clientRepository = clientRepository;
+		this.registrationUriTemplate = registrationUriTemplate;
 	}
 
 	public void setRefreshSecretOnUpdate(boolean refreshSecretOnUpdate) {
@@ -45,20 +43,17 @@ public class DefaultClientService implements ClientService {
 
 	@Override
 	@Transactional
-	public OIDCClientInformation create(OIDCClientMetadata metadata) {
+	public OIDCClientInformation create(OIDCClientMetadata metadata, boolean dynamicRegistration) {
 		metadata.applyDefaults();
-		ClientID clientId = new ClientID(UUID.randomUUID().toString());
+		ClientID id = new ClientID(UUID.randomUUID().toString());
 		Instant issueDate = Instant.now();
-		Secret secret = null;
+		Secret secret = isTokenEndpointAuthEnabled(metadata) ? new Secret() : null;
+		URI registrationUri = dynamicRegistration
+				? URI.create(this.registrationUriTemplate.replace("{id}", id.getValue()))
+				: null;
+		BearerAccessToken accessToken = dynamicRegistration ? new BearerAccessToken() : null;
 
-		if (!ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod())) {
-			secret = new Secret();
-		}
-
-		URI registrationUri = UriComponentsBuilder.fromHttpUrl(this.issuer.getValue()).path("/oauth2/register/{id}")
-				.build(clientId.getValue());
-		BearerAccessToken accessToken = new BearerAccessToken();
-		OIDCClientInformation client = new OIDCClientInformation(clientId, Date.from(issueDate), metadata, secret,
+		OIDCClientInformation client = new OIDCClientInformation(id, Date.from(issueDate), metadata, secret,
 				registrationUri, accessToken);
 		this.clientRepository.save(client);
 
@@ -75,20 +70,22 @@ public class DefaultClientService implements ClientService {
 		}
 
 		metadata.applyDefaults();
-		Secret secret = null;
-
-		if (!ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod())) {
-			secret = this.refreshSecretOnUpdate ? new Secret() : client.getSecret();
-		}
-
-		BearerAccessToken accessToken = this.refreshAccessTokenOnUpdate ? new BearerAccessToken()
-				: client.getRegistrationAccessToken();
+		Secret secret = isTokenEndpointAuthEnabled(metadata)
+				? (this.refreshSecretOnUpdate ? new Secret() : client.getSecret())
+				: null;
+		BearerAccessToken accessToken = (client.getRegistrationURI() != null)
+				? (this.refreshAccessTokenOnUpdate ? new BearerAccessToken() : client.getRegistrationAccessToken())
+				: null;
 
 		client = new OIDCClientInformation(id, client.getIDIssueDate(), metadata, secret, client.getRegistrationURI(),
 				accessToken);
 		this.clientRepository.save(client);
 
 		return client;
+	}
+
+	private boolean isTokenEndpointAuthEnabled(OIDCClientMetadata metadata) {
+		return !ClientAuthenticationMethod.NONE.equals(metadata.getTokenEndpointAuthMethod());
 	}
 
 }

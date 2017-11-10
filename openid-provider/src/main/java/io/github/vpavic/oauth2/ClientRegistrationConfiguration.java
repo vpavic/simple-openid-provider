@@ -4,6 +4,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientService;
@@ -26,10 +27,9 @@ public class ClientRegistrationConfiguration {
 
 	@Bean
 	public ClientService clientService() {
-		DefaultClientService clientService = new DefaultClientService(this.properties.getIssuer(),
-				this.clientRepository);
+		DefaultClientService clientService = new DefaultClientService(this.clientRepository, registrationUriTemplate());
 		clientService.setRefreshSecretOnUpdate(this.properties.getRegistration().isUpdateSecret());
-		clientService.setRefreshSecretOnUpdate(this.properties.getRegistration().isUpdateAccessToken());
+		clientService.setRefreshAccessTokenOnUpdate(this.properties.getRegistration().isUpdateAccessToken());
 		return clientService;
 	}
 
@@ -39,6 +39,16 @@ public class ClientRegistrationConfiguration {
 		endpoint.setAllowOpenRegistration(this.properties.getRegistration().isOpenRegistrationEnabled());
 		endpoint.setApiAccessToken(this.properties.getRegistration().getApiAccessToken());
 		return endpoint;
+	}
+
+	private String registrationUriTemplate() {
+		// @formatter:off
+		return UriComponentsBuilder.fromHttpUrl(this.properties.getIssuer().getValue())
+				.path(ClientRegistrationEndpoint.PATH_MAPPING)
+				.path("/{id}")
+				.build()
+				.toUriString();
+		// @formatter:on
 	}
 
 }

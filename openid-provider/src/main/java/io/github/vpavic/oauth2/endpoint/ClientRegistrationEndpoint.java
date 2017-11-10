@@ -89,7 +89,7 @@ public class ClientRegistrationEndpoint {
 		}
 
 		OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
-		OIDCClientInformation client = this.clientService.create(clientMetadata);
+		OIDCClientInformation client = this.clientService.create(clientMetadata, true);
 
 		// @formatter:off
 		return ResponseEntity.ok()
