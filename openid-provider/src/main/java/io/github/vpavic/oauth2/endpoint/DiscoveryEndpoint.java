@@ -2,6 +2,8 @@ package io.github.vpavic.oauth2.endpoint;
 
 import java.util.Objects;
 
+import javax.annotation.PostConstruct;
+
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,21 +31,18 @@ public class DiscoveryEndpoint {
 		this.providerMetadata = providerMetadata;
 	}
 
+	@PostConstruct
+	public void init() {
+		this.providerMetadataJson = this.providerMetadata.toJSONObject().toJSONString();
+	}
+
 	@GetMapping
 	public ResponseEntity<String> getProviderMetadata() {
 		// @formatter:off
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(getProviderMetadataJson());
+				.body(this.providerMetadataJson);
 		// @formatter:on
-	}
-
-	private String getProviderMetadataJson() {
-		if (this.providerMetadataJson == null) {
-			this.providerMetadataJson = this.providerMetadata.toJSONObject().toJSONString();
-		}
-
-		return this.providerMetadataJson;
 	}
 
 }
