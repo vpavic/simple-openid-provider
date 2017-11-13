@@ -28,6 +28,7 @@ import io.github.vpavic.oauth2.grant.password.ResourceOwnerPasswordCredentialsGr
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
+import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.TokenService;
 
@@ -49,10 +50,13 @@ public class CoreConfiguration {
 
 	private final ClaimSource claimSource;
 
+	private final ScopeResolver scopeResolver;
+
 	public CoreConfiguration(OpenIdProviderProperties properties, ObjectProvider<ClientRepository> clientRepository,
 			ObjectProvider<JwkSetLoader> jwkSetLoader, ObjectProvider<AuthenticationManager> authenticationManager,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
-			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<ClaimSource> claimSource) {
+			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<ClaimSource> claimSource,
+			ObjectProvider<ScopeResolver> scopeResolver) {
 		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
 		this.jwkSetLoader = jwkSetLoader.getObject();
@@ -60,6 +64,7 @@ public class CoreConfiguration {
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.refreshTokenStore = refreshTokenStore.getObject();
 		this.claimSource = claimSource.getObject();
+		this.scopeResolver = scopeResolver.getObject();
 	}
 
 	@Bean
@@ -80,10 +85,9 @@ public class CoreConfiguration {
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
 		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository,
-				this.authorizationCodeService, tokenService());
+				this.authorizationCodeService, tokenService(), this.scopeResolver);
 		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(1));
 		authorizationEndpoint.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
-		authorizationEndpoint.setSupportedScopes(this.properties.getAuthorization().getSupportedScopes());
 		return authorizationEndpoint;
 	}
 

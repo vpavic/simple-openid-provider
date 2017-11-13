@@ -26,6 +26,8 @@ import io.github.vpavic.oauth2.grant.code.HazelcastAuthorizationCodeService;
 import io.github.vpavic.oauth2.grant.refresh.JdbcRefreshTokenStore;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
+import io.github.vpavic.oauth2.scope.DefaultScopeResolver;
+import io.github.vpavic.oauth2.scope.ScopeResolver;
 
 @Configuration
 @Import(OpenIdProviderConfiguration.class)
@@ -85,6 +87,13 @@ public class OAuth2Configuration {
 	@Bean
 	public ClaimSource claimSource() {
 		return (subject, claims) -> new UserInfo(subject);
+	}
+
+	@Bean
+	public ScopeResolver scopeResolver() {
+		DefaultScopeResolver scopeResolver = new DefaultScopeResolver();
+		scopeResolver.setSupportedScopes(this.properties.getAuthorization().getSupportedScopes());
+		return scopeResolver;
 	}
 
 }

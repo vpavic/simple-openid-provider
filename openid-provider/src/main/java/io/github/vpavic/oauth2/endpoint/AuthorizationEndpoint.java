@@ -3,7 +3,6 @@ package io.github.vpavic.oauth2.endpoint;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -32,7 +31,6 @@ import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCError;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
-import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.Prompt;
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 import com.nimbusds.openid.connect.sdk.claims.AMR;
@@ -54,6 +52,7 @@ import org.springframework.web.servlet.ModelAndView;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
@@ -90,21 +89,23 @@ public class AuthorizationEndpoint {
 
 	private final TokenService tokenService;
 
+	private final ScopeResolver scopeResolver;
+
 	private ACR acr = new ACR("1");
 
 	private boolean sessionManagementEnabled;
 
-	private List<Scope.Value> supportedScopes = Collections.singletonList(OIDCScopeValue.OPENID);
-
 	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService) {
+			TokenService tokenService, ScopeResolver scopeResolver) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
+		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
+		this.scopeResolver = scopeResolver;
 	}
 
 	public void setAcr(ACR acr) {
@@ -113,10 +114,6 @@ public class AuthorizationEndpoint {
 
 	public void setSessionManagementEnabled(boolean sessionManagementEnabled) {
 		this.sessionManagementEnabled = sessionManagementEnabled;
-	}
-
-	public void setSupportedScopes(List<Scope.Value> supportedScopes) {
-		this.supportedScopes = supportedScopes;
 	}
 
 	@GetMapping
@@ -279,7 +276,7 @@ public class AuthorizationEndpoint {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
 		URI redirectionUri = authRequest.getRedirectionURI();
-		Scope scope = resolveScope(authRequest, client.getOIDCMetadata());
+		Scope requestedScope = authRequest.getScope();
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
@@ -291,6 +288,7 @@ public class AuthorizationEndpoint {
 		SessionID sessionId = new SessionID(request.getSessionId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
+		Scope scope = this.scopeResolver.resolve(subject, client, requestedScope);
 		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
@@ -304,7 +302,7 @@ public class AuthorizationEndpoint {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		URI redirectionUri = authRequest.getRedirectionURI();
-		Scope scope = resolveScope(authRequest, client.getOIDCMetadata());
+		Scope requestedScope = authRequest.getScope();
 		State state = authRequest.getState();
 		Nonce nonce = authRequest.getNonce();
 
@@ -315,6 +313,7 @@ public class AuthorizationEndpoint {
 		SessionID sessionId = new SessionID(request.getSessionId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
+		Scope scope = this.scopeResolver.resolve(subject, client, requestedScope);
 		AccessToken accessToken = null;
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
@@ -336,7 +335,7 @@ public class AuthorizationEndpoint {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
 		URI redirectUri = authRequest.getRedirectionURI();
-		Scope scope = resolveScope(authRequest, client.getOIDCMetadata());
+		Scope requestedScope = authRequest.getScope();
 		State state = authRequest.getState();
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
@@ -349,6 +348,7 @@ public class AuthorizationEndpoint {
 		SessionID sessionId = new SessionID(request.getSessionId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
+		Scope scope = this.scopeResolver.resolve(subject, client, requestedScope);
 		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
@@ -369,28 +369,6 @@ public class AuthorizationEndpoint {
 
 		return new AuthenticationSuccessResponse(redirectUri, code, idToken, accessToken, state, sessionState,
 				responseMode);
-	}
-
-	private Scope resolveScope(AuthenticationRequest authRequest, OIDCClientMetadata clientMetadata) {
-		Scope requestedScope = authRequest.getScope();
-		requestedScope.retainAll(this.supportedScopes);
-		Scope registeredScope = clientMetadata.getScope();
-		Scope resolvedScope;
-
-		if (registeredScope == null || registeredScope.isEmpty()) {
-			resolvedScope = requestedScope;
-		}
-		else {
-			resolvedScope = new Scope();
-
-			for (Scope.Value scope : requestedScope) {
-				if (registeredScope.contains(scope)) {
-					resolvedScope.add(scope);
-				}
-			}
-		}
-
-		return resolvedScope;
 	}
 
 	private ModelAndView authResponse(AuthorizationResponse authResponse) {
