@@ -288,7 +288,7 @@ public class AuthorizationEndpoint {
 		SessionID sessionId = new SessionID(request.getSessionId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
-		Scope scope = this.scopeResolver.resolve(subject, client, requestedScope);
+		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
 		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
@@ -313,7 +313,7 @@ public class AuthorizationEndpoint {
 		SessionID sessionId = new SessionID(request.getSessionId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
-		Scope scope = this.scopeResolver.resolve(subject, client, requestedScope);
+		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
 		AccessToken accessToken = null;
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
@@ -348,7 +348,7 @@ public class AuthorizationEndpoint {
 		SessionID sessionId = new SessionID(request.getSessionId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
-		Scope scope = this.scopeResolver.resolve(subject, client, requestedScope);
+		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
 		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
 				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);

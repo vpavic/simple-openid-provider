@@ -6,16 +6,16 @@ import java.util.List;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
-import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 
 public class DefaultScopeResolver implements ScopeResolver {
 
 	private List<Scope.Value> supportedScopes = Collections.singletonList(OIDCScopeValue.OPENID);
 
 	@Override
-	public Scope resolve(Subject subject, OIDCClientInformation client, Scope requestedScope) {
+	public Scope resolve(Subject subject, Scope requestedScope, OIDCClientMetadata clientMetadata) {
 		requestedScope.retainAll(this.supportedScopes);
-		Scope registeredScope = client.getOIDCMetadata().getScope();
+		Scope registeredScope = clientMetadata.getScope();
 		Scope resolvedScope;
 
 		if (registeredScope == null || registeredScope.isEmpty()) {

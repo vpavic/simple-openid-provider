@@ -109,8 +109,8 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com")
@@ -127,8 +127,8 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&state="
@@ -184,8 +184,8 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&max_age=60")
@@ -304,8 +304,8 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -324,8 +324,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test&state="
@@ -396,8 +396,8 @@ public class AuthorizationEndpointTests {
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -434,8 +434,8 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -458,8 +458,8 @@ public class AuthorizationEndpointTests {
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.scopeResolver.resolve(any(Subject.class), any(OIDCClientInformation.class), any(Scope.class)))
-				.will(AdditionalAnswers.returnsArgAt(2));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.will(AdditionalAnswers.returnsSecondArg());
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test&state="
