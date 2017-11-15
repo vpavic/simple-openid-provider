@@ -65,7 +65,7 @@ public class JdbcClientRepository implements ClientRepository {
 				ps.setTimestamp(2, Timestamp.from(issueDate.toInstant()));
 				ps.setString(3, metadata.toJSONObject().toJSONString());
 				ps.setString(4, (secret != null) ? secret.getValue() : null);
-				ps.setString(5, registrationUri.toString());
+				ps.setString(5, (registrationUri != null) ? registrationUri.toString() : null);
 				ps.setString(6, (accessToken != null) ? accessToken.getValue() : null);
 			});
 		}
@@ -112,7 +112,8 @@ public class JdbcClientRepository implements ClientRepository {
 
 				return new OIDCClientInformation(new ClientID(id), issueDate,
 						OIDCClientMetadata.parse(JSONObjectUtils.parse(metadata)),
-						(secret != null) ? new Secret(secret) : null, URI.create(registrationUri),
+						(secret != null) ? new Secret(secret) : null,
+						(registrationUri != null) ? URI.create(registrationUri) : null,
 						(accessToken != null) ? new BearerAccessToken(accessToken) : null);
 			}
 			catch (ParseException e) {
