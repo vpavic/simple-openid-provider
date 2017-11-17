@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import javax.annotation.PostConstruct;
+
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
@@ -15,36 +17,77 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.TypeMismatchDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * A JDBC implementation of {@link ClientRepository}.
+ *
+ * By default uses table named {@code clients} with the following definition:
+ *
+ * <pre class="code">
+ * CREATE TABLE clients (
+ *   id VARCHAR(100) PRIMARY KEY,
+ *   issue_date TIMESTAMP NOT NULL,
+ *   metadata TEXT NOT NULL,
+ *   secret VARCHAR(43),
+ *   registration_uri VARCHAR(200),
+ *   access_token VARCHAR(43)
+ * );
+ * </pre>
+ *
+ * Table name can be customize using {@link #setTableName(String)}.
+ *
+ * @author Vedran Pavic
+ */
 public class JdbcClientRepository implements ClientRepository {
 
-	private static final String INSERT_STATEMENT = "INSERT INTO op_clients(id, issue_date, metadata, secret, registration_uri, access_token) VALUES (?, ?, ?, ?, ?, ?)";
+	private static final String DEFAULT_TABLE_NAME = "clients";
 
-	private static final String SELECT_BY_ID_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM op_clients WHERE id = ?";
+	private static final String STATEMENT_TEMPLATE_INSERT = "INSERT INTO %s(id, issue_date, metadata, secret, registration_uri, access_token) VALUES (?, ?, ?, ?, ?, ?)";
 
-	private static final String SELECT_ALL_STATEMENT = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM op_clients";
+	private static final String STATEMENT_TEMPLATE_SELECT_BY_ID = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM %s WHERE id = ?";
 
-	private static final String UPDATE_STATEMENT = "UPDATE op_clients SET metadata = ?, secret = ?, access_token = ? WHERE id = ?";
+	private static final String STATEMENT_TEMPLATE_SELECT_ALL = "SELECT id, issue_date, metadata, secret, registration_uri, access_token FROM %s";
 
-	private static final String DELETE_STATEMENT = "DELETE FROM op_clients WHERE id = ?";
+	private static final String STATEMENT_TEMPLATE_UPDATE = "UPDATE %s SET metadata = ?, secret = ?, access_token = ? WHERE id = ?";
+
+	private static final String STATEMENT_TEMPLATE_DELETE = "DELETE FROM %s WHERE id = ?";
 
 	private static final ClientMapper clientMapper = new ClientMapper();
 
 	private final JdbcOperations jdbcOperations;
 
+	private String tableName = DEFAULT_TABLE_NAME;
+
+	private String statementInsert;
+
+	private String statementSelectById;
+
+	private String statementSelectAll;
+
+	private String statementUpdate;
+
+	private String statementDelete;
+
 	public JdbcClientRepository(JdbcOperations jdbcOperations) {
 		Objects.requireNonNull(jdbcOperations, "jdbcOperations must not be null");
-
 		this.jdbcOperations = jdbcOperations;
+	}
+
+	@PostConstruct
+	public void init() {
+		prepareStatements();
 	}
 
 	@Override
 	@Transactional
 	public void save(OIDCClientInformation client) {
+		Objects.requireNonNull(client, "client must not be null");
 		ClientID id = client.getID();
 		Date issueDate = client.getIDIssueDate();
 		OIDCClientMetadata metadata = client.getOIDCMetadata();
@@ -52,7 +95,7 @@ public class JdbcClientRepository implements ClientRepository {
 		URI registrationUri = client.getRegistrationURI();
 		BearerAccessToken accessToken = client.getRegistrationAccessToken();
 
-		int updatedCount = this.jdbcOperations.update(UPDATE_STATEMENT, ps -> {
+		int updatedCount = this.jdbcOperations.update(this.statementUpdate, ps -> {
 			ps.setString(1, metadata.toJSONObject().toJSONString());
 			ps.setString(2, (secret != null) ? secret.getValue() : null);
 			ps.setString(3, (accessToken != null) ? accessToken.getValue() : null);
@@ -60,7 +103,7 @@ public class JdbcClientRepository implements ClientRepository {
 		});
 
 		if (updatedCount == 0) {
-			this.jdbcOperations.update(INSERT_STATEMENT, ps -> {
+			this.jdbcOperations.update(this.statementInsert, ps -> {
 				ps.setString(1, id.getValue());
 				ps.setTimestamp(2, Timestamp.from(issueDate.toInstant()));
 				ps.setString(3, metadata.toJSONObject().toJSONString());
@@ -73,11 +116,10 @@ public class JdbcClientRepository implements ClientRepository {
 
 	@Override
 	@Transactional(readOnly = true)
-	public OIDCClientInformation findById(ClientID clientId) {
-		String id = clientId.getValue();
-
+	public OIDCClientInformation findById(ClientID id) {
+		Objects.requireNonNull(id, "id must not be null");
 		try {
-			return this.jdbcOperations.queryForObject(SELECT_BY_ID_STATEMENT, clientMapper, id);
+			return this.jdbcOperations.queryForObject(this.statementSelectById, clientMapper, id.getValue());
 		}
 		catch (EmptyResultDataAccessException e) {
 			return null;
@@ -87,15 +129,30 @@ public class JdbcClientRepository implements ClientRepository {
 	@Override
 	@Transactional(readOnly = true)
 	public List<OIDCClientInformation> findAll() {
-		return this.jdbcOperations.query(SELECT_ALL_STATEMENT, clientMapper);
+		return this.jdbcOperations.query(this.statementSelectAll, clientMapper);
 	}
 
 	@Override
 	@Transactional
-	public void deleteById(ClientID clientId) {
-		String id = clientId.getValue();
+	public void deleteById(ClientID id) {
+		Objects.requireNonNull(id, "id must not be null");
+		this.jdbcOperations.update(this.statementDelete, ps -> ps.setString(1, id.getValue()));
+	}
 
-		this.jdbcOperations.update(DELETE_STATEMENT, ps -> ps.setString(1, id));
+	public void setTableName(String tableName) {
+		Objects.requireNonNull(tableName, "tableName must not be null");
+		if (StringUtils.isBlank(tableName)) {
+			throw new IllegalArgumentException("tableName must not be empty");
+		}
+		this.tableName = tableName.trim();
+	}
+
+	private void prepareStatements() {
+		this.statementInsert = String.format(STATEMENT_TEMPLATE_INSERT, this.tableName);
+		this.statementSelectById = String.format(STATEMENT_TEMPLATE_SELECT_BY_ID, this.tableName);
+		this.statementSelectAll = String.format(STATEMENT_TEMPLATE_SELECT_ALL, this.tableName);
+		this.statementUpdate = String.format(STATEMENT_TEMPLATE_UPDATE, this.tableName);
+		this.statementDelete = String.format(STATEMENT_TEMPLATE_DELETE, this.tableName);
 	}
 
 	private static class ClientMapper implements RowMapper<OIDCClientInformation> {
@@ -103,12 +160,12 @@ public class JdbcClientRepository implements ClientRepository {
 		@Override
 		public OIDCClientInformation mapRow(ResultSet rs, int rowNum) throws SQLException {
 			try {
-				String id = rs.getString(1);
-				Date issueDate = rs.getTimestamp(2);
-				String metadata = rs.getString(3);
-				String secret = rs.getString(4);
-				String registrationUri = rs.getString(5);
-				String accessToken = rs.getString(6);
+				String id = rs.getString("id");
+				Date issueDate = rs.getTimestamp("issue_date");
+				String metadata = rs.getString("metadata");
+				String secret = rs.getString("secret");
+				String registrationUri = rs.getString("registration_uri");
+				String accessToken = rs.getString("access_token");
 
 				return new OIDCClientInformation(new ClientID(id), issueDate,
 						OIDCClientMetadata.parse(JSONObjectUtils.parse(metadata)),
@@ -117,7 +174,7 @@ public class JdbcClientRepository implements ClientRepository {
 						(accessToken != null) ? new BearerAccessToken(accessToken) : null);
 			}
 			catch (ParseException e) {
-				throw new RuntimeException(e);
+				throw new TypeMismatchDataAccessException(e.getMessage(), e);
 			}
 		}
 
