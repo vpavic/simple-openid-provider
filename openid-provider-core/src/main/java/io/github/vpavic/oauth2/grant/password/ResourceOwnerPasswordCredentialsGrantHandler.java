@@ -18,6 +18,7 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
+import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
@@ -28,21 +29,25 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 
 	private final TokenService tokenService;
 
+	private final ScopeResolver scopeResolver;
+
 	private final PasswordAuthenticationHandler passwordAuthenticationHandler;
 
 	public ResourceOwnerPasswordCredentialsGrantHandler(ClientRepository clientRepository, TokenService tokenService,
-			PasswordAuthenticationHandler passwordAuthenticationHandler) {
+			ScopeResolver scopeResolver, PasswordAuthenticationHandler passwordAuthenticationHandler) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 		Objects.requireNonNull(passwordAuthenticationHandler, "passwordAuthenticationHandler must not be null");
 
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
+		this.scopeResolver = scopeResolver;
 		this.passwordAuthenticationHandler = passwordAuthenticationHandler;
 	}
 
 	@Override
-	public Tokens grant(AuthorizationGrant authorizationGrant, Scope scope, ClientAuthentication clientAuthentication)
+	public Tokens grant(AuthorizationGrant authorizationGrant, Scope requestedScope, ClientAuthentication clientAuthentication)
 			throws GeneralException {
 		if (!(authorizationGrant instanceof ResourceOwnerPasswordCredentialsGrant)) {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
@@ -53,6 +58,7 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 		ClientID clientId = clientAuthentication.getClientID();
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
+		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;

@@ -272,7 +272,8 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Authentication authentication) {
+			OIDCClientInformation client, ServletWebRequest request, Authentication authentication)
+			throws GeneralException {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
 		URI redirectionUri = authRequest.getRedirectionURI();
@@ -298,7 +299,8 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleImplicitFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Authentication authentication) {
+			OIDCClientInformation client, ServletWebRequest request, Authentication authentication)
+			throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		URI redirectionUri = authRequest.getRedirectionURI();
@@ -330,7 +332,8 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleHybridFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Authentication authentication) {
+			OIDCClientInformation client, ServletWebRequest request, Authentication authentication)
+			throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();

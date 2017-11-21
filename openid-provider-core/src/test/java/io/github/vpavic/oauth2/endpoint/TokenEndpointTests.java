@@ -69,10 +69,12 @@ import io.github.vpavic.oauth2.grant.password.ResourceOwnerPasswordCredentialsGr
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenContext;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
+import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
 
+import static org.mockito.AdditionalAnswers.returnsSecondArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -107,6 +109,9 @@ public class TokenEndpointTests {
 
 	@Autowired
 	private TokenService tokenService;
+
+	@Autowired
+	private ScopeResolver scopeResolver;
 
 	@Autowired
 	private PasswordAuthenticationHandler authenticationHandler;
@@ -237,6 +242,8 @@ public class TokenEndpointTests {
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authenticationHandler.authenticate(any(ResourceOwnerPasswordCredentialsGrant.class)))
 				.willReturn(new Subject("user"));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.willAnswer(returnsSecondArg());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -257,6 +264,8 @@ public class TokenEndpointTests {
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.authenticationHandler.authenticate(any(ResourceOwnerPasswordCredentialsGrant.class)))
 				.willReturn(new Subject("user"));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.willAnswer(returnsSecondArg());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -382,6 +391,11 @@ public class TokenEndpointTests {
 		}
 
 		@Bean
+		public ScopeResolver scopeResolver() {
+			return mock(ScopeResolver.class);
+		}
+
+		@Bean
 		public PasswordAuthenticationHandler authenticationHandler() {
 			return mock(PasswordAuthenticationHandler.class);
 		}
@@ -396,7 +410,7 @@ public class TokenEndpointTests {
 			AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
 					clientRepository(), tokenService(), authorizationCodeService());
 			ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
-					clientRepository(), tokenService(), authenticationHandler());
+					clientRepository(), tokenService(), scopeResolver(), authenticationHandler());
 			ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
 					clientRepository(), tokenService());
 			RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(clientRepository(),

@@ -97,7 +97,7 @@ public class CoreConfiguration {
 		AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
 				this.clientRepository, tokenService(), this.authorizationCodeService);
 		ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
-				this.clientRepository, tokenService(), this.passwordAuthenticationHandler);
+				this.clientRepository, tokenService(), this.scopeResolver, this.passwordAuthenticationHandler);
 		ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
 				this.clientRepository, tokenService());
 		RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(this.clientRepository,
