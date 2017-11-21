@@ -9,17 +9,12 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
-import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
@@ -33,17 +28,17 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 
 	private final TokenService tokenService;
 
-	private final AuthenticationManager authenticationManager;
+	private final PasswordAuthenticationHandler passwordAuthenticationHandler;
 
 	public ResourceOwnerPasswordCredentialsGrantHandler(ClientRepository clientRepository, TokenService tokenService,
-			AuthenticationManager authenticationManager) {
+			PasswordAuthenticationHandler passwordAuthenticationHandler) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
-		Objects.requireNonNull(authenticationManager, "authenticationManager must not be null");
+		Objects.requireNonNull(passwordAuthenticationHandler, "passwordAuthenticationHandler must not be null");
 
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
-		this.authenticationManager = authenticationManager;
+		this.passwordAuthenticationHandler = passwordAuthenticationHandler;
 	}
 
 	@Override
@@ -54,20 +49,7 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 		}
 
 		ResourceOwnerPasswordCredentialsGrant passwordCredentialsGrant = (ResourceOwnerPasswordCredentialsGrant) authorizationGrant;
-		String username = passwordCredentialsGrant.getUsername();
-		Secret password = passwordCredentialsGrant.getPassword();
-
-		Authentication authentication;
-
-		try {
-			authentication = this.authenticationManager
-					.authenticate(new UsernamePasswordAuthenticationToken(username, password.getValue()));
-		}
-		catch (AuthenticationException e) {
-			throw new GeneralException(OAuth2Error.INVALID_GRANT);
-		}
-
-		Subject subject = new Subject(authentication.getName());
+		Subject subject = this.passwordAuthenticationHandler.authenticate(passwordCredentialsGrant);
 		ClientID clientId = clientAuthentication.getClientID();
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);

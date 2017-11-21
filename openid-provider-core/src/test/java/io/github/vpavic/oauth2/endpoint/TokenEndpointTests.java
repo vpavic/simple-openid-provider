@@ -46,12 +46,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -69,6 +64,7 @@ import io.github.vpavic.oauth2.grant.client.ClientCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeGrantHandler;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.password.PasswordAuthenticationHandler;
 import io.github.vpavic.oauth2.grant.password.ResourceOwnerPasswordCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenContext;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
@@ -113,7 +109,7 @@ public class TokenEndpointTests {
 	private TokenService tokenService;
 
 	@Autowired
-	private AuthenticationManager authenticationManager;
+	private PasswordAuthenticationHandler authenticationHandler;
 
 	@Autowired
 	private RefreshTokenStore refreshTokenStore;
@@ -239,8 +235,8 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
-		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
-				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		given(this.authenticationHandler.authenticate(any(ResourceOwnerPasswordCredentialsGrant.class)))
+				.willReturn(new Subject("user"));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -259,8 +255,8 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
-		given(this.authenticationManager.authenticate(any(Authentication.class))).willReturn(
-				new TestingAuthenticationToken(new User("user", "n/a", AuthorityUtils.NO_AUTHORITIES), "n/a"));
+		given(this.authenticationHandler.authenticate(any(ResourceOwnerPasswordCredentialsGrant.class)))
+				.willReturn(new Subject("user"));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -386,8 +382,8 @@ public class TokenEndpointTests {
 		}
 
 		@Bean
-		public AuthenticationManager authenticationManager() {
-			return mock(AuthenticationManager.class);
+		public PasswordAuthenticationHandler authenticationHandler() {
+			return mock(PasswordAuthenticationHandler.class);
 		}
 
 		@Bean
@@ -400,7 +396,7 @@ public class TokenEndpointTests {
 			AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
 					clientRepository(), tokenService(), authorizationCodeService());
 			ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
-					clientRepository(), tokenService(), authenticationManager());
+					clientRepository(), tokenService(), authenticationHandler());
 			ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
 					clientRepository(), tokenService());
 			RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(clientRepository(),

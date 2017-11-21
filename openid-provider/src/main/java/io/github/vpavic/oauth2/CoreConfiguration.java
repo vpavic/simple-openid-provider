@@ -12,7 +12,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.authentication.AuthenticationManager;
 
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -24,6 +23,7 @@ import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.grant.client.ClientCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeGrantHandler;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
+import io.github.vpavic.oauth2.grant.password.PasswordAuthenticationHandler;
 import io.github.vpavic.oauth2.grant.password.ResourceOwnerPasswordCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
@@ -42,8 +42,6 @@ public class CoreConfiguration {
 
 	private final JwkSetLoader jwkSetLoader;
 
-	private final AuthenticationManager authenticationManager;
-
 	private final AuthorizationCodeService authorizationCodeService;
 
 	private final RefreshTokenStore refreshTokenStore;
@@ -52,19 +50,22 @@ public class CoreConfiguration {
 
 	private final ScopeResolver scopeResolver;
 
+	private final PasswordAuthenticationHandler passwordAuthenticationHandler;
+
 	public CoreConfiguration(OpenIdProviderProperties properties, ObjectProvider<ClientRepository> clientRepository,
-			ObjectProvider<JwkSetLoader> jwkSetLoader, ObjectProvider<AuthenticationManager> authenticationManager,
+			ObjectProvider<JwkSetLoader> jwkSetLoader,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
 			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<ClaimSource> claimSource,
-			ObjectProvider<ScopeResolver> scopeResolver) {
+			ObjectProvider<ScopeResolver> scopeResolver,
+			ObjectProvider<PasswordAuthenticationHandler> passwordAuthenticationHandler) {
 		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
 		this.jwkSetLoader = jwkSetLoader.getObject();
-		this.authenticationManager = authenticationManager.getObject();
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.refreshTokenStore = refreshTokenStore.getObject();
 		this.claimSource = claimSource.getObject();
 		this.scopeResolver = scopeResolver.getObject();
+		this.passwordAuthenticationHandler = passwordAuthenticationHandler.getObject();
 	}
 
 	@Bean
@@ -96,7 +97,7 @@ public class CoreConfiguration {
 		AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
 				this.clientRepository, tokenService(), this.authorizationCodeService);
 		ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
-				this.clientRepository, tokenService(), this.authenticationManager);
+				this.clientRepository, tokenService(), this.passwordAuthenticationHandler);
 		ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
 				this.clientRepository, tokenService());
 		RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(this.clientRepository,
