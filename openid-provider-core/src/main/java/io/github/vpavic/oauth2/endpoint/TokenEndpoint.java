@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
-import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -59,15 +58,13 @@ public class TokenEndpoint {
 	public ResponseEntity<String> handleTokenRequest(HTTPRequest httpRequest) throws Exception {
 		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
 		this.clientRequestValidator.validateRequest(tokenRequest);
-		AuthorizationGrant authorizationGrant = tokenRequest.getAuthorizationGrant();
-		GrantHandler grantHandler = this.grantHandlers.get(authorizationGrant.getClass());
+		GrantHandler grantHandler = this.grantHandlers.get(tokenRequest.getAuthorizationGrant().getClass());
 
 		if (grantHandler == null) {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 
-		Tokens tokens = grantHandler.grant(authorizationGrant, tokenRequest.getScope(),
-				tokenRequest.getClientAuthentication());
+		Tokens tokens = grantHandler.grant(tokenRequest);
 		AccessTokenResponse tokenResponse = (tokens instanceof OIDCTokens) ? new OIDCTokenResponse((OIDCTokens) tokens)
 				: new AccessTokenResponse(tokens);
 

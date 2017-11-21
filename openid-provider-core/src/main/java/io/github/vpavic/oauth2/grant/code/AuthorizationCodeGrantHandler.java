@@ -5,12 +5,11 @@ import java.util.Objects;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
@@ -54,13 +53,12 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 	}
 
 	@Override
-	public Tokens grant(AuthorizationGrant authorizationGrant, Scope scope, ClientAuthentication clientAuthentication)
-			throws GeneralException {
-		if (!(authorizationGrant instanceof AuthorizationCodeGrant)) {
+	public Tokens grant(TokenRequest tokenRequest) throws GeneralException {
+		if (!(tokenRequest.getAuthorizationGrant() instanceof AuthorizationCodeGrant)) {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 
-		AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) authorizationGrant;
+		AuthorizationCodeGrant authorizationCodeGrant = (AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant();
 		AuthorizationCodeContext context = this.authorizationCodeService
 				.consume(authorizationCodeGrant.getAuthorizationCode());
 
