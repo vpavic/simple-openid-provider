@@ -2,6 +2,8 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'com.gorylenko.gradle-git-properties'
 
 dependencies {
+	compile project(':openid-provider-core')
+
 	compile 'org.springframework.boot:spring-boot-starter-actuator'
 	compile 'org.springframework.boot:spring-boot-starter-cache'
 	compile 'org.springframework.boot:spring-boot-starter-cloud-connectors'
@@ -15,8 +17,6 @@ dependencies {
 	compile 'com.hazelcast:hazelcast-spring'
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
-	compile 'org.apache.commons:commons-text'
-	compile 'org.bouncycastle:bcprov-jdk15on'
 	compile 'org.flywaydb:flyway-core'
 	compile 'org.mariadb.jdbc:mariadb-java-client'
 	compile 'org.postgresql:postgresql'

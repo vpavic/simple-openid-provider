@@ -1,6 +1,10 @@
 apply plugin: 'io.spring.dependency-management'
 
 dependencyManagement {
+	imports {
+		mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+	}
+
 	dependencies {
 		dependency 'com.nimbusds:nimbus-jose-jwt:5.1'
 		dependency 'com.nimbusds:oauth2-oidc-sdk:5.41.1'
