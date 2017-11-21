@@ -1,0 +1,27 @@
+package io.github.vpavic.oauth2.grant.code;
+
+import java.time.Instant;
+
+import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
+import com.nimbusds.openid.connect.sdk.claims.ACR;
+import com.nimbusds.openid.connect.sdk.claims.AMR;
+import com.nimbusds.openid.connect.sdk.claims.SessionID;
+
+/**
+ * Collection of utils for authorization code related testing scenarios.
+ *
+ * @author Vedran Pavic
+ */
+final class AuthorizationCodeTestUtils {
+
+	private AuthorizationCodeTestUtils() {
+	}
+
+	static AuthorizationCodeContext createAuthorizationCodeContext() {
+		return new AuthorizationCodeContext(new Subject("test"), new ClientID("test"), new Scope(), Instant.now(),
+				new ACR("1"), AMR.PWD, new SessionID("test"), null, null, null);
+	}
+
+}
