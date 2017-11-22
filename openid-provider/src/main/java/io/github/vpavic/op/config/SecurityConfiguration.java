@@ -1,10 +1,7 @@
 package io.github.vpavic.op.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.autoconfigure.security.EndpointRequest;
 import org.springframework.boot.autoconfigure.security.StaticResourceRequest;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -14,7 +11,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -25,7 +21,6 @@ import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
 import io.github.vpavic.op.login.LoginFormController;
 
 @Configuration
-@EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfiguration {
 
 	private static final int WEB_ORDER = 100;
@@ -34,40 +29,16 @@ public class SecurityConfiguration {
 
 	private static final int STATIC_ORDER = WEB_ORDER - 2;
 
-	private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
-
-	private final SecurityProperties properties;
-
-	public SecurityConfiguration(SecurityProperties properties) {
-		this.properties = properties;
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return new InMemoryUserDetailsManager(
+				User.withDefaultPasswordEncoder().username("user").password("password").roles("USER").build());
 	}
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
 			throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
-	}
-
-	@Bean
-	public UserDetailsService userDetailsService() {
-		SecurityProperties.User userProperties = this.properties.getUser();
-		String password = userProperties.getPassword();
-
-		if (userProperties.isDefaultPassword()) {
-			logger.info(String.format("Using default security password:%n%n%s%n", password));
-		}
-
-		// @formatter:off
-		UserDetails user = User.withUsername(userProperties.getName())
-				.password("{noop}" + password)
-				.roles("USER")
-				.build();
-		// @formatter:on
-
-		InMemoryUserDetailsManager userDetailsManager = new InMemoryUserDetailsManager();
-		userDetailsManager.createUser(user);
-
-		return userDetailsManager;
 	}
 
 	@Configuration
