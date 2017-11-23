@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import io.github.vpavic.oauth2.config.DiscoverySecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;

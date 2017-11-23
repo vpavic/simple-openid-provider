@@ -9,6 +9,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientService;
 import io.github.vpavic.oauth2.client.DefaultClientService;
+import io.github.vpavic.oauth2.config.ClientRegistrationSecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
 
 @Configuration

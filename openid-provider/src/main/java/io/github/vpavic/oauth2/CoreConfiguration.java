@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Import;
 
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.config.TokenSecurityConfiguration;
+import io.github.vpavic.oauth2.config.UserInfoSecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;

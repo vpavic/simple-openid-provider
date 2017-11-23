@@ -16,6 +16,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import io.github.vpavic.oauth2.LogoutConfiguration.LogoutCondition;
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.config.LogoutSecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
 

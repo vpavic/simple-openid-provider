@@ -16,8 +16,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

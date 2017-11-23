@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
+
 /**
  * OpenID Provider configuration.
  *

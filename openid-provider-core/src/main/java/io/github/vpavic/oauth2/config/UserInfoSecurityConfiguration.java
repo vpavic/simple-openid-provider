@@ -1,4 +1,4 @@
-package io.github.vpavic.oauth2;
+package io.github.vpavic.oauth2.config;
 
 import java.util.Objects;
 
