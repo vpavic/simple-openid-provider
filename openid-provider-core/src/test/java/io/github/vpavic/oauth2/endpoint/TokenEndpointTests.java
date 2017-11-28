@@ -234,7 +234,8 @@ public class TokenEndpointTests {
 	public void resourceOwnerPasswordCredentials_basicAuth_isOk() throws Exception {
 		ClientSecretBasic clientAuth = new ClientSecretBasic(new ClientID("test-client"), new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
-				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")), new Scope("test"));
+				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")),
+				new Scope(OIDCScopeValue.OPENID));
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 
@@ -256,7 +257,8 @@ public class TokenEndpointTests {
 	public void resourceOwnerPasswordCredentials_postAuth_isOk() throws Exception {
 		ClientSecretPost clientAuth = new ClientSecretPost(new ClientID("test-client"), new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
-				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")), new Scope("test"));
+				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")),
+				new Scope(OIDCScopeValue.OPENID));
 
 		BearerAccessToken accessToken = new BearerAccessToken();
 

@@ -13,6 +13,7 @@ import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -51,12 +52,18 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 
+		Scope requestedScope = tokenRequest.getScope();
+		if (!requestedScope.contains(OIDCScopeValue.OPENID)) {
+			throw new GeneralException(
+					OAuth2Error.INVALID_SCOPE.setDescription("The scope must include an \"openid\" value"));
+		}
+
 		Subject subject = this.passwordAuthenticationHandler
 				.authenticate((ResourceOwnerPasswordCredentialsGrant) tokenRequest.getAuthorizationGrant());
 		ClientID clientId = tokenRequest.getClientAuthentication().getClientID();
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
-		Scope scope = this.scopeResolver.resolve(subject, tokenRequest.getScope(), client.getOIDCMetadata());
+		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
 		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
