@@ -71,7 +71,7 @@ public class DefaultClientService implements ClientService {
 
 		metadata.applyDefaults();
 		Secret secret = isTokenEndpointAuthEnabled(metadata)
-				? (this.refreshSecretOnUpdate ? new Secret() : client.getSecret())
+				? (this.refreshSecretOnUpdate || client.getSecret() == null ? new Secret() : client.getSecret())
 				: null;
 		BearerAccessToken accessToken = (client.getRegistrationURI() != null)
 				? (this.refreshAccessTokenOnUpdate ? new BearerAccessToken() : client.getRegistrationAccessToken())
