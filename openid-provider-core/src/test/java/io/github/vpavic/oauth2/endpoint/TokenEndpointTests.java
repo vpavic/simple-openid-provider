@@ -127,16 +127,16 @@ public class TokenEndpointTests {
 	@Test
 	public void authCode_basicAuth_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
-		URI redirectionUri = URI.create("http://rp.example.com");
+		URI redirectUri = URI.create("http://rp.example.com");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		ClientSecretBasic clientAuth = new ClientSecretBasic(clientId, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
-				new AuthorizationCodeGrant(authorizationCode, redirectionUri));
+				new AuthorizationCodeGrant(authorizationCode, redirectUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, scope,
-				Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null, null, null);
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
+				scope, Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -155,13 +155,14 @@ public class TokenEndpointTests {
 	@Test
 	public void authCode_postAuth_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
+		URI redirectUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		ClientSecretPost clientAuth = new ClientSecretPost(clientId, new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
-				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com")));
+				new AuthorizationCodeGrant(authorizationCode, redirectUri));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
 				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null,
 				null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
@@ -179,16 +180,73 @@ public class TokenEndpointTests {
 	}
 
 	@Test
+	public void authCode_mismatchedClientId_shouldThrowException() throws Exception {
+		URI redirectUri = URI.create("http://rp.example.com");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		ClientSecretBasic clientAuth = new ClientSecretBasic(new ClientID("bad-client"), new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
+				new AuthorizationCodeGrant(authorizationCode, redirectUri));
+
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"),
+				new ClientID("test-client"), redirectUri, scope, Instant.now(), new ACR("1"), AMR.PWD,
+				new SessionID("test"), null, null, null);
+		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
+
+		given(this.clientRepository.findById(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.header("Authorization", clientAuth.toHTTPAuthorizationHeader());
+		this.mvc.perform(request).andExpect(status().isBadRequest());
+	}
+
+	@Test
+	public void authCode_mismatchedRedirectUri_shouldThrowException() throws Exception {
+		ClientID clientId = new ClientID("test-client");
+		Scope scope = new Scope(OIDCScopeValue.OPENID);
+		AuthorizationCode authorizationCode = new AuthorizationCode();
+
+		ClientSecretBasic clientAuth = new ClientSecretBasic(clientId, new Secret("test-secret"));
+		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
+				new AuthorizationCodeGrant(authorizationCode, URI.create("http://bad.example.com")));
+
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+				URI.create("http://rp.example.com"), scope, Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
+				null, null, null);
+		BearerAccessToken accessToken = new BearerAccessToken();
+		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
+
+		given(this.clientRepository.findById(any(ClientID.class)))
+				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
+		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
+		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+
+		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.header("Authorization", clientAuth.toHTTPAuthorizationHeader());
+		this.mvc.perform(request).andExpect(status().isBadRequest());
+	}
+
+	@Test
 	public void authCode_pkcePlain_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
+		URI redirectUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.PLAIN;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientId,
-				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
+				new AuthorizationCodeGrant(authorizationCode, redirectUri, codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
 				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
 				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
@@ -207,6 +265,7 @@ public class TokenEndpointTests {
 	@Test
 	public void authCode_pkceS256_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
+		URI redirectUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
 		CodeChallengeMethod codeChallengeMethod = CodeChallengeMethod.S256;
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -214,7 +273,7 @@ public class TokenEndpointTests {
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientId,
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
 
-		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
+		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
 				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
 				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
 		BearerAccessToken accessToken = new BearerAccessToken();

@@ -276,7 +276,7 @@ public class AuthorizationEndpoint {
 			throws GeneralException {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
-		URI redirectionUri = authRequest.getRedirectionURI();
+		URI redirectUri = authRequest.getRedirectionURI();
 		Scope requestedScope = authRequest.getScope();
 		CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
@@ -290,11 +290,11 @@ public class AuthorizationEndpoint {
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
 		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
-		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
-				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
+		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, redirectUri, scope,
+				authenticationTime, acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
 
-		return new AuthenticationSuccessResponse(redirectionUri, code, null, null, authRequest.getState(), sessionState,
+		return new AuthenticationSuccessResponse(redirectUri, code, null, null, authRequest.getState(), sessionState,
 				responseMode);
 	}
 
@@ -303,7 +303,7 @@ public class AuthorizationEndpoint {
 			throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
-		URI redirectionUri = authRequest.getRedirectionURI();
+		URI redirectUri = authRequest.getRedirectionURI();
 		Scope requestedScope = authRequest.getScope();
 		State state = authRequest.getState();
 		Nonce nonce = authRequest.getNonce();
@@ -327,7 +327,7 @@ public class AuthorizationEndpoint {
 				sessionId, nonce, accessToken, null);
 		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 
-		return new AuthenticationSuccessResponse(redirectionUri, null, idToken, accessToken, state, sessionState,
+		return new AuthenticationSuccessResponse(redirectUri, null, idToken, accessToken, state, sessionState,
 				responseMode);
 	}
 
@@ -352,8 +352,8 @@ public class AuthorizationEndpoint {
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
 		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
-		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, scope, authenticationTime,
-				acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
+		AuthorizationCodeContext context = new AuthorizationCodeContext(subject, clientId, redirectUri, scope,
+				authenticationTime, acr, amr, sessionId, codeChallenge, codeChallengeMethod, nonce);
 		AuthorizationCode code = this.authorizationCodeService.create(context);
 		AccessToken accessToken = null;
 

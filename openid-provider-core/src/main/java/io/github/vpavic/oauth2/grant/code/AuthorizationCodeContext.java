@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2.grant.code;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -20,6 +21,8 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final ClientID clientId;
 
+	private final URI redirectUri;
+
 	private final Scope scope;
 
 	private final Instant authenticationTime;
@@ -36,11 +39,12 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final Nonce nonce;
 
-	public AuthorizationCodeContext(Subject subject, ClientID clientId, Scope scope, Instant authenticationTime,
-			ACR acr, AMR amr, SessionID sessionId, CodeChallenge codeChallenge, CodeChallengeMethod codeChallengeMethod,
-			Nonce nonce) {
+	public AuthorizationCodeContext(Subject subject, ClientID clientId, URI redirectUri, Scope scope,
+			Instant authenticationTime, ACR acr, AMR amr, SessionID sessionId, CodeChallenge codeChallenge,
+			CodeChallengeMethod codeChallengeMethod, Nonce nonce) {
 		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(clientId, "clientId must not be null");
+		Objects.requireNonNull(redirectUri, "redirectUri must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
@@ -49,6 +53,7 @@ public class AuthorizationCodeContext implements Serializable {
 
 		this.subject = subject;
 		this.clientId = clientId;
+		this.redirectUri = redirectUri;
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
@@ -65,6 +70,10 @@ public class AuthorizationCodeContext implements Serializable {
 
 	public ClientID getClientId() {
 		return this.clientId;
+	}
+
+	public URI getRedirectUri() {
+		return this.redirectUri;
 	}
 
 	public Scope getScope() {

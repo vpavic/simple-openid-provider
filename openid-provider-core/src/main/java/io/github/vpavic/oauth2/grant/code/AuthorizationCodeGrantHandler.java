@@ -10,6 +10,7 @@ import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
@@ -65,6 +66,13 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 		if (context == null) {
 			throw new GeneralException(OAuth2Error.INVALID_GRANT);
 		}
+		if (!context.getClientId().equals(resolveClientId(tokenRequest))) {
+			throw new GeneralException(OAuth2Error.INVALID_GRANT);
+		}
+		if (!context.getRedirectUri()
+				.equals(((AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant()).getRedirectionURI())) {
+			throw new GeneralException(OAuth2Error.INVALID_GRANT);
+		}
 
 		CodeChallenge codeChallenge = context.getCodeChallenge();
 
@@ -108,6 +116,11 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
 
 		return new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
+	}
+
+	private static ClientID resolveClientId(TokenRequest tokenRequest) {
+		ClientAuthentication clientAuthentication = tokenRequest.getClientAuthentication();
+		return (clientAuthentication != null) ? clientAuthentication.getClientID() : tokenRequest.getClientID();
 	}
 
 }
