@@ -85,7 +85,7 @@ public class SecurityConfiguration {
 			http
 				.requestMatcher(EndpointRequest.toAnyEndpoint())
 				.authorizeRequests()
-					.requestMatchers(EndpointRequest.to("status", "info")).permitAll()
+					.requestMatchers(EndpointRequest.to("health", "info")).permitAll()
 					.anyRequest().authenticated()
 					.and()
 				.httpBasic()
