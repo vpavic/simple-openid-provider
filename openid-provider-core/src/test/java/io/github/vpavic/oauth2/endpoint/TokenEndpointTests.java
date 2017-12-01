@@ -344,6 +344,8 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.willAnswer(returnsSecondArg());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -362,6 +364,8 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
+		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
+				.willAnswer(returnsSecondArg());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
@@ -473,7 +477,7 @@ public class TokenEndpointTests {
 			ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
 					clientRepository(), tokenService(), scopeResolver(), authenticationHandler());
 			ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
-					clientRepository(), tokenService());
+					clientRepository(), scopeResolver(), tokenService());
 			RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(clientRepository(),
 					tokenService(), refreshTokenStore());
 

@@ -101,7 +101,7 @@ public class CoreConfiguration {
 		ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
 				this.clientRepository, tokenService(), this.scopeResolver, this.passwordAuthenticationHandler);
 		ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
-				this.clientRepository, tokenService());
+				this.clientRepository, this.scopeResolver, tokenService());
 		RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(this.clientRepository,
 				tokenService(), this.refreshTokenStore);
 		refreshTokenGrantHandler.setUpdateRefreshToken(this.properties.getRefreshToken().isUpdate());
