@@ -1,7 +1,7 @@
 package io.github.vpavic.oauth2;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -169,7 +169,7 @@ public class OpenIdProviderProperties {
 		 * Comma-separated list of supported OpenID scopes.
 		 */
 		@NotEmpty
-		private List<Scope.Value> openidScopes = Arrays.asList(OIDCScopeValue.OPENID, OIDCScopeValue.OFFLINE_ACCESS);
+		private List<Scope.Value> openidScopes = Collections.singletonList(OIDCScopeValue.OPENID);
 
 		/**
 		 * Mappings of resource scopes to resource IDs.
