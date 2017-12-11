@@ -25,6 +25,7 @@ import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,9 +33,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
-public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter {
+/**
+ * A pre-authenticated filter that extracts {@link Authentication} from Bearer token located in {@code Authorization}
+ * HTTP header.
+ *
+ * @author Vedran Pavic
+ */
+public class BearerTokenAuthenticationProcessingFilter extends OncePerRequestFilter {
 
-	private static final Logger logger = LoggerFactory.getLogger(BearerAccessTokenAuthenticationFilter.class);
+	private static final Logger logger = LoggerFactory.getLogger(BearerTokenAuthenticationProcessingFilter.class);
 
 	private final Issuer issuer;
 
@@ -42,10 +49,9 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 
 	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
 
-	public BearerAccessTokenAuthenticationFilter(Issuer issuer, JwkSetLoader jwkSetLoader) {
+	public BearerTokenAuthenticationProcessingFilter(Issuer issuer, JwkSetLoader jwkSetLoader) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
-
 		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
 	}
@@ -88,7 +94,7 @@ public class BearerAccessTokenAuthenticationFilter extends OncePerRequestFilter 
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 		catch (Exception e) {
-			logger.debug("Bearer authentication attempt failed: {}", e.getMessage());
+			logger.debug("Bearer token authentication attempt failed: {}", e.getMessage());
 		}
 
 		filterChain.doFilter(request, response);

@@ -12,7 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
-import io.github.vpavic.oauth2.authentication.BearerAccessTokenAuthenticationFilter;
+import io.github.vpavic.oauth2.authentication.BearerTokenAuthenticationProcessingFilter;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
@@ -58,8 +58,8 @@ public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter 
 	}
 
 	@Bean
-	public BearerAccessTokenAuthenticationFilter userInfoAuthenticationFilter() {
-		BearerAccessTokenAuthenticationFilter filter = new BearerAccessTokenAuthenticationFilter(this.issuer,
+	public BearerTokenAuthenticationProcessingFilter userInfoAuthenticationFilter() {
+		BearerTokenAuthenticationProcessingFilter filter = new BearerTokenAuthenticationProcessingFilter(this.issuer,
 				this.jwkSetLoader);
 		filter.setAccessTokenJwsAlgorithm(this.accessTokenJwsAlgorithm);
 		return filter;
