@@ -2,9 +2,6 @@ package io.github.vpavic.oauth2.config;
 
 import java.util.Objects;
 
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.oauth2.sdk.id.Issuer;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,26 +10,18 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
 import io.github.vpavic.oauth2.authentication.BearerTokenAuthenticationProcessingFilter;
-import io.github.vpavic.oauth2.authentication.JwtBearerAccessTokenAuthenticationResolver;
+import io.github.vpavic.oauth2.authentication.BearerTokenAuthenticationResolver;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
-import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 @Order(-1)
 @Configuration
 public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private final Issuer issuer;
+	private final BearerTokenAuthenticationResolver authenticationResolver;
 
-	private final JwkSetLoader jwkSetLoader;
-
-	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
-
-	public UserInfoSecurityConfiguration(Issuer issuer, JwkSetLoader jwkSetLoader) {
-		Objects.requireNonNull(issuer, "issuer must not be null");
-		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
-
-		this.issuer = issuer;
-		this.jwkSetLoader = jwkSetLoader;
+	public UserInfoSecurityConfiguration(BearerTokenAuthenticationResolver authenticationResolver) {
+		Objects.requireNonNull(authenticationResolver, "authenticationResolver must not be null");
+		this.authenticationResolver = authenticationResolver;
 	}
 
 	@Override
@@ -50,20 +39,8 @@ public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter 
 			.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
-			.addFilterBefore(userInfoAuthenticationFilter(), AbstractPreAuthenticatedProcessingFilter.class);
+			.addFilterBefore(new BearerTokenAuthenticationProcessingFilter(this.authenticationResolver), AbstractPreAuthenticatedProcessingFilter.class);
 		// @formatter:on
-	}
-
-	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
-		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
-	}
-
-	@Bean
-	public BearerTokenAuthenticationProcessingFilter userInfoAuthenticationFilter() {
-		JwtBearerAccessTokenAuthenticationResolver authenticationResolver = new JwtBearerAccessTokenAuthenticationResolver(
-				this.issuer, this.jwkSetLoader);
-		authenticationResolver.setAccessTokenJwsAlgorithm(this.accessTokenJwsAlgorithm);
-		return new BearerTokenAuthenticationProcessingFilter(authenticationResolver);
 	}
 
 }

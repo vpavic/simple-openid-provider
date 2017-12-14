@@ -1,6 +1,5 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,10 +16,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import io.github.vpavic.oauth2.authentication.BearerTokenAuthenticationResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.config.UserInfoSecurityConfiguration;
-import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -57,13 +56,8 @@ public class UserInfoEndpointTests {
 	static class Config {
 
 		@Bean
-		public Issuer issuer() {
-			return new Issuer("http://example.com");
-		}
-
-		@Bean
-		public JwkSetLoader jwkSetLoader() {
-			return mock(JwkSetLoader.class);
+		public BearerTokenAuthenticationResolver authenticationResolver() {
+			return mock(BearerTokenAuthenticationResolver.class);
 		}
 
 		@Bean

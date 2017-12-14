@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import io.github.vpavic.oauth2.authentication.JwtBearerAccessTokenAuthenticationResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.config.TokenSecurityConfiguration;
@@ -35,7 +36,7 @@ import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.TokenService;
 
 @Configuration
-@Import(TokenSecurityConfiguration.class)
+@Import({ TokenSecurityConfiguration.class, UserInfoSecurityConfiguration.class })
 public class CoreConfiguration {
 
 	private final OpenIdProviderProperties properties;
@@ -128,11 +129,11 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public UserInfoSecurityConfiguration userInfoSecurityConfiguration() {
-		UserInfoSecurityConfiguration userInfoSecurityConfiguration = new UserInfoSecurityConfiguration(
+	public JwtBearerAccessTokenAuthenticationResolver authenticationResolver() {
+		JwtBearerAccessTokenAuthenticationResolver authenticationResolver = new JwtBearerAccessTokenAuthenticationResolver(
 				this.properties.getIssuer(), this.jwkSetLoader);
-		userInfoSecurityConfiguration.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
-		return userInfoSecurityConfiguration;
+		authenticationResolver.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		return authenticationResolver;
 	}
 
 }
