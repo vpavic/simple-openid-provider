@@ -48,7 +48,6 @@ public class EndSessionEndpoint {
 	public EndSessionEndpoint(Issuer issuer, ClientRepository clientRepository) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-
 		this.issuer = issuer;
 		this.clientRepository = clientRepository;
 	}

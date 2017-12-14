@@ -26,7 +26,6 @@ public class JwkSetEndpoint {
 
 	public JwkSetEndpoint(JwkSetLoader jwkSetLoader) {
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
-
 		this.jwkSetLoader = jwkSetLoader;
 	}
 

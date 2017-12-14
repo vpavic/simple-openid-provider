@@ -39,7 +39,6 @@ public class UserInfoEndpoint {
 
 	public UserInfoEndpoint(ClaimSource claimSource) {
 		Objects.requireNonNull(claimSource, "claimSource must not be null");
-
 		this.claimSource = claimSource;
 	}
 

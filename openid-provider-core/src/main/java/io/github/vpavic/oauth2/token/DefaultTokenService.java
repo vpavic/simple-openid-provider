@@ -96,7 +96,6 @@ public class DefaultTokenService implements TokenService {
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		Objects.requireNonNull(claimSource, "claimSource must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
-
 		this.issuer = issuer;
 		this.jwkSetLoader = jwkSetLoader;
 		this.claimSource = claimSource;

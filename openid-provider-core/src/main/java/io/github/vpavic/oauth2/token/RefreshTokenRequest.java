@@ -18,7 +18,6 @@ public final class RefreshTokenRequest {
 		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(clientId, "clientId must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
-
 		this.subject = subject;
 		this.clientId = clientId;
 		this.scope = scope;

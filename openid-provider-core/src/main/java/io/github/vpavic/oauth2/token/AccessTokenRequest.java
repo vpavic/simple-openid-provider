@@ -18,7 +18,6 @@ public final class AccessTokenRequest {
 		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(client, "client must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
-
 		this.subject = subject;
 		this.client = client;
 		this.scope = scope;

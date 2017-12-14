@@ -48,7 +48,6 @@ public class ClientRegistrationEndpoint {
 	public ClientRegistrationEndpoint(ClientRepository clientRepository, ClientService clientService) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(clientService, "clientService must not be null");
-
 		this.clientRepository = clientRepository;
 		this.clientService = clientService;
 	}

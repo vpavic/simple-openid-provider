@@ -39,7 +39,6 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 		Objects.requireNonNull(passwordAuthenticationHandler, "passwordAuthenticationHandler must not be null");
-
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.scopeResolver = scopeResolver;

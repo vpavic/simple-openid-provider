@@ -45,11 +45,9 @@ public class TokenEndpoint {
 		Objects.requireNonNull(grantHandlers, "grantHandlers must not be null");
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-
 		if (grantHandlers.isEmpty()) {
 			throw new IllegalArgumentException("grantHandlers must not be empty");
 		}
-
 		this.grantHandlers = grantHandlers;
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}

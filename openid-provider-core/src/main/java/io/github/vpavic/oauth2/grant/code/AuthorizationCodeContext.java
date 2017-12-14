@@ -50,7 +50,6 @@ public class AuthorizationCodeContext implements Serializable {
 		Objects.requireNonNull(acr, "acr must not be null");
 		Objects.requireNonNull(amr, "amr must not be null");
 		Objects.requireNonNull(sessionId, "sessionId must not be null");
-
 		this.subject = subject;
 		this.clientId = clientId;
 		this.redirectUri = redirectUri;

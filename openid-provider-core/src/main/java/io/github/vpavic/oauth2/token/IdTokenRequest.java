@@ -44,11 +44,9 @@ public final class IdTokenRequest {
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
 		Objects.requireNonNull(amr, "amr must not be null");
-
 		if (!scope.contains(OIDCScopeValue.OPENID)) {
 			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OPENID + "' is required");
 		}
-
 		this.subject = subject;
 		this.client = client;
 		this.scope = scope;

@@ -101,7 +101,6 @@ public class CheckSessionIframe {
 
 	public CheckSessionIframe(String cookieName) {
 		Objects.requireNonNull(cookieName, "cookieName must not be null");
-
 		this.cookieName = cookieName;
 	}
 

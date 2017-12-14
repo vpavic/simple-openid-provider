@@ -28,7 +28,6 @@ public class DefaultClientService implements ClientService {
 	public DefaultClientService(ClientRepository clientRepository, String registrationUriTemplate) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(registrationUriTemplate, "registrationUriTemplate must not be null");
-
 		this.clientRepository = clientRepository;
 		this.registrationUriTemplate = registrationUriTemplate;
 	}

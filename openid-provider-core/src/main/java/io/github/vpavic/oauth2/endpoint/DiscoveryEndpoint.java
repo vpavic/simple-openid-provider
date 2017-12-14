@@ -27,7 +27,6 @@ public class DiscoveryEndpoint {
 
 	public DiscoveryEndpoint(OIDCProviderMetadata providerMetadata) {
 		Objects.requireNonNull(providerMetadata, "providerMetadata must not be null");
-
 		this.providerMetadata = providerMetadata;
 	}
 

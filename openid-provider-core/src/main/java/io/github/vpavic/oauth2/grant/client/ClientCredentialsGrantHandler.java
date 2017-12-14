@@ -32,7 +32,6 @@ public class ClientCredentialsGrantHandler implements GrantHandler {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
-
 		this.clientRepository = clientRepository;
 		this.scopeResolver = scopeResolver;
 		this.tokenService = tokenService;

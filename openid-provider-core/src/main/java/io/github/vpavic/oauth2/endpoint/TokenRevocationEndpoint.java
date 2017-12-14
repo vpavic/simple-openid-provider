@@ -40,7 +40,6 @@ public class TokenRevocationEndpoint {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
-
 		this.refreshTokenStore = refreshTokenStore;
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
