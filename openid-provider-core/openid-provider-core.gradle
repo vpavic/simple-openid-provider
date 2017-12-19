@@ -7,6 +7,7 @@ dependencies {
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
 	compile 'javax.servlet:javax.servlet-api'
+	compile 'org.apache.commons:commons-collections4'
 	compile 'org.apache.commons:commons-text'
 	compile 'org.bouncycastle:bcprov-jdk15on'
 	compile 'org.slf4j:slf4j-api'

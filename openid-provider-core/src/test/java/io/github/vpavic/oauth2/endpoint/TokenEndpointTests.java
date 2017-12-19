@@ -386,8 +386,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(
-				new RefreshTokenContext(new Subject("user"), clientId, new Scope(OIDCScopeValue.OPENID), null));
+		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(new RefreshTokenContext(
+				new RefreshToken(), clientId, new Subject("user"), new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -408,8 +408,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(
-				new RefreshTokenContext(new Subject("user"), clientId, new Scope(OIDCScopeValue.OPENID), null));
+		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(new RefreshTokenContext(
+				new RefreshToken(), clientId, new Subject("user"), new Scope(OIDCScopeValue.OPENID), null));
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);

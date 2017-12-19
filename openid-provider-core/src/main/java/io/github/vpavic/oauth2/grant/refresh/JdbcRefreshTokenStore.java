@@ -43,11 +43,13 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	private static final String DEFAULT_TABLE_NAME = "refresh_tokens";
 
-	private static final String STATEMENT_TEMPLATE_INSERT = "INSERT INTO %s(token, subject, client_id, scope, expiry) VALUES (?, ?, ?, ?, ?)";
+	private static final String STATEMENT_TEMPLATE_INSERT = "INSERT INTO %s(token, client_id, subject, scope, expiry) VALUES (?, ?, ?, ?, ?)";
 
-	private static final String STATEMENT_TEMPLATE_SELECT = "SELECT subject, client_id, scope, expiry FROM %s WHERE token = ?";
+	private static final String STATEMENT_TEMPLATE_SELECT_BY_TOKEN = "SELECT token, client_id, subject, scope, expiry FROM %s WHERE token = ?";
 
-	private static final String STATEMENT_TEMPLATE_DELETE = "DELETE FROM %s WHERE token = ?";
+	private static final String STATEMENT_TEMPLATE_SELECT_BY_CLIENT_AND_SUBJECT = "SELECT token, client_id, subject, scope, expiry FROM %s WHERE client_id = ? AND subject = ?";
+
+	private static final String STATEMENT_TEMPLATE_DELETE_BY_TOKEN = "DELETE FROM %s WHERE token = ?";
 
 	private static final String STATEMENT_TEMPLATE_DELETE_EXPIRED = "DELETE FROM %s WHERE expiry > 0 AND expiry < ?";
 
@@ -59,9 +61,11 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	private String statementInsert;
 
-	private String statementSelect;
+	private String statementSelectByToken;
 
-	private String statementDelete;
+	private String statementSelectByClientIdAndSubject;
+
+	private String statementDeleteByToken;
 
 	private String statementDeleteExpired;
 
@@ -77,14 +81,13 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	@Override
 	@Transactional
-	public void save(RefreshToken refreshToken, RefreshTokenContext context) {
-		Objects.requireNonNull(refreshToken, "refreshToken must not be null");
+	public void save(RefreshTokenContext context) {
 		Objects.requireNonNull(context, "context must not be null");
 		Instant expiry = context.getExpiry();
 		this.jdbcOperations.update(this.statementInsert, ps -> {
-			ps.setString(1, refreshToken.getValue());
-			ps.setString(2, context.getSubject().getValue());
-			ps.setString(3, context.getClientId().getValue());
+			ps.setString(1, context.getRefreshToken().getValue());
+			ps.setString(2, context.getClientId().getValue());
+			ps.setString(3, context.getSubject().getValue());
 			ps.setString(4, context.getScope().toString());
 			ps.setLong(5, (expiry != null) ? expiry.getEpochSecond() : 0);
 		});
@@ -95,9 +98,10 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 	public RefreshTokenContext load(RefreshToken refreshToken) throws GeneralException {
 		Objects.requireNonNull(refreshToken, "refreshToken must not be null");
 		try {
-			RefreshTokenContext context = this.jdbcOperations.queryForObject(this.statementSelect,
+			RefreshTokenContext context = this.jdbcOperations.queryForObject(this.statementSelectByToken,
 					refreshTokenContextMapper, refreshToken.getValue());
-			if (context == null || context.isExpired()) {
+			if (context.isExpired()) {
+				this.jdbcOperations.update(this.statementDeleteByToken, ps -> ps.setString(1, refreshToken.getValue()));
 				throw new GeneralException(OAuth2Error.INVALID_GRANT);
 			}
 			return context;
@@ -109,9 +113,29 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	@Override
 	@Transactional
+	public RefreshTokenContext findByClientIdAndSubject(ClientID clientId, Subject subject) {
+		Objects.requireNonNull(clientId, "clientId must not be null");
+		Objects.requireNonNull(subject, "subject must not be null");
+		try {
+			RefreshTokenContext context = this.jdbcOperations.queryForObject(this.statementSelectByClientIdAndSubject,
+					refreshTokenContextMapper, clientId.getValue(), subject.getValue());
+			if (context.isExpired()) {
+				this.jdbcOperations.update(this.statementDeleteByToken,
+						ps -> ps.setString(1, context.getRefreshToken().getValue()));
+				return null;
+			}
+			return context;
+		}
+		catch (EmptyResultDataAccessException e) {
+			return null;
+		}
+	}
+
+	@Override
+	@Transactional
 	public void revoke(RefreshToken refreshToken) {
 		Objects.requireNonNull(refreshToken, "refreshToken must not be null");
-		this.jdbcOperations.update(this.statementDelete, ps -> ps.setString(1, refreshToken.getValue()));
+		this.jdbcOperations.update(this.statementDeleteByToken, ps -> ps.setString(1, refreshToken.getValue()));
 	}
 
 	@Scheduled(cron = "0 0 * * * *")
@@ -129,8 +153,10 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	private void prepareStatements() {
 		this.statementInsert = String.format(STATEMENT_TEMPLATE_INSERT, this.tableName);
-		this.statementSelect = String.format(STATEMENT_TEMPLATE_SELECT, this.tableName);
-		this.statementDelete = String.format(STATEMENT_TEMPLATE_DELETE, this.tableName);
+		this.statementSelectByToken = String.format(STATEMENT_TEMPLATE_SELECT_BY_TOKEN, this.tableName);
+		this.statementSelectByClientIdAndSubject = String.format(STATEMENT_TEMPLATE_SELECT_BY_CLIENT_AND_SUBJECT,
+				this.tableName);
+		this.statementDeleteByToken = String.format(STATEMENT_TEMPLATE_DELETE_BY_TOKEN, this.tableName);
 		this.statementDeleteExpired = String.format(STATEMENT_TEMPLATE_DELETE_EXPIRED, this.tableName);
 	}
 
@@ -138,13 +164,14 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 		@Override
 		public RefreshTokenContext mapRow(ResultSet rs, int rowNum) throws SQLException {
-			String subject = rs.getString("subject");
+			String refreshToken = rs.getString("token");
 			String clientId = rs.getString("client_id");
+			String subject = rs.getString("subject");
 			String scope = rs.getString("scope");
 			long expiry = rs.getLong("expiry");
 
-			return new RefreshTokenContext(new Subject(subject), new ClientID(clientId), Scope.parse(scope),
-					expiry > 0 ? Instant.ofEpochSecond(expiry) : null);
+			return new RefreshTokenContext(new RefreshToken(refreshToken), new ClientID(clientId), new Subject(subject),
+					Scope.parse(scope), expiry > 0 ? Instant.ofEpochSecond(expiry) : null);
 		}
 
 	}

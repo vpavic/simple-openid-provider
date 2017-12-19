@@ -48,6 +48,7 @@ import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import org.apache.commons.collections4.SetUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import io.github.vpavic.oauth2.claim.ClaimHelper;
@@ -164,17 +165,21 @@ public class DefaultTokenService implements TokenService {
 	@Override
 	public RefreshToken createRefreshToken(RefreshTokenRequest refreshTokenRequest) {
 		Instant now = Instant.now();
+		ClientID clientId = refreshTokenRequest.getClientId();
+		Subject subject = refreshTokenRequest.getSubject();
 		Scope scope = refreshTokenRequest.getScope();
 
-		RefreshToken refreshToken = new RefreshToken();
-		Instant expiry = (!this.refreshTokenLifetime.isZero() && !this.refreshTokenLifetime.isNegative())
-				? now.plus(this.refreshTokenLifetime)
-				: null;
-		RefreshTokenContext context = new RefreshTokenContext(refreshTokenRequest.getSubject(),
-				refreshTokenRequest.getClientId(), scope, expiry);
-		this.refreshTokenStore.save(refreshToken, context);
+		RefreshTokenContext context = this.refreshTokenStore.findByClientIdAndSubject(clientId, subject);
 
-		return refreshToken;
+		if (context == null || !SetUtils.isEqualSet(context.getScope(), scope)) {
+			Instant expiry = (!this.refreshTokenLifetime.isZero() && !this.refreshTokenLifetime.isNegative())
+					? now.plus(this.refreshTokenLifetime)
+					: null;
+			context = new RefreshTokenContext(new RefreshToken(), clientId, subject, scope, expiry);
+			this.refreshTokenStore.save(context);
+		}
+
+		return context.getRefreshToken();
 	}
 
 	@Override

@@ -4,12 +4,15 @@ import java.time.Instant;
 
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.DirectFieldAccessor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
@@ -64,9 +67,11 @@ public class JdbcRefreshTokenStoreTests {
 
 		assertThat((String) new DirectFieldAccessor(refreshTokenStore).getPropertyValue("statementInsert"))
 				.contains(tableName);
-		assertThat((String) new DirectFieldAccessor(refreshTokenStore).getPropertyValue("statementSelect"))
+		assertThat((String) new DirectFieldAccessor(refreshTokenStore).getPropertyValue("statementSelectByToken"))
 				.contains(tableName);
-		assertThat((String) new DirectFieldAccessor(refreshTokenStore).getPropertyValue("statementDelete"))
+		assertThat((String) new DirectFieldAccessor(refreshTokenStore)
+				.getPropertyValue("statementSelectByClientIdAndSubject")).contains(tableName);
+		assertThat((String) new DirectFieldAccessor(refreshTokenStore).getPropertyValue("statementDeleteByToken"))
 				.contains(tableName);
 		assertThat((String) new DirectFieldAccessor(refreshTokenStore).getPropertyValue("statementDeleteExpired"))
 				.contains(tableName);
@@ -94,19 +99,9 @@ public class JdbcRefreshTokenStoreTests {
 	public void save_Valid_ShouldInsert() {
 		given(this.jdbcOperations.update(anyString(), any(PreparedStatementSetter.class))).willReturn(0);
 
-		this.refreshTokenStore.save(new RefreshToken(), RefreshTokenTestUtils.createRefreshTokenContext(null));
+		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(null));
 
 		verify(this.jdbcOperations, times(1)).update(startsWith("INSERT"), any(PreparedStatementSetter.class));
-		verifyZeroInteractions(this.jdbcOperations);
-	}
-
-	@Test
-	public void save_NullAccessToken_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("refreshToken must not be null");
-
-		this.refreshTokenStore.save(null, RefreshTokenTestUtils.createRefreshTokenContext(null));
-
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
@@ -115,7 +110,7 @@ public class JdbcRefreshTokenStoreTests {
 		this.thrown.expect(NullPointerException.class);
 		this.thrown.expectMessage("context must not be null");
 
-		this.refreshTokenStore.save(new RefreshToken(), null);
+		this.refreshTokenStore.save(null);
 
 		verifyZeroInteractions(this.jdbcOperations);
 	}
@@ -123,44 +118,43 @@ public class JdbcRefreshTokenStoreTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void load_Existing_ShouldReturnClient() throws GeneralException {
-		RefreshToken refreshToken = new RefreshToken();
-		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString()))
-				.willReturn(RefreshTokenTestUtils.createRefreshTokenContext(null));
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(context);
 
-		assertThat(this.refreshTokenStore.load(refreshToken)).isNotNull();
+		assertThat(this.refreshTokenStore.load(context.getRefreshToken())).isNotNull();
 		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
-				eq(refreshToken.getValue()));
+				eq(context.getRefreshToken().getValue()));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
 	public void load_Missing_ShouldThrowException() throws GeneralException {
-		RefreshToken refreshToken = new RefreshToken();
-		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(null);
+		RefreshToken token = new RefreshToken();
+		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString()))
+				.willThrow(EmptyResultDataAccessException.class);
 		this.thrown.expect(GeneralException.class);
 		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
-		this.refreshTokenStore.load(refreshToken);
+		this.refreshTokenStore.load(token);
 
 		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
-				eq(refreshToken.getValue()));
+				eq(token.getValue()));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
 	public void load_Expired_ShouldThrowException() throws GeneralException {
-		RefreshToken refreshToken = new RefreshToken();
-		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString()))
-				.willReturn(RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
+		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(context);
 		this.thrown.expect(GeneralException.class);
 		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
-		this.refreshTokenStore.load(refreshToken);
+		this.refreshTokenStore.load(context.getRefreshToken());
 
 		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
-				eq(refreshToken.getValue()));
+				eq(context.getRefreshToken().getValue()));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
@@ -170,6 +164,66 @@ public class JdbcRefreshTokenStoreTests {
 		this.thrown.expectMessage("refreshToken must not be null");
 
 		this.refreshTokenStore.load(null);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void findByClientIdAndSubject_Existing_ShouldReturnClient() {
+		ClientID clientId = new ClientID();
+		Subject subject = new Subject();
+		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString(), anyString()))
+				.willReturn(RefreshTokenTestUtils.createRefreshTokenContext(null));
+
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(clientId, subject)).isNotNull();
+		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
+				eq(clientId.getValue()), eq(subject.getValue()));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void findByClientIdAndSubject_Missing_ShouldReturnNull() {
+		ClientID clientId = new ClientID();
+		Subject subject = new Subject();
+		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString(), anyString()))
+				.willThrow(EmptyResultDataAccessException.class);
+
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(clientId, subject)).isNull();
+		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
+				eq(clientId.getValue()), eq(subject.getValue()));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void findByClientIdAndSubject_Expired_ShouldReturnNull() {
+		ClientID clientId = new ClientID();
+		Subject subject = new Subject();
+		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString(), anyString()))
+				.willReturn(RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
+
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(clientId, subject)).isNull();
+		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
+				eq(clientId.getValue()), eq(subject.getValue()));
+		verify(this.jdbcOperations, times(1)).update(and(startsWith("DELETE"), endsWith("WHERE token = ?")),
+				any(PreparedStatementSetter.class));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	public void findByClientIdAndSubject_NullClientId_ShouldThrowException() {
+		this.thrown.expect(NullPointerException.class);
+		this.thrown.expectMessage("clientId must not be null");
+
+		this.refreshTokenStore.findByClientIdAndSubject(null, new Subject());
+	}
+
+	@Test
+	public void findByClientIdAndSubject_NullSubjject_ShouldThrowException() {
+		this.thrown.expect(NullPointerException.class);
+		this.thrown.expectMessage("subject must not be null");
+
+		this.refreshTokenStore.findByClientIdAndSubject(new ClientID(), null);
 	}
 
 	@Test

@@ -6,6 +6,8 @@ import javax.sql.DataSource;
 
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,7 +50,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Test
 	public void save_Valid_ShouldInsert() {
-		this.refreshTokenStore.save(new RefreshToken(), RefreshTokenTestUtils.createRefreshTokenContext(null));
+		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(null));
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(1);
 	}
@@ -57,17 +59,17 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	public void save_Existing_ShouldThrowException() {
 		this.thrown.expect(DuplicateKeyException.class);
 
-		RefreshToken refreshToken = new RefreshToken();
-		this.refreshTokenStore.save(refreshToken, RefreshTokenTestUtils.createRefreshTokenContext(null));
-		this.refreshTokenStore.save(refreshToken, RefreshTokenTestUtils.createRefreshTokenContext(null));
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		this.refreshTokenStore.save(context);
+		this.refreshTokenStore.save(context);
 	}
 
 	@Test
 	public void load_Existing_ShouldReturnClient() throws GeneralException {
-		RefreshToken refreshToken = new RefreshToken();
-		this.refreshTokenStore.save(refreshToken, RefreshTokenTestUtils.createRefreshTokenContext(null));
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		this.refreshTokenStore.save(context);
 
-		assertThat(this.refreshTokenStore.load(refreshToken)).isNotNull();
+		assertThat(this.refreshTokenStore.load(context.getRefreshToken())).isNotNull();
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(1);
 	}
 
@@ -81,20 +83,43 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Test
 	public void load_Expired_ShouldThrowException() throws GeneralException {
-		RefreshToken refreshToken = new RefreshToken();
-		this.refreshTokenStore.save(refreshToken,
-				RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
+		this.refreshTokenStore.save(context);
 		this.thrown.expect(GeneralException.class);
 		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
-		this.refreshTokenStore.load(refreshToken);
+		this.refreshTokenStore.load(context.getRefreshToken());
+	}
+
+	@Test
+	public void findByClientIdAndSubject_Existing_ShouldReturnClient() {
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		this.refreshTokenStore.save(context);
+
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(context.getClientId(), context.getSubject()))
+				.isNotNull();
+		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(1);
+	}
+
+	@Test
+	public void findByClientIdAndSubject_Missing_ShouldReturnNull() {
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(new ClientID(), new Subject())).isNull();
+	}
+
+	@Test
+	public void findByClientIdAndSubject_Expired_ShouldReturnNull() {
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
+		this.refreshTokenStore.save(context);
+
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(context.getClientId(), context.getSubject()))
+				.isNull();
 	}
 
 	@Test
 	public void revoke_Existing_ShouldReturnNull() {
-		RefreshToken refreshToken = new RefreshToken();
-		this.refreshTokenStore.save(refreshToken, RefreshTokenTestUtils.createRefreshTokenContext(null));
-		this.refreshTokenStore.revoke(refreshToken);
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		this.refreshTokenStore.save(context);
+		this.refreshTokenStore.revoke(context.getRefreshToken());
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
 	}
@@ -108,7 +133,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Test
 	public void cleanExpiredTokens_Valid_ShouldReturnNull() {
-		this.refreshTokenStore.save(new RefreshToken(), RefreshTokenTestUtils.createRefreshTokenContext(null));
+		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(null));
 		this.refreshTokenStore.cleanExpiredTokens();
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(1);
@@ -116,8 +141,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Test
 	public void cleanExpiredTokens_Expired_ShouldReturnNull() {
-		this.refreshTokenStore.save(new RefreshToken(),
-				RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
+		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
 		this.refreshTokenStore.cleanExpiredTokens();
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
