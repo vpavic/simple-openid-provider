@@ -1,7 +1,6 @@
 package io.github.vpavic.oauth2.config;
 
-import java.util.Objects;
-
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,9 +18,8 @@ public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter 
 
 	private final BearerTokenAuthenticationResolver authenticationResolver;
 
-	public UserInfoSecurityConfiguration(BearerTokenAuthenticationResolver authenticationResolver) {
-		Objects.requireNonNull(authenticationResolver, "authenticationResolver must not be null");
-		this.authenticationResolver = authenticationResolver;
+	public UserInfoSecurityConfiguration(ObjectProvider<BearerTokenAuthenticationResolver> authenticationResolver) {
+		this.authenticationResolver = authenticationResolver.getObject();
 	}
 
 	@Override

@@ -64,7 +64,6 @@ public class SessionConfiguration {
 		DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
 		cookieSerializer.setCookieName(this.sessionCookieProperties.getName());
 		cookieSerializer.setUseHttpOnlyCookie(this.sessionCookieProperties.getHttpOnly());
-
 		return cookieSerializer;
 	}
 

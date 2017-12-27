@@ -78,7 +78,6 @@ public class DiscoveryConfiguration {
 		providerMetadata.setUILocales(uiLocales());
 		providerMetadata.setSupportsFrontChannelLogout(supportsFrontChannelLogout());
 		providerMetadata.setSupportsFrontChannelLogoutSession(supportsFrontChannelLogoutSession());
-
 		return providerMetadata;
 	}
 
@@ -141,7 +140,6 @@ public class DiscoveryConfiguration {
 	private Scope scope() {
 		Scope scope = new Scope();
 		scope.addAll(this.properties.getAuthorization().getSupportedScopes());
-
 		return scope;
 	}
 
