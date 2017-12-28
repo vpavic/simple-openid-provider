@@ -172,6 +172,9 @@ public class DefaultTokenService implements TokenService {
 		RefreshTokenContext context = this.refreshTokenStore.findByClientIdAndSubject(clientId, subject);
 
 		if (context == null || !SetUtils.isEqualSet(context.getScope(), scope)) {
+			if (context != null) {
+				this.refreshTokenStore.revoke(context.getRefreshToken());
+			}
 			Instant expiry = (!this.refreshTokenLifetime.isZero() && !this.refreshTokenLifetime.isNegative())
 					? now.plus(this.refreshTokenLifetime)
 					: null;
