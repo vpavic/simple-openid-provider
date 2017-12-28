@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2.grant.refresh;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -169,8 +170,8 @@ public class JdbcRefreshTokenStoreTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void findByClientIdAndSubject_Existing_ShouldReturnClient() {
-		ClientID clientId = new ClientID();
-		Subject subject = new Subject();
+		ClientID clientId = new ClientID(UUID.randomUUID().toString());
+		Subject subject = new Subject(UUID.randomUUID().toString());
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString(), anyString()))
 				.willReturn(RefreshTokenTestUtils.createRefreshTokenContext(null));
 
@@ -183,8 +184,8 @@ public class JdbcRefreshTokenStoreTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void findByClientIdAndSubject_Missing_ShouldReturnNull() {
-		ClientID clientId = new ClientID();
-		Subject subject = new Subject();
+		ClientID clientId = new ClientID(UUID.randomUUID().toString());
+		Subject subject = new Subject(UUID.randomUUID().toString());
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString(), anyString()))
 				.willThrow(EmptyResultDataAccessException.class);
 
@@ -197,8 +198,8 @@ public class JdbcRefreshTokenStoreTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void findByClientIdAndSubject_Expired_ShouldReturnNull() {
-		ClientID clientId = new ClientID();
-		Subject subject = new Subject();
+		ClientID clientId = new ClientID(UUID.randomUUID().toString());
+		Subject subject = new Subject(UUID.randomUUID().toString());
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString(), anyString()))
 				.willReturn(RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
 
@@ -215,7 +216,7 @@ public class JdbcRefreshTokenStoreTests {
 		this.thrown.expect(NullPointerException.class);
 		this.thrown.expectMessage("clientId must not be null");
 
-		this.refreshTokenStore.findByClientIdAndSubject(null, new Subject());
+		this.refreshTokenStore.findByClientIdAndSubject(null, new Subject(UUID.randomUUID().toString()));
 	}
 
 	@Test
@@ -223,7 +224,7 @@ public class JdbcRefreshTokenStoreTests {
 		this.thrown.expect(NullPointerException.class);
 		this.thrown.expectMessage("subject must not be null");
 
-		this.refreshTokenStore.findByClientIdAndSubject(new ClientID(), null);
+		this.refreshTokenStore.findByClientIdAndSubject(new ClientID(UUID.randomUUID().toString()), null);
 	}
 
 	@Test

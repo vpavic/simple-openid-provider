@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2.grant.refresh;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import javax.sql.DataSource;
 
@@ -103,7 +104,8 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Test
 	public void findByClientIdAndSubject_Missing_ShouldReturnNull() {
-		assertThat(this.refreshTokenStore.findByClientIdAndSubject(new ClientID(), new Subject())).isNull();
+		assertThat(this.refreshTokenStore.findByClientIdAndSubject(new ClientID(UUID.randomUUID().toString()),
+				new Subject(UUID.randomUUID().toString()))).isNull();
 	}
 
 	@Test

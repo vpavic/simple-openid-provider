@@ -1,5 +1,7 @@
 package io.github.vpavic.oauth2.client;
 
+import java.util.UUID;
+
 import javax.sql.DataSource;
 
 import com.nimbusds.oauth2.sdk.auth.Secret;
@@ -68,7 +70,7 @@ public class JdbcClientRepositoryIntegrationTests {
 
 	@Test
 	public void findById_Missing_ShouldReturnNull() {
-		assertThat(this.clientRepository.findById(new ClientID())).isNull();
+		assertThat(this.clientRepository.findById(new ClientID(UUID.randomUUID().toString()))).isNull();
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "clients")).isEqualTo(0);
 	}
 

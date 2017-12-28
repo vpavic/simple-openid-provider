@@ -2,6 +2,7 @@ package io.github.vpavic.oauth2.client;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.UUID;
 
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
@@ -20,7 +21,7 @@ final class ClientTestUtils {
 	}
 
 	static OIDCClientInformation createClient() {
-		ClientID id = new ClientID();
+		ClientID id = new ClientID(UUID.randomUUID().toString());
 		Date issueDate = new Date();
 		OIDCClientMetadata metadata = new OIDCClientMetadata();
 		Secret secret = new Secret();

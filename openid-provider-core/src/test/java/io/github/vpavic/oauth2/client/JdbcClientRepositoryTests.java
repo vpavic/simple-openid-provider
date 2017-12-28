@@ -2,6 +2,7 @@ package io.github.vpavic.oauth2.client;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
@@ -140,7 +141,7 @@ public class JdbcClientRepositoryTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void findById_Missing_ShouldReturnNull() {
-		ClientID id = new ClientID();
+		ClientID id = new ClientID(UUID.randomUUID().toString());
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(null);
 
 		assertThat(this.clientRepository.findById(id)).isNull();
@@ -182,7 +183,7 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	public void deleteById_Valid_ShouldReturnNull() {
-		this.clientRepository.deleteById(new ClientID());
+		this.clientRepository.deleteById(new ClientID(UUID.randomUUID().toString()));
 
 		verify(this.jdbcOperations, times(1)).update(startsWith("DELETE"), any(PreparedStatementSetter.class));
 		verifyZeroInteractions(this.jdbcOperations);
