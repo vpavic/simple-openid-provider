@@ -33,12 +33,6 @@ public class EndSessionEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/logout";
 
-	private static final String POST_LOGOUT_REDIRECT_URI_PARAMETER = "post_logout_redirect_uri";
-
-	private static final String STATE_PARAMETER = "state";
-
-	private static final String LOGOUT_PROMPT_FORWARD_URI = "forward:/logout";
-
 	private final Issuer issuer;
 
 	private final ClientRepository clientRepository;
@@ -66,12 +60,12 @@ public class EndSessionEndpoint {
 			model.put("state", logoutRequest.getState());
 		}
 
-		return new ModelAndView(LOGOUT_PROMPT_FORWARD_URI, model);
+		return new ModelAndView("forward:/logout", model);
 	}
 
 	@PostMapping
 	public ResponseEntity<String> handleLogoutSuccess(WebRequest request) {
-		String postLogoutRedirectUri = request.getParameter(POST_LOGOUT_REDIRECT_URI_PARAMETER);
+		String postLogoutRedirectUri = request.getParameter("post_logout_redirect_uri");
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
@@ -86,7 +80,7 @@ public class EndSessionEndpoint {
 			// @formatter:on
 
 			if (postLogoutRedirectUris.contains(postLogoutRedirectUri)) {
-				String state = request.getParameter(STATE_PARAMETER);
+				String state = request.getParameter("state");
 
 				if (state != null) {
 					// @formatter:off

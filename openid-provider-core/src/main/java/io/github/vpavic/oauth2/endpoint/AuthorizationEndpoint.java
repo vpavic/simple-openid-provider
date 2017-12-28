@@ -75,10 +75,6 @@ public class AuthorizationEndpoint {
 
 	public static final String AUTH_REQUEST_URI_ATTRIBUTE = "continue";
 
-	private static final String PROMPT_PARAMETER = "prompt";
-
-	private static final String LOGIN_REDIRECT_URI = "redirect:/login";
-
 	private static final String FORM_POST_PATH = "/form-post";
 
 	private static final String FORM_POST_FORWARD_URI = "forward:" + PATH_MAPPING + FORM_POST_PATH;
@@ -255,7 +251,7 @@ public class AuthorizationEndpoint {
 		if (prompt != null && prompt.contains(Prompt.Type.LOGIN)) {
 			// @formatter:off
 			Map<String, String> authRequestParams = authRequest.toParameters().entrySet().stream()
-					.filter(entry -> !entry.getKey().equals(PROMPT_PARAMETER))
+					.filter(entry -> !entry.getKey().equals("prompt"))
 					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 			// @formatter:on
 
@@ -268,7 +264,7 @@ public class AuthorizationEndpoint {
 		String authRequestUri = PATH_MAPPING + "?" + authRequestQuery;
 		request.setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri, RequestAttributes.SCOPE_SESSION);
 
-		return new ModelAndView(LOGIN_REDIRECT_URI);
+		return new ModelAndView("redirect:/login");
 	}
 
 	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
