@@ -137,17 +137,18 @@ public class AuthorizationEndpoint {
 
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
 
+		Subject subject = new Subject(authentication.getName());
 		ResponseType responseType = authRequest.getResponseType();
 		AuthenticationSuccessResponse authResponse;
 
 		if (responseType.impliesCodeFlow()) {
-			authResponse = handleAuthorizationCodeFlow(authRequest, client, request, authentication);
+			authResponse = handleAuthorizationCodeFlow(authRequest, client, request, subject);
 		}
 		else if (responseType.impliesImplicitFlow()) {
-			authResponse = handleImplicitFlow(authRequest, client, request, authentication);
+			authResponse = handleImplicitFlow(authRequest, client, request, subject);
 		}
 		else if (responseType.impliesHybridFlow()) {
-			authResponse = handleHybridFlow(authRequest, client, request, authentication);
+			authResponse = handleHybridFlow(authRequest, client, request, subject);
 		}
 		else {
 			ErrorObject error = OAuth2Error.UNSUPPORTED_RESPONSE_TYPE;
@@ -271,8 +272,7 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Authentication authentication)
-			throws GeneralException {
+			OIDCClientInformation client, ServletWebRequest request, Subject subject) throws GeneralException {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
 		URI redirectUri = authRequest.getRedirectionURI();
@@ -281,7 +281,6 @@ public class AuthorizationEndpoint {
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
 
-		Subject subject = new Subject(authentication.getName());
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
@@ -298,8 +297,7 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleImplicitFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Authentication authentication)
-			throws GeneralException {
+			OIDCClientInformation client, ServletWebRequest request, Subject subject) throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		URI redirectUri = authRequest.getRedirectionURI();
@@ -307,7 +305,6 @@ public class AuthorizationEndpoint {
 		State state = authRequest.getState();
 		Nonce nonce = authRequest.getNonce();
 
-		Subject subject = new Subject(authentication.getName());
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
@@ -331,8 +328,7 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleHybridFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Authentication authentication)
-			throws GeneralException {
+			OIDCClientInformation client, ServletWebRequest request, Subject subject) throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
@@ -343,7 +339,6 @@ public class AuthorizationEndpoint {
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
 
-		Subject subject = new Subject(authentication.getName());
 		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
