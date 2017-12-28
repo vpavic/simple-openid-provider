@@ -17,7 +17,6 @@ import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
-import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 /**
@@ -57,7 +56,7 @@ public class JwtBearerAccessTokenAuthenticationResolver implements BearerTokenAu
 		if (Instant.now().isAfter(claimsSet.getExpirationTime().toInstant())) {
 			throw new Exception("Access token has expired");
 		}
-		List<String> scopes = claimsSet.getStringListClaim(UserInfoEndpoint.CLAIM_SCOPE);
+		List<String> scopes = claimsSet.getStringListClaim("scp");
 		if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
 			throw new Exception("Invalid scope");
 		}
