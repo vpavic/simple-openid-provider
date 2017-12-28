@@ -16,10 +16,11 @@ import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 @Configuration
 public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private final BearerTokenAuthenticationResolver authenticationResolver;
+	private final BearerTokenAuthenticationResolver userInfoAuthenticationResolver;
 
-	public UserInfoSecurityConfiguration(ObjectProvider<BearerTokenAuthenticationResolver> authenticationResolver) {
-		this.authenticationResolver = authenticationResolver.getObject();
+	public UserInfoSecurityConfiguration(
+			ObjectProvider<BearerTokenAuthenticationResolver> userInfoAuthenticationResolver) {
+		this.userInfoAuthenticationResolver = userInfoAuthenticationResolver.getObject();
 	}
 
 	@Override
@@ -37,7 +38,8 @@ public class UserInfoSecurityConfiguration extends WebSecurityConfigurerAdapter 
 			.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				.and()
-			.addFilterBefore(new BearerTokenAuthenticationProcessingFilter(this.authenticationResolver), AbstractPreAuthenticatedProcessingFilter.class);
+			.addFilterBefore(new BearerTokenAuthenticationProcessingFilter(this.userInfoAuthenticationResolver),
+					AbstractPreAuthenticatedProcessingFilter.class);
 		// @formatter:on
 	}
 

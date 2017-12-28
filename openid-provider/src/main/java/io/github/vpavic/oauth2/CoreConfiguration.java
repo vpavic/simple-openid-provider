@@ -129,7 +129,7 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public JwtBearerAccessTokenAuthenticationResolver authenticationResolver() {
+	public JwtBearerAccessTokenAuthenticationResolver userInfoAuthenticationResolver() {
 		JwtBearerAccessTokenAuthenticationResolver authenticationResolver = new JwtBearerAccessTokenAuthenticationResolver(
 				this.properties.getIssuer(), this.jwkSetLoader);
 		authenticationResolver.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
