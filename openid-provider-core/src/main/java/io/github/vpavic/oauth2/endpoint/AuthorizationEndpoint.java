@@ -40,7 +40,6 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,6 +52,7 @@ import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
+import io.github.vpavic.oauth2.subject.SubjectResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
@@ -85,6 +85,8 @@ public class AuthorizationEndpoint {
 
 	private final TokenService tokenService;
 
+	private final SubjectResolver subjectResolver;
+
 	private final ScopeResolver scopeResolver;
 
 	private ACR acr = new ACR("1");
@@ -92,14 +94,16 @@ public class AuthorizationEndpoint {
 	private boolean sessionManagementEnabled;
 
 	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService, ScopeResolver scopeResolver) {
+			TokenService tokenService, SubjectResolver subjectResolver, ScopeResolver scopeResolver) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
+		Objects.requireNonNull(subjectResolver, "subjectResolver must not be null");
 		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 		this.clientRepository = clientRepository;
 		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
+		this.subjectResolver = subjectResolver;
 		this.scopeResolver = scopeResolver;
 	}
 
@@ -112,15 +116,17 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public ModelAndView authorize(ServletWebRequest request, Authentication authentication) throws GeneralException {
+	public ModelAndView authorize(ServletWebRequest request) throws GeneralException {
 		AuthenticationRequest authRequest = resolveAuthRequest(request);
 		ClientID clientId = authRequest.getClientID();
 		OIDCClientInformation client = resolveClient(clientId);
-		validateAuthRequest(authRequest, client, authentication);
+		Subject subject = this.subjectResolver.resolveSubject(request);
+		boolean authenticated = subject != null;
+		validateAuthRequest(authRequest, client, authenticated);
 
 		Prompt prompt = authRequest.getPrompt();
 
-		if (authentication == null || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
+		if (!authenticated || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
 			return loginRedirect(request, authRequest);
 		}
 
@@ -133,7 +139,6 @@ public class AuthorizationEndpoint {
 
 		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
 
-		Subject subject = new Subject(authentication.getName());
 		ResponseType responseType = authRequest.getResponseType();
 		AuthenticationSuccessResponse authResponse;
 
@@ -220,7 +225,7 @@ public class AuthorizationEndpoint {
 	}
 
 	private void validateAuthRequest(AuthenticationRequest authRequest, OIDCClientInformation client,
-			Authentication authentication) throws GeneralException {
+			boolean authenticated) throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
@@ -237,7 +242,7 @@ public class AuthorizationEndpoint {
 			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
 		}
 
-		if (prompt != null && prompt.contains(Prompt.Type.NONE) && authentication == null) {
+		if (prompt != null && prompt.contains(Prompt.Type.NONE) && !authenticated) {
 			ErrorObject error = OIDCError.LOGIN_REQUIRED;
 
 			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);

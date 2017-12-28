@@ -42,6 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -49,6 +50,7 @@ import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
+import io.github.vpavic.oauth2.subject.SubjectResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
 import io.github.vpavic.oauth2.token.TokenService;
@@ -92,6 +94,9 @@ public class AuthorizationEndpointTests {
 	private TokenService tokenService;
 
 	@Autowired
+	private SubjectResolver subjectResolver;
+
+	@Autowired
 	private ScopeResolver scopeResolver;
 
 	private MockHttpSession session;
@@ -109,6 +114,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -127,6 +133,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -155,6 +162,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code&client_id=test-client&redirect_uri=http://example.com&prompt=none")
@@ -184,6 +192,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -287,6 +296,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=id_token token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -304,6 +314,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -324,6 +335,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -396,6 +408,7 @@ public class AuthorizationEndpointTests {
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -416,6 +429,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 
 		MockHttpServletRequestBuilder request = get(
 				"/oauth2/authorize?scope=openid&response_type=code id_token&client_id=test-client&redirect_uri=http://example.com&nonce=test")
@@ -434,6 +448,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -458,6 +473,7 @@ public class AuthorizationEndpointTests {
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
+		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -567,6 +583,11 @@ public class AuthorizationEndpointTests {
 		}
 
 		@Bean
+		public SubjectResolver subjectResolver() {
+			return mock(SubjectResolver.class);
+		}
+
+		@Bean
 		public ScopeResolver scopeResolver() {
 			return mock(ScopeResolver.class);
 		}
@@ -574,7 +595,7 @@ public class AuthorizationEndpointTests {
 		@Bean
 		public AuthorizationEndpoint authorizationEndpoint() {
 			return new AuthorizationEndpoint(clientRepository(), authorizationCodeService(), tokenService(),
-					scopeResolver());
+					subjectResolver(), scopeResolver());
 		}
 
 	}

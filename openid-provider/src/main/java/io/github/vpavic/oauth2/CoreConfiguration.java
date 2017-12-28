@@ -32,6 +32,7 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
+import io.github.vpavic.oauth2.subject.SubjectResolver;
 import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.TokenService;
 
@@ -51,6 +52,8 @@ public class CoreConfiguration {
 
 	private final ClaimSource claimSource;
 
+	private final SubjectResolver subjectResolver;
+
 	private final ScopeResolver scopeResolver;
 
 	private final PasswordAuthenticationHandler passwordAuthenticationHandler;
@@ -59,7 +62,7 @@ public class CoreConfiguration {
 			ObjectProvider<JwkSetLoader> jwkSetLoader,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
 			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<ClaimSource> claimSource,
-			ObjectProvider<ScopeResolver> scopeResolver,
+			ObjectProvider<SubjectResolver> subjectResolver, ObjectProvider<ScopeResolver> scopeResolver,
 			ObjectProvider<PasswordAuthenticationHandler> passwordAuthenticationHandler) {
 		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
@@ -67,6 +70,7 @@ public class CoreConfiguration {
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.refreshTokenStore = refreshTokenStore.getObject();
 		this.claimSource = claimSource.getObject();
+		this.subjectResolver = subjectResolver.getObject();
 		this.scopeResolver = scopeResolver.getObject();
 		this.passwordAuthenticationHandler = passwordAuthenticationHandler.getObject();
 	}
@@ -89,7 +93,7 @@ public class CoreConfiguration {
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
 		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository,
-				this.authorizationCodeService, tokenService(), this.scopeResolver);
+				this.authorizationCodeService, tokenService(), this.subjectResolver, this.scopeResolver);
 		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(1));
 		authorizationEndpoint.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
 		return authorizationEndpoint;
