@@ -8,9 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
-import com.nimbusds.openid.connect.sdk.UserInfoRequest;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -38,10 +36,9 @@ public class BearerTokenAuthenticationProcessingFilter extends OncePerRequestFil
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		try {
-			HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
-			Authentication authentication = this.authenticationResolver
-					.resolveAuthentication(userInfoRequest.getAccessToken().getValue());
+			String authorization = request.getHeader("Authorization");
+			BearerAccessToken accessToken = BearerAccessToken.parse(authorization);
+			Authentication authentication = this.authenticationResolver.resolveAuthentication(accessToken.getValue());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 		catch (Exception e) {
