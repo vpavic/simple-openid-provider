@@ -254,12 +254,12 @@ public class OpenIdProviderProperties {
 		/**
 		 * Name of the Access Token claim containing scope.
 		 */
-		private String scopeClaimName = "scp";
+		private String scopeClaim = "scp";
 
 		/**
 		 * Name of the Access Token claim containing client id.
 		 */
-		private String clientIdClaimName = "cid";
+		private String clientIdClaim = "cid";
 
 		/**
 		 * Comma-separated list of subject claims to be included in Access Tokens.
@@ -282,20 +282,20 @@ public class OpenIdProviderProperties {
 			this.jwsAlgorithm = jwsAlgorithm;
 		}
 
-		public String getScopeClaimName() {
-			return this.scopeClaimName;
+		public String getScopeClaim() {
+			return this.scopeClaim;
 		}
 
-		public void setScopeClaimName(String scopeClaimName) {
-			this.scopeClaimName = scopeClaimName;
+		public void setScopeClaim(String scopeClaim) {
+			this.scopeClaim = scopeClaim;
 		}
 
-		public String getClientIdClaimName() {
-			return this.clientIdClaimName;
+		public String getClientIdClaim() {
+			return this.clientIdClaim;
 		}
 
-		public void setClientIdClaimName(String clientIdClaimName) {
-			this.clientIdClaimName = clientIdClaimName;
+		public void setClientIdClaim(String clientIdClaim) {
+			this.clientIdClaim = clientIdClaim;
 		}
 
 		public List<String> getSubjectClaims() {

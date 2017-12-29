@@ -77,15 +77,15 @@ public class DefaultTokenService implements TokenService {
 
 	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
 
+	private String accessTokenScopeClaim = "scp";
+
+	private String accessTokenClientIdClaim = "cid";
+
 	private List<String> accessTokenSubjectClaims = new ArrayList<>();
 
 	private Duration refreshTokenLifetime = Duration.ZERO;
 
 	private Duration idTokenLifetime = Duration.ofMinutes(15);
-
-	private String scopeClaimName = "scp";
-
-	private String clientIdClaimName = "cid";
 
 	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
@@ -126,8 +126,8 @@ public class DefaultTokenService implements TokenService {
 		Date issueTime = Date.from(now);
 		JWTID jwtId = new JWTID(UUID.randomUUID().toString());
 		UserInfo userInfo = this.claimSource.load(subject, new HashSet<>(this.accessTokenSubjectClaims));
-		userInfo.setClaim(this.scopeClaimName, scope);
-		userInfo.setClaim(this.clientIdClaimName, client.getID());
+		userInfo.setClaim(this.accessTokenScopeClaim, scope);
+		userInfo.setClaim(this.accessTokenClientIdClaim, client.getID());
 
 		try {
 			JWTAssertionDetails details = new JWTAssertionDetails(this.issuer, userInfo.getSubject(), audience,
@@ -265,6 +265,14 @@ public class DefaultTokenService implements TokenService {
 		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
 	}
 
+	public void setAccessTokenScopeClaim(String accessTokenScopeClaim) {
+		this.accessTokenScopeClaim = accessTokenScopeClaim;
+	}
+
+	public void setAccessTokenClientIdClaim(String accessTokenClientIdClaim) {
+		this.accessTokenClientIdClaim = accessTokenClientIdClaim;
+	}
+
 	public void setAccessTokenSubjectClaims(List<String> accessTokenSubjectClaims) {
 		this.accessTokenSubjectClaims = accessTokenSubjectClaims;
 	}
@@ -275,14 +283,6 @@ public class DefaultTokenService implements TokenService {
 
 	public void setIdTokenLifetime(Duration idTokenLifetime) {
 		this.idTokenLifetime = idTokenLifetime;
-	}
-
-	public void setScopeClaimName(String scopeClaimName) {
-		this.scopeClaimName = scopeClaimName;
-	}
-
-	public void setClientIdClaimName(String clientIdClaimName) {
-		this.clientIdClaimName = clientIdClaimName;
 	}
 
 	public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {

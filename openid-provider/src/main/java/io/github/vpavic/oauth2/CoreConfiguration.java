@@ -82,11 +82,11 @@ public class CoreConfiguration {
 		tokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
 		tokenService.setAccessTokenLifetime(Duration.ofSeconds(this.properties.getAccessToken().getLifetime()));
 		tokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		tokenService.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
+		tokenService.setAccessTokenClientIdClaim(this.properties.getAccessToken().getClientIdClaim());
 		tokenService.setAccessTokenSubjectClaims(this.properties.getAccessToken().getSubjectClaims());
 		tokenService.setRefreshTokenLifetime(Duration.ofSeconds(this.properties.getRefreshToken().getLifetime()));
 		tokenService.setIdTokenLifetime(Duration.ofSeconds(this.properties.getIdToken().getLifetime()));
-		tokenService.setScopeClaimName(this.properties.getAccessToken().getScopeClaimName());
-		tokenService.setClientIdClaimName(this.properties.getAccessToken().getClientIdClaimName());
 		tokenService.setScopeClaims(this.properties.getClaim().getScopeClaims());
 		tokenService.setFrontChannelLogoutEnabled(this.properties.getFrontChannelLogout().isEnabled());
 		return tokenService;
@@ -130,7 +130,7 @@ public class CoreConfiguration {
 	@Bean
 	public UserInfoEndpoint userInfoEndpoint() {
 		UserInfoEndpoint endpoint = new UserInfoEndpoint(this.claimSource);
-		endpoint.setScopeClaimName(this.properties.getAccessToken().getScopeClaimName());
+		endpoint.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
 		endpoint.setScopeClaims(this.properties.getClaim().getScopeClaims());
 		return endpoint;
 	}
@@ -139,8 +139,8 @@ public class CoreConfiguration {
 	public JwtBearerAccessTokenAuthenticationResolver userInfoAuthenticationResolver() {
 		JwtBearerAccessTokenAuthenticationResolver authenticationResolver = new JwtBearerAccessTokenAuthenticationResolver(
 				this.properties.getIssuer(), this.jwkSetLoader);
-		authenticationResolver.setScopeClaimName(this.properties.getAccessToken().getScopeClaimName());
 		authenticationResolver.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		authenticationResolver.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
 		return authenticationResolver;
 	}
 

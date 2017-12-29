@@ -33,7 +33,7 @@ public class UserInfoEndpoint {
 
 	private final ClaimSource claimSource;
 
-	private String scopeClaimName = "scp";
+	private String accessTokenScopeClaim = "scp";
 
 	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
@@ -42,8 +42,8 @@ public class UserInfoEndpoint {
 		this.claimSource = claimSource;
 	}
 
-	public void setScopeClaimName(String scopeClaimName) {
-		this.scopeClaimName = scopeClaimName;
+	public void setAccessTokenScopeClaim(String accessTokenScopeClaim) {
+		this.accessTokenScopeClaim = accessTokenScopeClaim;
 	}
 
 	public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {
@@ -56,7 +56,7 @@ public class UserInfoEndpoint {
 		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
 
 		Subject subject = new Subject(claimsSet.getSubject());
-		Scope scope = Scope.parse(claimsSet.getStringListClaim(this.scopeClaimName));
+		Scope scope = Scope.parse(claimsSet.getStringListClaim(this.accessTokenScopeClaim));
 		Set<String> claims = ClaimHelper.resolveClaims(scope, this.scopeClaims);
 		UserInfo userInfo = this.claimSource.load(subject, claims);
 
