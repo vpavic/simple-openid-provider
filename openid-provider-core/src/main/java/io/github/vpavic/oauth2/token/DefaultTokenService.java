@@ -59,10 +59,6 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 public class DefaultTokenService implements TokenService {
 
-	private static final String CLAIM_SCOPE = "scp";
-
-	private static final String CLAIM_CLIENT_ID = "cid";
-
 	private static final Scope SCOPE_OPENID = new Scope(OIDCScopeValue.OPENID);
 
 	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
@@ -86,6 +82,10 @@ public class DefaultTokenService implements TokenService {
 	private Duration refreshTokenLifetime = Duration.ZERO;
 
 	private Duration idTokenLifetime = Duration.ofMinutes(15);
+
+	private String scopeClaimName = "scp";
+
+	private String clientIdClaimName = "cid";
 
 	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
@@ -126,8 +126,8 @@ public class DefaultTokenService implements TokenService {
 		Date issueTime = Date.from(now);
 		JWTID jwtId = new JWTID(UUID.randomUUID().toString());
 		UserInfo userInfo = this.claimSource.load(subject, new HashSet<>(this.accessTokenSubjectClaims));
-		userInfo.setClaim(CLAIM_SCOPE, scope);
-		userInfo.setClaim(CLAIM_CLIENT_ID, client.getID());
+		userInfo.setClaim(this.scopeClaimName, scope);
+		userInfo.setClaim(this.clientIdClaimName, client.getID());
 
 		try {
 			JWTAssertionDetails details = new JWTAssertionDetails(this.issuer, userInfo.getSubject(), audience,
@@ -275,6 +275,14 @@ public class DefaultTokenService implements TokenService {
 
 	public void setIdTokenLifetime(Duration idTokenLifetime) {
 		this.idTokenLifetime = idTokenLifetime;
+	}
+
+	public void setScopeClaimName(String scopeClaimName) {
+		this.scopeClaimName = scopeClaimName;
+	}
+
+	public void setClientIdClaimName(String clientIdClaimName) {
+		this.clientIdClaimName = clientIdClaimName;
 	}
 
 	public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {

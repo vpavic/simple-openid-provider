@@ -30,6 +30,8 @@ public class JwtBearerAccessTokenAuthenticationResolver implements BearerTokenAu
 
 	private final JwkSetLoader jwkSetLoader;
 
+	private String scopeClaimName = "scp";
+
 	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
 
 	public JwtBearerAccessTokenAuthenticationResolver(Issuer issuer, JwkSetLoader jwkSetLoader) {
@@ -56,7 +58,7 @@ public class JwtBearerAccessTokenAuthenticationResolver implements BearerTokenAu
 		if (Instant.now().isAfter(claimsSet.getExpirationTime().toInstant())) {
 			throw new Exception("Access token has expired");
 		}
-		List<String> scopes = claimsSet.getStringListClaim("scp");
+		List<String> scopes = claimsSet.getStringListClaim(this.scopeClaimName);
 		if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
 			throw new Exception("Invalid scope");
 		}
@@ -66,6 +68,10 @@ public class JwtBearerAccessTokenAuthenticationResolver implements BearerTokenAu
 				Collections.emptyList());
 		authentication.setDetails(claimsSet);
 		return authentication;
+	}
+
+	public void setScopeClaimName(String scopeClaimName) {
+		this.scopeClaimName = scopeClaimName;
 	}
 
 	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {

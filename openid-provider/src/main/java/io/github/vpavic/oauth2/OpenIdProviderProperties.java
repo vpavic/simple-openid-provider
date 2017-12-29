@@ -252,6 +252,16 @@ public class OpenIdProviderProperties {
 		private JWSAlgorithm jwsAlgorithm = JWSAlgorithm.RS256;
 
 		/**
+		 * Name of the Access Token claim containing scope.
+		 */
+		private String scopeClaimName = "scp";
+
+		/**
+		 * Name of the Access Token claim containing client id.
+		 */
+		private String clientIdClaimName = "cid";
+
+		/**
 		 * Comma-separated list of subject claims to be included in Access Tokens.
 		 */
 		private List<String> subjectClaims = new ArrayList<>();
@@ -270,6 +280,22 @@ public class OpenIdProviderProperties {
 
 		public void setJwsAlgorithm(JWSAlgorithm jwsAlgorithm) {
 			this.jwsAlgorithm = jwsAlgorithm;
+		}
+
+		public String getScopeClaimName() {
+			return this.scopeClaimName;
+		}
+
+		public void setScopeClaimName(String scopeClaimName) {
+			this.scopeClaimName = scopeClaimName;
+		}
+
+		public String getClientIdClaimName() {
+			return this.clientIdClaimName;
+		}
+
+		public void setClientIdClaimName(String clientIdClaimName) {
+			this.clientIdClaimName = clientIdClaimName;
 		}
 
 		public List<String> getSubjectClaims() {
