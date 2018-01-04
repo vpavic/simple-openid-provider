@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,14 +112,14 @@ public class DefaultTokenService implements TokenService {
 		OIDCClientInformation client = accessTokenRequest.getClient();
 		Scope scope = accessTokenRequest.getScope();
 
-		List<Audience> audience = new ArrayList<>();
-		audience.add(new Audience(this.issuer));
+		Set<Audience> audiences = new LinkedHashSet<>();
+		audiences.add(new Audience(this.issuer));
 
 		for (Scope.Value value : scope) {
 			String resource = this.resourceScopes.get(value);
 
 			if (resource != null) {
-				audience.add(new Audience(resource));
+				audiences.add(new Audience(resource));
 			}
 		}
 
@@ -130,8 +131,8 @@ public class DefaultTokenService implements TokenService {
 		userInfo.setClaim(this.accessTokenClientIdClaim, client.getID());
 
 		try {
-			JWTAssertionDetails details = new JWTAssertionDetails(this.issuer, userInfo.getSubject(), audience,
-					expirationTime, issueTime, issueTime, jwtId, userInfo.toJSONObject());
+			JWTAssertionDetails details = new JWTAssertionDetails(this.issuer, userInfo.getSubject(),
+					new ArrayList<>(audiences), expirationTime, issueTime, issueTime, jwtId, userInfo.toJSONObject());
 			SignedJWT accessToken;
 
 			if (JWSAlgorithm.Family.HMAC_SHA.contains(this.accessTokenJwsAlgorithm)) {
