@@ -26,5 +26,5 @@ dependencies {
 	testCompile 'org.springframework:spring-test'
 	testCompile 'org.springframework.security:spring-security-test'
 
-	testRuntime 'org.junit.vintage:junit-vintage-engine:4.12.2'
+	testRuntime 'org.junit.vintage:junit-vintage-engine'
 }
