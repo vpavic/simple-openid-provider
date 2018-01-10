@@ -11,13 +11,10 @@ import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
-import io.github.vpavic.oauth2.authentication.JwtBearerAccessTokenAuthenticationResolver;
+import io.github.vpavic.oauth2.authentication.JwtAccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.config.TokenSecurityConfiguration;
-import io.github.vpavic.oauth2.config.UserInfoSecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
@@ -37,7 +34,6 @@ import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.TokenService;
 
 @Configuration
-@Import({ TokenSecurityConfiguration.class, UserInfoSecurityConfiguration.class })
 public class CoreConfiguration {
 
 	private final OpenIdProviderProperties properties;
@@ -128,20 +124,20 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public UserInfoEndpoint userInfoEndpoint() {
-		UserInfoEndpoint endpoint = new UserInfoEndpoint(this.claimSource);
-		endpoint.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
-		endpoint.setScopeClaims(this.properties.getClaim().getScopeClaims());
-		return endpoint;
-	}
-
-	@Bean
-	public JwtBearerAccessTokenAuthenticationResolver userInfoAuthenticationResolver() {
-		JwtBearerAccessTokenAuthenticationResolver authenticationResolver = new JwtBearerAccessTokenAuthenticationResolver(
+	public JwtAccessTokenClaimsResolver accessTokenClaimsResolver() {
+		JwtAccessTokenClaimsResolver authenticationResolver = new JwtAccessTokenClaimsResolver(
 				this.properties.getIssuer(), this.jwkSetLoader);
 		authenticationResolver.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
 		authenticationResolver.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
 		return authenticationResolver;
+	}
+
+	@Bean
+	public UserInfoEndpoint userInfoEndpoint() {
+		UserInfoEndpoint endpoint = new UserInfoEndpoint(accessTokenClaimsResolver(), this.claimSource);
+		endpoint.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
+		endpoint.setScopeClaims(this.properties.getClaim().getScopeClaims());
+		return endpoint;
 	}
 
 }

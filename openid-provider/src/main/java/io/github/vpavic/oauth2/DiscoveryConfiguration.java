@@ -26,9 +26,7 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
-import io.github.vpavic.oauth2.config.DiscoverySecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
@@ -41,7 +39,6 @@ import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 @Configuration
-@Import(DiscoverySecurityConfiguration.class)
 public class DiscoveryConfiguration {
 
 	private final OpenIdProviderProperties properties;

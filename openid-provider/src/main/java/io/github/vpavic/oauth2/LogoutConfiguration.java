@@ -10,13 +10,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import io.github.vpavic.oauth2.LogoutConfiguration.LogoutCondition;
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.config.LogoutSecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
 
@@ -49,12 +47,6 @@ public class LogoutConfiguration {
 	@Conditional(SessionManagementCondition.class)
 	public CheckSessionIframe checkSessionIframe() {
 		return new CheckSessionIframe(this.serverProperties.getSession().getCookie().getName());
-	}
-
-	@Configuration
-	@Import(LogoutSecurityConfiguration.class)
-	static class SecurityConfiguration {
-
 	}
 
 	private static class SessionManagementCondition extends SpringBootCondition {

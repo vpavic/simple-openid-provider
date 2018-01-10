@@ -3,17 +3,14 @@ package io.github.vpavic.oauth2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientService;
 import io.github.vpavic.oauth2.client.DefaultClientService;
-import io.github.vpavic.oauth2.config.ClientRegistrationSecurityConfiguration;
 import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
 
 @Configuration
-@Import(ClientRegistrationSecurityConfiguration.class)
 public class ClientRegistrationConfiguration {
 
 	private final OpenIdProviderProperties properties;

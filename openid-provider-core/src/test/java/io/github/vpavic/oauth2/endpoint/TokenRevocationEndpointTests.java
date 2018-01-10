@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -19,11 +18,9 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
-import io.github.vpavic.oauth2.config.TokenSecurityConfiguration;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 
 import static org.mockito.Mockito.mock;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 /**
  * Tests for {@link TokenRevocationEndpoint}.
@@ -42,7 +39,7 @@ public class TokenRevocationEndpointTests {
 
 	@Before
 	public void setUp() {
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).apply(springSecurity()).build();
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
@@ -52,8 +49,7 @@ public class TokenRevocationEndpointTests {
 
 	@Configuration
 	@EnableWebMvc
-	@EnableWebSecurity
-	@Import({ OpenIdProviderWebMvcConfiguration.class, TokenSecurityConfiguration.class })
+	@Import(OpenIdProviderWebMvcConfiguration.class)
 	static class Config {
 
 		@Bean

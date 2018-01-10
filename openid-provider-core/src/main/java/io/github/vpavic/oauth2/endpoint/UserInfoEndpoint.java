@@ -6,17 +6,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.Subject;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimHelper;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 
@@ -31,14 +33,18 @@ public class UserInfoEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/userinfo";
 
+	private final AccessTokenClaimsResolver accessTokenClaimsResolver;
+
 	private final ClaimSource claimSource;
 
 	private String accessTokenScopeClaim = "scp";
 
 	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
-	public UserInfoEndpoint(ClaimSource claimSource) {
+	public UserInfoEndpoint(AccessTokenClaimsResolver accessTokenClaimsResolver, ClaimSource claimSource) {
+		Objects.requireNonNull(accessTokenClaimsResolver, "accessTokenClaimsResolver must not be null");
 		Objects.requireNonNull(claimSource, "claimSource must not be null");
+		this.accessTokenClaimsResolver = accessTokenClaimsResolver;
 		this.claimSource = claimSource;
 	}
 
@@ -52,11 +58,13 @@ public class UserInfoEndpoint {
 
 	@CrossOrigin
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-	public ResponseEntity<String> getUserInfo(Authentication authentication) throws Exception {
-		JWTClaimsSet claimsSet = (JWTClaimsSet) authentication.getDetails();
-
-		Subject subject = new Subject(claimsSet.getSubject());
-		Scope scope = Scope.parse(claimsSet.getStringListClaim(this.accessTokenScopeClaim));
+	@SuppressWarnings("unchecked")
+	public ResponseEntity<String> getUserInfo(HTTPRequest httpRequest) throws Exception {
+		UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
+		AccessToken accessToken = userInfoRequest.getAccessToken();
+		Map<String, Object> accessTokenClaims = this.accessTokenClaimsResolver.resolveClaims(accessToken);
+		Subject subject = new Subject((String) accessTokenClaims.get("sub"));
+		Scope scope = Scope.parse((List<String>) accessTokenClaims.get(this.accessTokenScopeClaim));
 		Set<String> claims = ClaimHelper.resolveClaims(scope, this.scopeClaims);
 		UserInfo userInfo = this.claimSource.load(subject, claims);
 
