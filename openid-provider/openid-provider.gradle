@@ -5,7 +5,6 @@ dependencies {
 	compile project(':openid-provider-core')
 
 	compile 'org.springframework.boot:spring-boot-starter-actuator'
-	compile 'org.springframework.boot:spring-boot-starter-cache'
 	compile 'org.springframework.boot:spring-boot-starter-cloud-connectors'
 	compile 'org.springframework.boot:spring-boot-starter-jdbc'
 	compile 'org.springframework.boot:spring-boot-starter-security'
@@ -13,8 +12,8 @@ dependencies {
 	compile 'org.springframework.boot:spring-boot-starter-web'
 
 	compile 'com.h2database:h2'
+	compile 'com.hazelcast:hazelcast'
 	compile 'com.hazelcast:hazelcast-client'
-	compile 'com.hazelcast:hazelcast-spring'
 	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
 	compile 'org.flywaydb:flyway-core'
