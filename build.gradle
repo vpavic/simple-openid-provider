@@ -12,7 +12,7 @@ buildscript {
 	dependencies {
 		classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
 		classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.3.0'
-		classpath 'gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:1.4.17'
+		classpath 'gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:1.4.20'
 		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.2'
 		classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
 	}
