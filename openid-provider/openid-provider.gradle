@@ -11,8 +11,6 @@ dependencies {
 
 	compile 'com.h2database:h2'
 	compile 'com.hazelcast:hazelcast'
-	compile 'com.hazelcast:hazelcast-client'
-	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
 	compile 'org.flywaydb:flyway-core'
 	compile 'org.postgresql:postgresql'
@@ -23,5 +21,4 @@ dependencies {
 	compile 'org.webjars:webjars-locator'
 
 	testCompile 'org.springframework.boot:spring-boot-starter-test'
-	testCompile 'org.springframework.security:spring-security-test'
 }
