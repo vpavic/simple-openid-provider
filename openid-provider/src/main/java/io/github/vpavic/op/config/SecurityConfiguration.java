@@ -1,6 +1,5 @@
 package io.github.vpavic.op.config;
 
-import org.springframework.boot.actuate.autoconfigure.security.EndpointRequest;
 import org.springframework.boot.autoconfigure.security.StaticResourceRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +8,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -22,12 +20,6 @@ import io.github.vpavic.op.login.LoginFormController;
 
 @Configuration
 public class SecurityConfiguration {
-
-	private static final int WEB_ORDER = 100;
-
-	private static final int ACTUATOR_ORDER = WEB_ORDER - 1;
-
-	private static final int STATIC_ORDER = WEB_ORDER - 2;
 
 	@Bean
 	public UserDetailsService userDetailsService() {
@@ -42,7 +34,7 @@ public class SecurityConfiguration {
 	}
 
 	@Configuration
-	@Order(WEB_ORDER)
+	@Order(100)
 	static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		private static final String LOGOUT_URL = "/logout";
@@ -76,29 +68,7 @@ public class SecurityConfiguration {
 	}
 
 	@Configuration
-	@Order(ACTUATOR_ORDER)
-	static class ActuatorSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			// @formatter:off
-			http
-				.requestMatcher(EndpointRequest.toAnyEndpoint())
-				.authorizeRequests()
-					.requestMatchers(EndpointRequest.to("health", "info")).permitAll()
-					.anyRequest().authenticated()
-					.and()
-				.httpBasic()
-					.and()
-				.sessionManagement()
-					.sessionCreationPolicy(SessionCreationPolicy.NEVER);
-			// @formatter:on
-		}
-
-	}
-
-	@Configuration
-	@Order(STATIC_ORDER)
+	@Order(99)
 	static class StaticResourcesSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		@Override
