@@ -4,7 +4,6 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 
 dependencies {
 	compile 'com.hazelcast:hazelcast', optional
-	compile 'com.nimbusds:nimbus-jose-jwt'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
 	compile 'javax.servlet:javax.servlet-api'
 	compile 'org.apache.commons:commons-collections4'
@@ -13,8 +12,6 @@ dependencies {
 	compile 'org.slf4j:slf4j-api'
 	compile 'org.springframework:spring-jdbc', optional
 	compile 'org.springframework:spring-webmvc'
-	compile 'org.springframework.security:spring-security-config'
-	compile 'org.springframework.security:spring-security-web'
 
 	testCompile 'com.h2database:h2'
 	testCompile 'com.jayway.jsonpath:json-path'
@@ -24,7 +21,6 @@ dependencies {
 	testCompile 'org.mockito:mockito-core'
 	testCompile 'org.slf4j:slf4j-nop'
 	testCompile 'org.springframework:spring-test'
-	testCompile 'org.springframework.security:spring-security-test'
 
 	testRuntime 'org.junit.vintage:junit-vintage-engine'
 }
