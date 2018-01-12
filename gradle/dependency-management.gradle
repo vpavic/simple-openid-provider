@@ -6,7 +6,7 @@ dependencyManagement {
 	}
 
 	dependencies {
-		dependency 'com.nimbusds:nimbus-jose-jwt:5.3'
+		dependency 'com.nimbusds:nimbus-jose-jwt:5.4'
 		dependency 'com.nimbusds:oauth2-oidc-sdk:5.45'
 		dependency 'org.apache.commons:commons-collections4:4.1'
 		dependency 'org.apache.commons:commons-text:1.2'
