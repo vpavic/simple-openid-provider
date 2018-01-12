@@ -77,6 +77,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -119,6 +120,13 @@ public class TokenEndpointTests {
 	@Before
 	public void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+
+		reset(this.clientRepository);
+		reset(this.authorizationCodeService);
+		reset(this.tokenService);
+		reset(this.scopeResolver);
+		reset(this.authenticationHandler);
+		reset(this.refreshTokenStore);
 	}
 
 	@Test

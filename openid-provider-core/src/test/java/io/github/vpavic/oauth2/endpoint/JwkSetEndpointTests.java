@@ -23,6 +23,7 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,6 +52,8 @@ public class JwkSetEndpointTests {
 	@Before
 	public void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+
+		reset(this.jwkSetLoader);
 	}
 
 	@Test
