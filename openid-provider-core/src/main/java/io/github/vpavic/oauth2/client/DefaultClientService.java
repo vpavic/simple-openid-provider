@@ -13,7 +13,6 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import org.springframework.transaction.annotation.Transactional;
 
 public class DefaultClientService implements ClientService {
 
@@ -41,7 +40,6 @@ public class DefaultClientService implements ClientService {
 	}
 
 	@Override
-	@Transactional
 	public OIDCClientInformation create(OIDCClientMetadata metadata, boolean dynamicRegistration) {
 		metadata.applyDefaults();
 		ClientID id = new ClientID(UUID.randomUUID().toString());
@@ -60,7 +58,6 @@ public class DefaultClientService implements ClientService {
 	}
 
 	@Override
-	@Transactional
 	public OIDCClientInformation update(ClientID id, OIDCClientMetadata metadata) throws InvalidClientException {
 		OIDCClientInformation client = this.clientRepository.findById(id);
 
