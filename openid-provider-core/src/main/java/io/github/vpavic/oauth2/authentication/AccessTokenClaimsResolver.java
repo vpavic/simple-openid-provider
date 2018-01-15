@@ -2,6 +2,7 @@ package io.github.vpavic.oauth2.authentication;
 
 import java.util.Map;
 
+import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 
 /**
@@ -11,6 +12,6 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
  */
 public interface AccessTokenClaimsResolver {
 
-	Map<String, Object> resolveClaims(AccessToken accessToken) throws Exception;
+	Map<String, Object> resolveClaims(AccessToken accessToken) throws GeneralException;
 
 }

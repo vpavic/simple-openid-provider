@@ -1,19 +1,24 @@
 package io.github.vpavic.oauth2.authentication;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
@@ -41,25 +46,37 @@ public class JwtAccessTokenClaimsResolver implements AccessTokenClaimsResolver {
 	}
 
 	@Override
-	public Map<String, Object> resolveClaims(AccessToken accessToken) throws Exception {
+	public Map<String, Object> resolveClaims(AccessToken accessToken) throws GeneralException {
 		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(this.accessTokenJwsAlgorithm,
 				(jwkSelector, context) -> jwkSelector.select(this.jwkSetLoader.load()));
 		jwtProcessor.setJWSKeySelector(keySelector);
-		JWTClaimsSet claimsSet = jwtProcessor.process(accessToken.getValue(), null);
+		JWTClaimsSet claimsSet;
+		try {
+			claimsSet = jwtProcessor.process(accessToken.getValue(), null);
+		}
+		catch (ParseException | BadJOSEException | JOSEException e) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
 
 		if (!this.issuer.getValue().equals(claimsSet.getIssuer())) {
-			throw new Exception("Invalid issuer");
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 		if (!claimsSet.getAudience().contains(this.issuer.getValue())) {
-			throw new Exception("Invalid audience");
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 		if (Instant.now().isAfter(claimsSet.getExpirationTime().toInstant())) {
-			throw new Exception("Access token has expired");
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
-		List<String> scopes = claimsSet.getStringListClaim(this.accessTokenScopeClaim);
+		List<String> scopes;
+		try {
+			scopes = claimsSet.getStringListClaim(this.accessTokenScopeClaim);
+		}
+		catch (ParseException e) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
 		if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
-			throw new Exception("Invalid scope");
+			throw new GeneralException(BearerTokenError.INSUFFICIENT_SCOPE);
 		}
 
 		return claimsSet.getClaims();
