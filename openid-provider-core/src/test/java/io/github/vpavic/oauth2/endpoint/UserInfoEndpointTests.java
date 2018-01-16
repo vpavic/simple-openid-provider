@@ -6,7 +6,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -17,7 +16,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
-import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
 
 import static org.mockito.Mockito.mock;
 
@@ -48,7 +46,6 @@ public class UserInfoEndpointTests {
 
 	@Configuration
 	@EnableWebMvc
-	@Import(OpenIdProviderWebMvcConfiguration.class)
 	static class Config {
 
 		@Bean

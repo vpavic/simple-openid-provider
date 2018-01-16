@@ -4,6 +4,8 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
@@ -30,7 +32,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -39,11 +40,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
@@ -116,7 +115,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -134,7 +133,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -161,7 +160,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -191,7 +190,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(authCodeClient());
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -287,7 +286,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -306,7 +305,7 @@ public class AuthorizationEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -326,7 +325,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -394,7 +393,7 @@ public class AuthorizationEndpointTests {
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -414,7 +413,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -434,7 +433,7 @@ public class AuthorizationEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithTokenClient());
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -458,7 +457,7 @@ public class AuthorizationEndpointTests {
 		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
-		given(this.subjectResolver.resolveSubject(any(ServletWebRequest.class))).willReturn(new Subject("user"));
+		given(this.subjectResolver.resolveSubject(any(HttpServletRequest.class))).willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -545,7 +544,6 @@ public class AuthorizationEndpointTests {
 
 	@Configuration
 	@EnableWebMvc
-	@Import(OpenIdProviderWebMvcConfiguration.class)
 	static class Config {
 
 		@Bean

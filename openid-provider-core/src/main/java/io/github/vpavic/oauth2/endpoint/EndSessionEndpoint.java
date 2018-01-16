@@ -1,30 +1,31 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 
@@ -51,25 +52,30 @@ public class EndSessionEndpoint {
 	}
 
 	@GetMapping
-	public ModelAndView getLogoutPrompt(HTTPRequest httpRequest) throws ParseException {
-		Map<String, Object> model = new HashMap<>();
+	public void getLogoutPrompt(HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		if (request.getQueryString() != null) {
+			HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 
-		if (httpRequest.getQuery() != null) {
-			LogoutRequest logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
-			model.put("redirectUri", logoutRequest.getPostLogoutRedirectionURI());
-			model.put("state", logoutRequest.getState());
+			try {
+				LogoutRequest logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
+				request.setAttribute("redirectUri", logoutRequest.getPostLogoutRedirectionURI());
+				request.setAttribute("state", logoutRequest.getState());
+			}
+			catch (ParseException ignored) {
+			}
 		}
 
-		return new ModelAndView("forward:/logout", model);
+		request.getRequestDispatcher("/logout").forward(request, response);
 	}
 
 	@PostMapping
-	public ResponseEntity<String> handleLogoutSuccess(WebRequest request) {
+	public void handleLogoutSuccess(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String postLogoutRedirectUri = request.getParameter("post_logout_redirect_uri");
 
 		List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
-		if (StringUtils.hasText(postLogoutRedirectUri)) {
+		if (StringUtils.isNotBlank(postLogoutRedirectUri)) {
 			// @formatter:off
 			Set<String> postLogoutRedirectUris = clients.stream()
 					.flatMap(client -> Optional.ofNullable(client.getOIDCMetadata().getPostLogoutRedirectionURIs())
@@ -84,9 +90,9 @@ public class EndSessionEndpoint {
 
 				if (state != null) {
 					// @formatter:off
-					postLogoutRedirectUri = UriComponentsBuilder.fromHttpUrl(postLogoutRedirectUri)
-							.queryParam("state", state)
-							.toUriString();
+					postLogoutRedirectUri = new URIBuilder(URI.create(postLogoutRedirectUri))
+							.addParameter("state", state)
+							.toString();
 					// @formatter:on
 				}
 			}
@@ -101,7 +107,7 @@ public class EndSessionEndpoint {
 		List<String> frontChannelLogoutUris = new ArrayList<>();
 
 		if (this.frontChannelLogoutEnabled) {
-			String sessionId = request.getSessionId();
+			String sessionId = request.getSession().getId();
 
 			// @formatter:off
 			frontChannelLogoutUris = clients.stream()
@@ -112,28 +118,29 @@ public class EndSessionEndpoint {
 			// @formatter:on
 		}
 
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.TEXT_HTML)
-				.body(prepareLogoutSuccessPage(postLogoutRedirectUri, frontChannelLogoutUris));
-		// @formatter:on
+		response.setContentType("text/html");
+
+		PrintWriter writer = response.getWriter();
+		writer.print(prepareLogoutSuccessPage(postLogoutRedirectUri, frontChannelLogoutUris));
+		writer.close();
 	}
 
 	private String resolveDefaultPostLogoutRedirectUri() {
+
 		// @formatter:off
-		return UriComponentsBuilder.fromHttpUrl(this.issuer.getValue())
-				.path("/login")
-				.query("logout")
-				.toUriString();
+		return new URIBuilder(URI.create(this.issuer.getValue()))
+				.setPath("/login")
+				.setCustomQuery("logout")
+				.toString();
 		// @formatter:on
 	}
 
 	private String buildFrontChannelLogoutUri(URI uri, String sessionId) {
 		// @formatter:off
-		return UriComponentsBuilder.fromUri(uri)
-				.queryParam("iss", this.issuer)
-				.queryParam("sid", sessionId)
-				.toUriString();
+		return new URIBuilder(uri)
+				.addParameter("iss", this.issuer.getValue())
+				.addParameter("sid", sessionId)
+				.toString();
 		// @formatter:on
 	}
 

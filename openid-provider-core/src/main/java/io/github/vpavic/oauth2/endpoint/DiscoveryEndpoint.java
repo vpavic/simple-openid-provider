@@ -1,12 +1,12 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Objects;
 
-import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -30,18 +30,21 @@ public class DiscoveryEndpoint {
 		this.providerMetadata = providerMetadata;
 	}
 
-	@PostConstruct
-	public void init() {
-		this.providerMetadataJson = this.providerMetadata.toJSONObject().toJSONString();
+	@GetMapping
+	public void getProviderMetadata(HttpServletResponse response) throws IOException {
+		if (this.providerMetadataJson == null) {
+			this.providerMetadataJson = serializeProviderMetadata();
+		}
+
+		response.setContentType("application/json; charset=UTF-8");
+
+		PrintWriter writer = response.getWriter();
+		writer.print(this.providerMetadataJson);
+		writer.close();
 	}
 
-	@GetMapping
-	public ResponseEntity<String> getProviderMetadata() {
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(this.providerMetadataJson);
-		// @formatter:on
+	private String serializeProviderMetadata() {
+		return this.providerMetadata.toJSONObject().toJSONString();
 	}
 
 }

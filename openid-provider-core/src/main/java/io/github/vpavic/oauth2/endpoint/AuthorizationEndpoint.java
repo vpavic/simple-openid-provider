@@ -1,12 +1,16 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -18,6 +22,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.id.Subject;
@@ -37,16 +42,8 @@ import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.ModelAndView;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
@@ -74,10 +71,6 @@ public class AuthorizationEndpoint {
 	public static final String PATH_MAPPING = "/oauth2/authorize";
 
 	public static final String AUTH_REQUEST_URI_ATTRIBUTE = "continue";
-
-	private static final String FORM_POST_PATH = "/form-post";
-
-	private static final String FORM_POST_FORWARD_URI = "forward:" + PATH_MAPPING + FORM_POST_PATH;
 
 	private final ClientRepository clientRepository;
 
@@ -116,84 +109,98 @@ public class AuthorizationEndpoint {
 	}
 
 	@GetMapping
-	public ModelAndView authorize(ServletWebRequest request) throws GeneralException {
-		AuthenticationRequest authRequest = resolveAuthRequest(request);
-		ClientID clientId = authRequest.getClientID();
-		OIDCClientInformation client = resolveClient(clientId);
-		Subject subject = this.subjectResolver.resolveSubject(request);
-		boolean authenticated = subject != null;
-		validateAuthRequest(authRequest, client, authenticated);
+	public void authorize(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		AuthorizationResponse authResponse;
 
-		Prompt prompt = authRequest.getPrompt();
+		try {
+			AuthenticationRequest authRequest = resolveAuthRequest(request);
 
-		if (!authenticated || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
-			return loginRedirect(request, authRequest);
+			ResponseType responseType = authRequest.getResponseType();
+			ResponseMode responseMode = authRequest.impliedResponseMode();
+			ClientID clientId = authRequest.getClientID();
+			URI redirectUri = authRequest.getRedirectionURI();
+			State state = authRequest.getState();
+			Prompt prompt = authRequest.getPrompt();
+			OIDCClientInformation client = resolveClient(clientId);
+			OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
+			Subject subject = this.subjectResolver.resolveSubject(request);
+			boolean authenticated = subject != null;
+
+			validateRedirectionURI(redirectUri, clientMetadata);
+
+			if (!clientMetadata.getResponseTypes().contains(responseType)) {
+				ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
+				throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
+			}
+
+			if (prompt != null && prompt.contains(Prompt.Type.NONE) && !authenticated) {
+				ErrorObject error = OIDCError.LOGIN_REQUIRED;
+				throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
+			}
+
+			if (!authenticated || (prompt != null && prompt.contains(Prompt.Type.LOGIN))) {
+				loginRedirect(request, response, authRequest);
+				return;
+			}
+
+			int maxAge = authRequest.getMaxAge();
+			Instant authenticationTime = Instant.ofEpochMilli(request.getSession().getCreationTime());
+
+			if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
+				loginRedirect(request, response, authRequest);
+				return;
+			}
+
+			request.getSession().removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE);
+
+			if (responseType.impliesCodeFlow()) {
+				authResponse = handleAuthorizationCodeFlow(authRequest, client, request, subject);
+			}
+			else if (responseType.impliesImplicitFlow()) {
+				authResponse = handleImplicitFlow(authRequest, client, request, subject);
+			}
+			else if (responseType.impliesHybridFlow()) {
+				authResponse = handleHybridFlow(authRequest, client, request, subject);
+			}
+			else {
+				ErrorObject error = OAuth2Error.UNSUPPORTED_RESPONSE_TYPE;
+				throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
+			}
+		}
+		catch (GeneralException e) {
+			authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), e.getErrorObject(), e.getState(),
+					e.getResponseMode());
+		}
+		catch (NonRedirectingException e) {
+			response.sendError(e.getStatus(), e.getDescription());
+			return;
 		}
 
-		int maxAge = authRequest.getMaxAge();
-		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		if (ResponseMode.FORM_POST.equals(authResponse.getResponseMode())) {
+			response.setContentType("text/html");
 
-		if (maxAge > 0 && authenticationTime.plusSeconds(maxAge).isBefore(Instant.now())) {
-			return loginRedirect(request, authRequest);
-		}
-
-		request.removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, RequestAttributes.SCOPE_SESSION);
-
-		ResponseType responseType = authRequest.getResponseType();
-		AuthenticationSuccessResponse authResponse;
-
-		if (responseType.impliesCodeFlow()) {
-			authResponse = handleAuthorizationCodeFlow(authRequest, client, request, subject);
-		}
-		else if (responseType.impliesImplicitFlow()) {
-			authResponse = handleImplicitFlow(authRequest, client, request, subject);
-		}
-		else if (responseType.impliesHybridFlow()) {
-			authResponse = handleHybridFlow(authRequest, client, request, subject);
+			PrintWriter writer = response.getWriter();
+			writer.print(prepareFormPostPage(authResponse));
+			writer.close();
 		}
 		else {
-			ErrorObject error = OAuth2Error.UNSUPPORTED_RESPONSE_TYPE;
-			URI redirectUri = authRequest.getRedirectionURI();
-			ResponseMode responseMode = authRequest.getResponseMode();
-			State state = authRequest.getState();
-
-			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
+			ServletUtils.applyHTTPResponse(authResponse.toHTTPResponse(), response);
 		}
-
-		return authResponse(authResponse);
 	}
 
-	@GetMapping(path = FORM_POST_PATH)
-	public ResponseEntity<String> formPost(ServletWebRequest request) {
-		AuthorizationResponse authResponse = (AuthorizationResponse) request.getAttribute("authResponse",
-				RequestAttributes.SCOPE_REQUEST);
-
-		if (authResponse == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-		}
-
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.TEXT_HTML)
-				.body(prepareFormPostPage(authResponse));
-		// @formatter:on
-	}
-
-	private AuthenticationRequest resolveAuthRequest(ServletWebRequest request) throws GeneralException {
+	private AuthenticationRequest resolveAuthRequest(HttpServletRequest request)
+			throws GeneralException, NonRedirectingException {
 		AuthenticationRequest authRequest;
 
 		try {
-			authRequest = AuthenticationRequest.parse(request.getRequest().getQueryString());
+			authRequest = AuthenticationRequest.parse(request.getQueryString());
 		}
 		catch (ParseException e) {
 			ClientID clientId = e.getClientID();
 			URI redirectUri = e.getRedirectionURI();
 
 			if (clientId == null || redirectUri == null) {
-				ErrorObject error = e.getErrorObject();
-
-				throw new ResponseStatusException(HttpStatus.valueOf(error.getHTTPStatusCode()),
-						error.getDescription());
+				throw new NonRedirectingException(e.getErrorObject());
 			}
 
 			OIDCClientInformation client = resolveClient(clientId);
@@ -205,51 +212,29 @@ public class AuthorizationEndpoint {
 		return authRequest;
 	}
 
-	private OIDCClientInformation resolveClient(ClientID clientId) {
+	private OIDCClientInformation resolveClient(ClientID clientId) throws NonRedirectingException {
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 
 		if (client == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid \"client_id\" parameter: " + clientId);
+			throw new NonRedirectingException(HttpServletResponse.SC_BAD_REQUEST,
+					"Invalid \"client_id\" parameter: " + clientId);
 		}
 
 		return client;
 	}
 
-	private void validateRedirectionURI(URI redirectUri, OIDCClientMetadata clientMetadata) {
+	private void validateRedirectionURI(URI redirectUri, OIDCClientMetadata clientMetadata)
+			throws NonRedirectingException {
 		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectUri)) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+			throw new NonRedirectingException(HttpServletResponse.SC_BAD_REQUEST,
 					"Invalid \"redirect_uri\" parameter: " + redirectUri);
 		}
 	}
 
-	private void validateAuthRequest(AuthenticationRequest authRequest, OIDCClientInformation client,
-			boolean authenticated) throws GeneralException {
-		ResponseType responseType = authRequest.getResponseType();
-		ResponseMode responseMode = authRequest.impliedResponseMode();
-		ClientID clientId = authRequest.getClientID();
-		URI redirectUri = authRequest.getRedirectionURI();
-		State state = authRequest.getState();
-		Prompt prompt = authRequest.getPrompt();
-		OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
-
-		validateRedirectionURI(redirectUri, clientMetadata);
-
-		if (!clientMetadata.getResponseTypes().contains(responseType)) {
-			ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
-
-			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
-		}
-
-		if (prompt != null && prompt.contains(Prompt.Type.NONE) && !authenticated) {
-			ErrorObject error = OIDCError.LOGIN_REQUIRED;
-
-			throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
-		}
-	}
-
-	private ModelAndView loginRedirect(ServletWebRequest request, AuthenticationRequest authRequest) {
+	private void loginRedirect(HttpServletRequest request, HttpServletResponse response,
+			AuthenticationRequest authRequest) throws IOException {
 		Prompt prompt = authRequest.getPrompt();
 		String authRequestQuery;
 
@@ -267,13 +252,13 @@ public class AuthorizationEndpoint {
 		}
 
 		String authRequestUri = PATH_MAPPING + "?" + authRequestQuery;
-		request.setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri, RequestAttributes.SCOPE_SESSION);
+		request.getSession().setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri);
 
-		return new ModelAndView("redirect:/login");
+		response.sendRedirect("/login");
 	}
 
 	private AuthenticationSuccessResponse handleAuthorizationCodeFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Subject subject) throws GeneralException {
+			OIDCClientInformation client, HttpServletRequest request, Subject subject) throws GeneralException {
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
 		URI redirectUri = authRequest.getRedirectionURI();
@@ -282,10 +267,10 @@ public class AuthorizationEndpoint {
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
 
-		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		Instant authenticationTime = Instant.ofEpochMilli(request.getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
-		SessionID sessionId = new SessionID(request.getSessionId());
+		SessionID sessionId = new SessionID(request.getSession().getId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
 		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
@@ -298,7 +283,7 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleImplicitFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Subject subject) throws GeneralException {
+			OIDCClientInformation client, HttpServletRequest request, Subject subject) throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		URI redirectUri = authRequest.getRedirectionURI();
@@ -306,10 +291,10 @@ public class AuthorizationEndpoint {
 		State state = authRequest.getState();
 		Nonce nonce = authRequest.getNonce();
 
-		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		Instant authenticationTime = Instant.ofEpochMilli(request.getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
-		SessionID sessionId = new SessionID(request.getSessionId());
+		SessionID sessionId = new SessionID(request.getSession().getId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
 		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
@@ -329,7 +314,7 @@ public class AuthorizationEndpoint {
 	}
 
 	private AuthenticationSuccessResponse handleHybridFlow(AuthenticationRequest authRequest,
-			OIDCClientInformation client, ServletWebRequest request, Subject subject) throws GeneralException {
+			OIDCClientInformation client, HttpServletRequest request, Subject subject) throws GeneralException {
 		ResponseType responseType = authRequest.getResponseType();
 		ResponseMode responseMode = authRequest.impliedResponseMode();
 		ClientID clientId = authRequest.getClientID();
@@ -340,10 +325,10 @@ public class AuthorizationEndpoint {
 		CodeChallengeMethod codeChallengeMethod = authRequest.getCodeChallengeMethod();
 		Nonce nonce = authRequest.getNonce();
 
-		Instant authenticationTime = Instant.ofEpochMilli(request.getRequest().getSession().getCreationTime());
+		Instant authenticationTime = Instant.ofEpochMilli(request.getSession().getCreationTime());
 		ACR acr = this.acr;
 		AMR amr = AMR.PWD;
-		SessionID sessionId = new SessionID(request.getSessionId());
+		SessionID sessionId = new SessionID(request.getSession().getId());
 		State sessionState = this.sessionManagementEnabled ? State.parse(sessionId.getValue()) : null;
 
 		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
@@ -367,15 +352,6 @@ public class AuthorizationEndpoint {
 
 		return new AuthenticationSuccessResponse(redirectUri, code, idToken, accessToken, state, sessionState,
 				responseMode);
-	}
-
-	private ModelAndView authResponse(AuthorizationResponse authResponse) {
-		if (ResponseMode.FORM_POST.equals(authResponse.getResponseMode())) {
-			return new ModelAndView(FORM_POST_FORWARD_URI, Collections.singletonMap("authResponse", authResponse));
-		}
-		else {
-			return new ModelAndView("redirect:" + authResponse.toURI());
-		}
 	}
 
 	private String prepareFormPostPage(AuthorizationResponse authResponse) {
@@ -422,14 +398,6 @@ public class AuthorizationEndpoint {
 		sb.append("</html>");
 
 		return sb.toString();
-	}
-
-	@ExceptionHandler(GeneralException.class)
-	public ModelAndView handleGeneralException(GeneralException e) {
-		AuthenticationErrorResponse authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(),
-				e.getErrorObject(), e.getState(), e.getResponseMode());
-
-		return authResponse(authResponse);
 	}
 
 }

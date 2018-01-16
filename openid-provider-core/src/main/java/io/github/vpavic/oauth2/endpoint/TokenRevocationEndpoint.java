@@ -1,17 +1,20 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
 import java.util.Objects;
 
-import com.nimbusds.oauth2.sdk.ErrorObject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.oauth2.sdk.GeneralException;
+import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRevocationRequest;
-import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -45,44 +48,34 @@ public class TokenRevocationEndpoint {
 	}
 
 	@PostMapping
-	public ResponseEntity<Void> handleRevocationRequest(HTTPRequest httpRequest) throws Exception {
-		TokenRevocationRequest revocationRequest = TokenRevocationRequest.parse(httpRequest);
-		this.clientRequestValidator.validateRequest(revocationRequest);
-		Token token = revocationRequest.getToken();
-		RefreshToken refreshToken;
+	public void handleRevocationRequest(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 
-		if (token instanceof RefreshToken) {
-			refreshToken = (RefreshToken) token;
+		try {
+			TokenRevocationRequest revocationRequest = TokenRevocationRequest.parse(httpRequest);
+			this.clientRequestValidator.validateRequest(revocationRequest);
+			Token token = revocationRequest.getToken();
+			RefreshToken refreshToken;
+
+			if (token instanceof RefreshToken) {
+				refreshToken = (RefreshToken) token;
+			}
+			else {
+				refreshToken = new RefreshToken(token.getValue());
+			}
+
+			this.refreshTokenStore.revoke(refreshToken);
+
+			response.setStatus(HttpServletResponse.SC_OK);
 		}
-		else {
-			refreshToken = new RefreshToken(token.getValue());
+		catch (JOSEException e) {
+			response.setStatus(HttpServletResponse.SC_OK);
 		}
-
-		this.refreshTokenStore.revoke(refreshToken);
-
-		// @formatter:off
-		return ResponseEntity.ok()
-				.build();
-		// @formatter:on
-	}
-
-	@ExceptionHandler(InvalidClientException.class)
-	public ResponseEntity<String> handleInvalidClientException(InvalidClientException e) {
-		ErrorObject error = e.getErrorObject();
-
-		// @formatter:off
-		return ResponseEntity.status(error.getHTTPStatusCode())
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(error.toJSONObject().toJSONString());
-		// @formatter:on
-	}
-
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<Void> handleException() {
-		// @formatter:off
-		return ResponseEntity.ok()
-				.build();
-		// @formatter:on
+		catch (GeneralException e) {
+			TokenErrorResponse tokenResponse = new TokenErrorResponse(e.getErrorObject());
+			ServletUtils.applyHTTPResponse(tokenResponse.toHTTPResponse(), response);
+		}
 	}
 
 }

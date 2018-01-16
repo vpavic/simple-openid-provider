@@ -1,22 +1,25 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
-import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -52,42 +55,32 @@ public class TokenEndpoint {
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
-	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> handleTokenRequest(HTTPRequest httpRequest) throws Exception {
-		TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
-		this.clientRequestValidator.validateRequest(tokenRequest);
-		GrantHandler grantHandler = this.grantHandlers.get(tokenRequest.getAuthorizationGrant().getClass());
+	@PostMapping
+	public void handleTokenRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+		TokenResponse tokenResponse;
 
-		if (grantHandler == null) {
-			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+		try {
+			TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
+			this.clientRequestValidator.validateRequest(tokenRequest);
+			GrantHandler grantHandler = this.grantHandlers.get(tokenRequest.getAuthorizationGrant().getClass());
+
+			if (grantHandler == null) {
+				throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+			}
+
+			Tokens tokens = grantHandler.grant(tokenRequest);
+			tokenResponse = (tokens instanceof OIDCTokens) ? new OIDCTokenResponse((OIDCTokens) tokens)
+					: new AccessTokenResponse(tokens);
+		}
+		catch (JOSEException e) {
+			tokenResponse = new TokenErrorResponse(OAuth2Error.SERVER_ERROR);
+		}
+		catch (GeneralException e) {
+			tokenResponse = new TokenErrorResponse(e.getErrorObject());
 		}
 
-		Tokens tokens = grantHandler.grant(tokenRequest);
-		AccessTokenResponse tokenResponse = (tokens instanceof OIDCTokens) ? new OIDCTokenResponse((OIDCTokens) tokens)
-				: new AccessTokenResponse(tokens);
-
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(tokenResponse.toJSONObject().toJSONString());
-		// @formatter:on
-	}
-
-	@ExceptionHandler(GeneralException.class)
-	public ResponseEntity<String> handleParseException(GeneralException e) {
-		ErrorObject error = e.getErrorObject();
-
-		if (error == null) {
-			error = OAuth2Error.INVALID_REQUEST.setDescription(e.getMessage());
-		}
-
-		TokenErrorResponse tokenResponse = new TokenErrorResponse(error);
-
-		// @formatter:off
-		return ResponseEntity.status(error.getHTTPStatusCode())
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(tokenResponse.toJSONObject().toJSONString());
-		// @formatter:on
+		ServletUtils.applyHTTPResponse(tokenResponse.toHTTPResponse(), response);
 	}
 
 }

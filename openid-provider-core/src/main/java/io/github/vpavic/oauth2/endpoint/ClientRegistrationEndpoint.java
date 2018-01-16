@@ -1,28 +1,33 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
 
-import com.nimbusds.oauth2.sdk.ErrorObject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.ProtectedResourceRequest;
 import com.nimbusds.oauth2.sdk.client.ClientDeleteRequest;
 import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
+import com.nimbusds.oauth2.sdk.client.ClientRegistrationErrorResponse;
+import com.nimbusds.oauth2.sdk.client.ClientRegistrationResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
+import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformationResponse;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientRegistrationRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientUpdateRequest;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -61,94 +66,114 @@ public class ClientRegistrationEndpoint {
 	}
 
 	@GetMapping
-	public ResponseEntity<String> getClientRegistrations(HTTPRequest httpRequest) throws Exception {
-		String authorizationHeader = httpRequest.getAuthorization();
+	public void getClientRegistrations(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 
-		if (authorizationHeader == null) {
-			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		try {
+			String authorizationHeader = httpRequest.getAuthorization();
+
+			if (authorizationHeader == null) {
+				throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+			}
+
+			BearerAccessToken requestAccessToken = BearerAccessToken.parse(authorizationHeader);
+			validateAccessToken(requestAccessToken);
+			List<OIDCClientInformation> clients = this.clientRepository.findAll();
+
+			response.setContentType("application/json; charset=UTF-8");
+
+			PrintWriter writer = response.getWriter();
+			writer.print(toJsonObject(clients).toJSONString());
+			writer.close();
 		}
-
-		BearerAccessToken requestAccessToken = BearerAccessToken.parse(authorizationHeader);
-		validateAccessToken(requestAccessToken);
-		List<OIDCClientInformation> clients = this.clientRepository.findAll();
-
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(toJsonObject(clients).toJSONString());
-		// @formatter:on
+		catch (GeneralException e) {
+			ClientRegistrationResponse registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+			ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+		}
 	}
 
 	@PostMapping
-	public ResponseEntity<String> handleClientRegistrationRequest(HTTPRequest httpRequest) throws Exception {
-		OIDCClientRegistrationRequest registrationRequest = OIDCClientRegistrationRequest.parse(httpRequest);
+	public void handleClientRegistrationRequest(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+		ClientRegistrationResponse registrationResponse;
 
-		if (!this.allowOpenRegistration) {
-			validateAccessToken(registrationRequest.getAccessToken());
+		try {
+			OIDCClientRegistrationRequest registrationRequest = OIDCClientRegistrationRequest.parse(httpRequest);
+
+			if (!this.allowOpenRegistration) {
+				validateAccessToken(registrationRequest.getAccessToken());
+			}
+
+			OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
+			OIDCClientInformation clientInformation = this.clientService.create(clientMetadata, true);
+
+			registrationResponse = new OIDCClientInformationResponse(clientInformation);
+		}
+		catch (GeneralException e) {
+			registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
 		}
 
-		OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
-		OIDCClientInformation client = this.clientService.create(clientMetadata, true);
-
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(client.toJSONObject().toJSONString());
-		// @formatter:on
+		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
 	}
 
 	@GetMapping(path = "/{id:.*}")
-	public ResponseEntity<String> getClientConfiguration(HTTPRequest httpRequest, @PathVariable ClientID id)
-			throws Exception {
-		ClientReadRequest clientReadRequest = ClientReadRequest.parse(httpRequest);
-		OIDCClientInformation client = resolveAndValidateClient(id, clientReadRequest);
+	public void getClientConfiguration(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable ClientID id) throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+		ClientRegistrationResponse registrationResponse;
 
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(client.toJSONObject().toJSONString());
-		// @formatter:on
+		try {
+			ClientReadRequest clientReadRequest = ClientReadRequest.parse(httpRequest);
+			OIDCClientInformation client = resolveAndValidateClient(id, clientReadRequest);
+			registrationResponse = new OIDCClientInformationResponse(client);
+		}
+		catch (GeneralException e) {
+			registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+		}
+
+		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
 	}
 
 	@PutMapping(path = "/{id:.*}")
-	public ResponseEntity<String> updateClientConfiguration(HTTPRequest httpRequest, @PathVariable ClientID id)
-			throws Exception {
-		OIDCClientUpdateRequest clientUpdateRequest = OIDCClientUpdateRequest.parse(httpRequest);
-		resolveAndValidateClient(id, clientUpdateRequest);
+	public void updateClientConfiguration(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable ClientID id) throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+		ClientRegistrationResponse registrationResponse;
 
-		OIDCClientMetadata clientMetadata = clientUpdateRequest.getOIDCClientMetadata();
-		OIDCClientInformation client = this.clientService.update(id, clientMetadata);
+		try {
+			OIDCClientUpdateRequest clientUpdateRequest = OIDCClientUpdateRequest.parse(httpRequest);
+			resolveAndValidateClient(id, clientUpdateRequest);
 
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(client.toJSONObject().toJSONString());
-		// @formatter:on
+			OIDCClientMetadata clientMetadata = clientUpdateRequest.getOIDCClientMetadata();
+			OIDCClientInformation client = this.clientService.update(id, clientMetadata);
+
+			registrationResponse = new OIDCClientInformationResponse(client);
+		}
+		catch (GeneralException e) {
+			registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+		}
+
+		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
 	}
 
 	@DeleteMapping(path = "/{id:.*}")
-	public ResponseEntity<Void> deleteClientConfiguration(HTTPRequest httpRequest, @PathVariable ClientID id)
-			throws Exception {
-		ClientDeleteRequest clientDeleteRequest = ClientDeleteRequest.parse(httpRequest);
-		resolveAndValidateClient(id, clientDeleteRequest);
+	public void deleteClientConfiguration(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable ClientID id) throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 
-		this.clientRepository.deleteById(id);
+		try {
+			ClientDeleteRequest clientDeleteRequest = ClientDeleteRequest.parse(httpRequest);
+			resolveAndValidateClient(id, clientDeleteRequest);
 
-		// @formatter:off
-		return ResponseEntity.noContent()
-				.build();
-		// @formatter:on
-	}
+			this.clientRepository.deleteById(id);
 
-	@ExceptionHandler(GeneralException.class)
-	public ResponseEntity<String> handleGeneralException(GeneralException e) {
-		ErrorObject error = e.getErrorObject();
-
-		// @formatter:off
-		return ResponseEntity.status(error.getHTTPStatusCode())
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(error.toJSONObject().toJSONString());
-		// @formatter:on
+			response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+		}
+		catch (GeneralException e) {
+			ClientRegistrationResponse registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+			ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+		}
 	}
 
 	private void validateAccessToken(AccessToken requestAccessToken) throws GeneralException {

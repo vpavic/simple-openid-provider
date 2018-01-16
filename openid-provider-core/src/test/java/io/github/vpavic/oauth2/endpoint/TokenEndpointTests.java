@@ -44,7 +44,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -56,7 +55,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.config.OpenIdProviderWebMvcConfiguration;
 import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.grant.client.ClientCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
@@ -441,7 +439,6 @@ public class TokenEndpointTests {
 
 	@Configuration
 	@EnableWebMvc
-	@Import(OpenIdProviderWebMvcConfiguration.class)
 	static class Config {
 
 		@Bean

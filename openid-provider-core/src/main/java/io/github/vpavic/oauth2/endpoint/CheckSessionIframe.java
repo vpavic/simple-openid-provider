@@ -1,13 +1,13 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Objects;
 
-import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.text.StrSubstitutor;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -104,19 +104,22 @@ public class CheckSessionIframe {
 		this.cookieName = cookieName;
 	}
 
-	@PostConstruct
-	public void init() {
-		this.checkSessionIframe = StrSubstitutor.replace(CHECK_SESSION_IFRAME_TEMPLATE,
-				Collections.singletonMap("cookieName", this.cookieName));
+	@GetMapping
+	public void checkSession(HttpServletResponse response) throws IOException {
+		if (this.checkSessionIframe == null) {
+			this.checkSessionIframe = buildCheckSessionIframe();
+		}
+
+		response.setContentType("text/html");
+
+		PrintWriter writer = response.getWriter();
+		writer.print(this.checkSessionIframe);
+		writer.close();
 	}
 
-	@GetMapping
-	public ResponseEntity<String> checkSession() {
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(MediaType.TEXT_HTML)
-				.body(this.checkSessionIframe);
-		// @formatter:on
+	private String buildCheckSessionIframe() {
+		return StrSubstitutor.replace(CHECK_SESSION_IFRAME_TEMPLATE,
+				Collections.singletonMap("cookieName", this.cookieName));
 	}
 
 }

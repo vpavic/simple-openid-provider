@@ -1,10 +1,12 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Objects;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.nimbusds.jose.jwk.JWKSet;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -20,8 +22,6 @@ public class JwkSetEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/keys";
 
-	private static final MediaType JWK_SET = MediaType.parseMediaType(JWKSet.MIME_TYPE);
-
 	private final JwkSetLoader jwkSetLoader;
 
 	public JwkSetEndpoint(JwkSetLoader jwkSetLoader) {
@@ -30,14 +30,14 @@ public class JwkSetEndpoint {
 	}
 
 	@GetMapping
-	public ResponseEntity<String> getJwkSet() {
+	public void getJwkSet(HttpServletResponse response) throws IOException {
 		JWKSet jwkSet = this.jwkSetLoader.load();
 
-		// @formatter:off
-		return ResponseEntity.ok()
-				.contentType(JWK_SET)
-				.body(jwkSet.toJSONObject().toJSONString());
-		// @formatter:on
+		response.setContentType(JWKSet.MIME_TYPE);
+
+		PrintWriter writer = response.getWriter();
+		writer.print(jwkSet.toJSONObject().toJSONString());
+		writer.close();
 	}
 
 }
