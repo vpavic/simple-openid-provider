@@ -1,5 +1,7 @@
 package io.github.vpavic.oauth2.grant.refresh;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,9 +62,38 @@ public class InMemoryRefreshTokenStore implements RefreshTokenStore {
 	}
 
 	@Override
+	public List<RefreshTokenContext> findBySubject(Subject subject) {
+		Objects.requireNonNull(subject, "subject must not be null");
+		List<RefreshTokenContext> results = new ArrayList<>();
+		for (Map.Entry<RefreshToken, RefreshTokenContext> entry : this.refreshTokens.entrySet()) {
+			RefreshTokenContext context = entry.getValue();
+			if (subject.equals(context.getSubject())) {
+				if (context.isExpired()) {
+					this.refreshTokens.remove(context.getRefreshToken());
+				}
+				else {
+					results.add(context);
+				}
+			}
+		}
+		return results;
+	}
+
+	@Override
 	public void revoke(RefreshToken refreshToken) {
 		Objects.requireNonNull(refreshToken, "refreshToken must not be null");
 		this.refreshTokens.remove(refreshToken);
+	}
+
+	@Override
+	public void revokeAllForSubject(Subject subject) {
+		Objects.requireNonNull(subject, "subject must not be null");
+		for (Map.Entry<RefreshToken, RefreshTokenContext> entry : this.refreshTokens.entrySet()) {
+			RefreshTokenContext context = entry.getValue();
+			if (subject.equals(context.getSubject())) {
+				this.refreshTokens.remove(context.getRefreshToken());
+			}
+		}
 	}
 
 }

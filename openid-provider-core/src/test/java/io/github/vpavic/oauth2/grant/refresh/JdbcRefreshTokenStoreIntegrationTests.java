@@ -118,6 +118,28 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
+	public void findBySubject_Existing_ShouldReturnClientList() {
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		this.refreshTokenStore.save(context);
+
+		assertThat(this.refreshTokenStore.findBySubject(context.getSubject())).hasSize(1);
+		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(1);
+	}
+
+	@Test
+	public void findBySubject_Missing_ShouldReturnEmptyList() {
+		assertThat(this.refreshTokenStore.findBySubject(new Subject(UUID.randomUUID().toString()))).isEmpty();
+	}
+
+	@Test
+	public void findBySubject_Expired_ShouldReturnEmptyList() {
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
+		this.refreshTokenStore.save(context);
+
+		assertThat(this.refreshTokenStore.findBySubject(context.getSubject())).isEmpty();
+	}
+
+	@Test
 	public void revoke_Existing_ShouldReturnNull() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
@@ -129,6 +151,22 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	@Test
 	public void revoke_Missing_ShouldReturnNull() {
 		this.refreshTokenStore.revoke(new RefreshToken());
+
+		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
+	}
+
+	@Test
+	public void revokeAllForSubject_Existing_ShouldReturnNull() {
+		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
+		this.refreshTokenStore.save(context);
+		this.refreshTokenStore.revokeAllForSubject(context.getSubject());
+
+		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
+	}
+
+	@Test
+	public void revokeAllForSubject_Missing_ShouldReturnNull() {
+		this.refreshTokenStore.revokeAllForSubject(new Subject(UUID.randomUUID().toString()));
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
 	}

@@ -3,6 +3,8 @@ package io.github.vpavic.oauth2.grant.refresh;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.PostConstruct;
@@ -49,7 +51,11 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	private static final String STATEMENT_TEMPLATE_SELECT_BY_CLIENT_AND_SUBJECT = "SELECT token, client_id, subject, scope, expiry FROM %s WHERE client_id = ? AND subject = ?";
 
+	private static final String STATEMENT_TEMPLATE_SELECT_BY_SUBJECT = "SELECT token, client_id, subject, scope, expiry FROM %s WHERE subject = ?";
+
 	private static final String STATEMENT_TEMPLATE_DELETE_BY_TOKEN = "DELETE FROM %s WHERE token = ?";
+
+	private static final String STATEMENT_TEMPLATE_DELETE_BY_SUBJECT = "DELETE FROM %s WHERE subject = ?";
 
 	private static final String STATEMENT_TEMPLATE_DELETE_EXPIRED = "DELETE FROM %s WHERE expiry > 0 AND expiry < ?";
 
@@ -65,7 +71,11 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	private String statementSelectByClientIdAndSubject;
 
+	private String statementSelectBySubject;
+
 	private String statementDeleteByToken;
+
+	private String statementDeleteBySubject;
 
 	private String statementDeleteExpired;
 
@@ -133,9 +143,34 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 
 	@Override
 	@Transactional
+	public List<RefreshTokenContext> findBySubject(Subject subject) {
+		Objects.requireNonNull(subject, "subject must not be null");
+		List<RefreshTokenContext> results = new ArrayList<>();
+		List<RefreshTokenContext> contexts = this.jdbcOperations.query(this.statementSelectBySubject,
+				refreshTokenContextMapper, subject.getValue());
+		for (RefreshTokenContext context : contexts) {
+			if (context.isExpired()) {
+				this.jdbcOperations.update(this.statementDeleteByToken,
+						ps -> ps.setString(1, context.getRefreshToken().getValue()));
+			}
+			else {
+				results.add(context);
+			}
+		}
+		return results;
+	}
+
+	@Override
+	@Transactional
 	public void revoke(RefreshToken refreshToken) {
 		Objects.requireNonNull(refreshToken, "refreshToken must not be null");
 		this.jdbcOperations.update(this.statementDeleteByToken, ps -> ps.setString(1, refreshToken.getValue()));
+	}
+
+	@Override
+	public void revokeAllForSubject(Subject subject) {
+		Objects.requireNonNull(subject, "subject must not be null");
+		this.jdbcOperations.update(this.statementDeleteBySubject, subject.getValue());
 	}
 
 	@Scheduled(cron = "0 0 * * * *")
@@ -156,7 +191,9 @@ public class JdbcRefreshTokenStore implements RefreshTokenStore {
 		this.statementSelectByToken = String.format(STATEMENT_TEMPLATE_SELECT_BY_TOKEN, this.tableName);
 		this.statementSelectByClientIdAndSubject = String.format(STATEMENT_TEMPLATE_SELECT_BY_CLIENT_AND_SUBJECT,
 				this.tableName);
+		this.statementSelectBySubject = String.format(STATEMENT_TEMPLATE_SELECT_BY_SUBJECT, this.tableName);
 		this.statementDeleteByToken = String.format(STATEMENT_TEMPLATE_DELETE_BY_TOKEN, this.tableName);
+		this.statementDeleteBySubject = String.format(STATEMENT_TEMPLATE_DELETE_BY_SUBJECT, this.tableName);
 		this.statementDeleteExpired = String.format(STATEMENT_TEMPLATE_DELETE_EXPIRED, this.tableName);
 	}
 

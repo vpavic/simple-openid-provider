@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2.grant.refresh;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.UUID;
 
 import com.nimbusds.oauth2.sdk.GeneralException;
@@ -220,11 +221,57 @@ public class JdbcRefreshTokenStoreTests {
 	}
 
 	@Test
-	public void findByClientIdAndSubject_NullSubjject_ShouldThrowException() {
+	public void findByClientIdAndSubject_NullSubject_ShouldThrowException() {
 		this.thrown.expect(NullPointerException.class);
 		this.thrown.expectMessage("subject must not be null");
 
 		this.refreshTokenStore.findByClientIdAndSubject(new ClientID(UUID.randomUUID().toString()), null);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void findBySubject_Existing_ShouldReturnClientList() {
+		Subject subject = new Subject(UUID.randomUUID().toString());
+		given(this.jdbcOperations.query(anyString(), any(RowMapper.class), anyString()))
+				.willReturn(Collections.singletonList(RefreshTokenTestUtils.createRefreshTokenContext(null)));
+
+		assertThat(this.refreshTokenStore.findBySubject(subject)).hasSize(1);
+		verify(this.jdbcOperations, times(1)).query(startsWith("SELECT"), any(RowMapper.class), eq(subject.getValue()));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void findBySubject_Missing_ShouldReturnEmptyList() {
+		Subject subject = new Subject(UUID.randomUUID().toString());
+		given(this.jdbcOperations.query(anyString(), any(RowMapper.class), anyString()))
+				.willReturn(Collections.emptyList());
+
+		assertThat(this.refreshTokenStore.findBySubject(subject)).isEmpty();
+		verify(this.jdbcOperations, times(1)).query(startsWith("SELECT"), any(RowMapper.class), eq(subject.getValue()));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void findBySubject_Expired_ShouldReturnEmptyList() {
+		Subject subject = new Subject(UUID.randomUUID().toString());
+		given(this.jdbcOperations.query(anyString(), any(RowMapper.class), anyString())).willReturn(Collections
+				.singletonList(RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1))));
+
+		assertThat(this.refreshTokenStore.findBySubject(subject)).isEmpty();
+		verify(this.jdbcOperations, times(1)).query(startsWith("SELECT"), any(RowMapper.class), eq(subject.getValue()));
+		verify(this.jdbcOperations, times(1)).update(and(startsWith("DELETE"), endsWith("WHERE token = ?")),
+				any(PreparedStatementSetter.class));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	public void findBySubject_Null_ShouldThrowException() {
+		this.thrown.expect(NullPointerException.class);
+		this.thrown.expectMessage("subject must not be null");
+
+		this.refreshTokenStore.findBySubject(null);
 	}
 
 	@Test
@@ -242,6 +289,24 @@ public class JdbcRefreshTokenStoreTests {
 		this.thrown.expectMessage("refreshToken must not be null");
 
 		this.refreshTokenStore.revoke(null);
+	}
+
+	@Test
+	public void revokeAllForSubject_Valid_ShouldReturnNull() {
+		Subject subject = new Subject(UUID.randomUUID().toString());
+		this.refreshTokenStore.revokeAllForSubject(subject);
+
+		verify(this.jdbcOperations, times(1)).update(and(startsWith("DELETE"), endsWith("WHERE subject = ?")),
+				eq(subject.getValue()));
+		verifyZeroInteractions(this.jdbcOperations);
+	}
+
+	@Test
+	public void revokeAllForSubject_Null_ShouldThrowException() {
+		this.thrown.expect(NullPointerException.class);
+		this.thrown.expectMessage("subject must not be null");
+
+		this.refreshTokenStore.revokeAllForSubject(null);
 	}
 
 	@Test
