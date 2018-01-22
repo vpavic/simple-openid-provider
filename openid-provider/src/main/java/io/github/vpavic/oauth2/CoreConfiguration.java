@@ -20,7 +20,6 @@ import io.github.vpavic.oauth2.endpoint.AuthorizationHandler;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenHandler;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
-import io.github.vpavic.oauth2.endpoint.TokenRevocationHandler;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
 import io.github.vpavic.oauth2.endpoint.UserInfoHandler;
 import io.github.vpavic.oauth2.grant.GrantHandler;
@@ -102,7 +101,7 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public TokenEndpoint tokenEndpoint() {
+	public TokenHandler tokenHandler() {
 		AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
 				this.clientRepository, tokenService(), this.authorizationCodeService);
 		ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
@@ -119,15 +118,18 @@ public class CoreConfiguration {
 		grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
 		grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
 
-		TokenHandler handler = new TokenHandler(grantHandlers, this.properties.getIssuer(), this.clientRepository);
-		return new TokenEndpoint(handler);
+		return new TokenHandler(grantHandlers, this.refreshTokenStore, this.properties.getIssuer(),
+				this.clientRepository);
+	}
+
+	@Bean
+	public TokenEndpoint tokenEndpoint() {
+		return new TokenEndpoint(tokenHandler());
 	}
 
 	@Bean
 	public TokenRevocationEndpoint tokenRevocationEndpoint() {
-		TokenRevocationHandler handler = new TokenRevocationHandler(this.properties.getIssuer(), this.clientRepository,
-				this.refreshTokenStore);
-		return new TokenRevocationEndpoint(handler);
+		return new TokenRevocationEndpoint(tokenHandler());
 	}
 
 	@Bean

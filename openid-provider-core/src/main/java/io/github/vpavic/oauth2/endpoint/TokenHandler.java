@@ -14,9 +14,12 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.TokenRevocationRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
+import com.nimbusds.oauth2.sdk.token.Token;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -24,12 +27,14 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.github.vpavic.oauth2.authentication.ClientRequestValidator;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Token Endpoint implementation.
  *
  * @author Vedran Pavic
  * @see <a href="https://tools.ietf.org/html/rfc6749">RFC 6749: The OAuth 2.0 Authorization Framework</a>
+ * @see <a href="https://tools.ietf.org/html/rfc7009">RFC 7009: OAuth 2.0 Token Revocation</a>
  * @see <a href="https://tools.ietf.org/html/rfc7636">RFC 7636: Proof Key for Code Exchange by OAuth Public Clients</a>
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
@@ -37,16 +42,21 @@ public class TokenHandler {
 
 	private final Map<Class<?>, GrantHandler> grantHandlers;
 
+	private final RefreshTokenStore refreshTokenStore;
+
 	private final ClientRequestValidator clientRequestValidator;
 
-	public TokenHandler(Map<Class<?>, GrantHandler> grantHandlers, Issuer issuer, ClientRepository clientRepository) {
+	public TokenHandler(Map<Class<?>, GrantHandler> grantHandlers, RefreshTokenStore refreshTokenStore, Issuer issuer,
+			ClientRepository clientRepository) {
 		Objects.requireNonNull(grantHandlers, "grantHandlers must not be null");
+		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		if (grantHandlers.isEmpty()) {
 			throw new IllegalArgumentException("grantHandlers must not be empty");
 		}
 		this.grantHandlers = grantHandlers;
+		this.refreshTokenStore = refreshTokenStore;
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
@@ -75,6 +85,36 @@ public class TokenHandler {
 		}
 
 		ServletUtils.applyHTTPResponse(tokenResponse.toHTTPResponse(), response);
+	}
+
+	public void handleTokenRevocationRequest(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+
+		try {
+			TokenRevocationRequest revocationRequest = TokenRevocationRequest.parse(httpRequest);
+			this.clientRequestValidator.validateRequest(revocationRequest);
+			Token token = revocationRequest.getToken();
+			RefreshToken refreshToken;
+
+			if (token instanceof RefreshToken) {
+				refreshToken = (RefreshToken) token;
+			}
+			else {
+				refreshToken = new RefreshToken(token.getValue());
+			}
+
+			this.refreshTokenStore.revoke(refreshToken);
+
+			response.setStatus(HttpServletResponse.SC_OK);
+		}
+		catch (JOSEException e) {
+			response.setStatus(HttpServletResponse.SC_OK);
+		}
+		catch (GeneralException e) {
+			TokenErrorResponse tokenResponse = new TokenErrorResponse(e.getErrorObject());
+			ServletUtils.applyHTTPResponse(tokenResponse.toHTTPResponse(), response);
+		}
 	}
 
 }

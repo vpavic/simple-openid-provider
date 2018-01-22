@@ -16,16 +16,16 @@ public class TokenRevocationEndpoint {
 
 	public static final String PATH_MAPPING = "/oauth2/revoke";
 
-	private final TokenRevocationHandler handler;
+	private final TokenHandler handler;
 
-	public TokenRevocationEndpoint(TokenRevocationHandler handler) {
+	public TokenRevocationEndpoint(TokenHandler handler) {
 		Objects.requireNonNull(handler, "handler must not be null");
 		this.handler = handler;
 	}
 
 	@PostMapping
 	public void handleRevocationRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		this.handler.handleRevocationRequest(request, response);
+		this.handler.handleTokenRevocationRequest(request, response);
 	}
 
 }

@@ -488,7 +488,8 @@ public class TokenEndpointTests {
 			grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
 			grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
 
-			return new TokenHandler(grantHandlers, new Issuer("http://example.com"), clientRepository());
+			return new TokenHandler(grantHandlers, refreshTokenStore(), new Issuer("http://example.com"),
+					clientRepository());
 		}
 
 		@Bean

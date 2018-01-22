@@ -1,5 +1,7 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.util.Map;
+
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,14 +53,14 @@ public class TokenRevocationEndpointTests {
 
 		@Bean
 		@SuppressWarnings("unchecked")
-		public TokenRevocationHandler tokenRevocationHandler() {
-			return new TokenRevocationHandler(new Issuer("http://example.com"), mock(ClientRepository.class),
-					mock(RefreshTokenStore.class));
+		public TokenHandler tokenHandler() {
+			return new TokenHandler(mock(Map.class), mock(RefreshTokenStore.class), new Issuer("http://example.com"),
+					mock(ClientRepository.class));
 		}
 
 		@Bean
 		public TokenRevocationEndpoint tokenRevocationEndpoint() {
-			return new TokenRevocationEndpoint(tokenRevocationHandler());
+			return new TokenRevocationEndpoint(tokenHandler());
 		}
 
 	}
