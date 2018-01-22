@@ -162,12 +162,15 @@ public class AuthorizationHandler {
 			}
 		}
 		catch (GeneralException e) {
-			authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), e.getErrorObject(), e.getState(),
-					e.getResponseMode());
-		}
-		catch (NonRedirectingException e) {
-			response.sendError(e.getStatus(), e.getDescription());
-			return;
+			ErrorObject error = e.getErrorObject();
+			if (e.getRedirectionURI() == null) {
+				response.sendError(error.getHTTPStatusCode(), error.getDescription());
+				return;
+			}
+			else {
+				authResponse = new AuthenticationErrorResponse(e.getRedirectionURI(), error, e.getState(),
+						e.getResponseMode());
+			}
 		}
 
 		if (ResponseMode.FORM_POST.equals(authResponse.getResponseMode())) {
@@ -182,8 +185,7 @@ public class AuthorizationHandler {
 		}
 	}
 
-	private AuthenticationRequest resolveAuthRequest(HttpServletRequest request)
-			throws GeneralException, NonRedirectingException {
+	private AuthenticationRequest resolveAuthRequest(HttpServletRequest request) throws GeneralException {
 		AuthenticationRequest authRequest;
 
 		try {
@@ -194,7 +196,8 @@ public class AuthorizationHandler {
 			URI redirectUri = e.getRedirectionURI();
 
 			if (clientId == null || redirectUri == null) {
-				throw new NonRedirectingException(e.getErrorObject());
+				throw new GeneralException(
+						OAuth2Error.INVALID_REQUEST.setDescription(e.getErrorObject().getDescription()));
 			}
 
 			OIDCClientInformation client = resolveClient(clientId);
@@ -206,24 +209,23 @@ public class AuthorizationHandler {
 		return authRequest;
 	}
 
-	private OIDCClientInformation resolveClient(ClientID clientId) throws NonRedirectingException {
+	private OIDCClientInformation resolveClient(ClientID clientId) throws GeneralException {
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 
 		if (client == null) {
-			throw new NonRedirectingException(HttpServletResponse.SC_BAD_REQUEST,
-					"Invalid \"client_id\" parameter: " + clientId);
+			throw new GeneralException(
+					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"client_id\" parameter: " + clientId));
 		}
 
 		return client;
 	}
 
-	private void validateRedirectionURI(URI redirectUri, OIDCClientMetadata clientMetadata)
-			throws NonRedirectingException {
+	private void validateRedirectionURI(URI redirectUri, OIDCClientMetadata clientMetadata) throws GeneralException {
 		Set<URI> registeredRedirectionURIs = clientMetadata.getRedirectionURIs();
 
 		if (registeredRedirectionURIs == null || !registeredRedirectionURIs.contains(redirectUri)) {
-			throw new NonRedirectingException(HttpServletResponse.SC_BAD_REQUEST,
-					"Invalid \"redirect_uri\" parameter: " + redirectUri);
+			throw new GeneralException(
+					OAuth2Error.INVALID_REQUEST.setDescription("Invalid \"redirect_uri\" parameter: " + redirectUri));
 		}
 	}
 
