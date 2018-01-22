@@ -15,8 +15,6 @@ import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.authentication.ClientRequestValidator;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -29,16 +27,13 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
  * @see <a href="https://tools.ietf.org/html/rfc6749">RFC 6749: The OAuth 2.0 Authorization Framework</a>
  * @see <a href="https://tools.ietf.org/html/rfc7009">RFC 7009: OAuth 2.0 Token Revocation</a>
  */
-@RequestMapping(path = TokenRevocationEndpoint.PATH_MAPPING)
-public class TokenRevocationEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/revoke";
+public class TokenRevocationHandler {
 
 	private final RefreshTokenStore refreshTokenStore;
 
 	private final ClientRequestValidator clientRequestValidator;
 
-	public TokenRevocationEndpoint(Issuer issuer, ClientRepository clientRepository,
+	public TokenRevocationHandler(Issuer issuer, ClientRepository clientRepository,
 			RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
@@ -47,7 +42,6 @@ public class TokenRevocationEndpoint {
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
-	@PostMapping
 	public void handleRevocationRequest(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);

@@ -2,14 +2,10 @@ apply plugin: 'maven'
 apply plugin: 'nebula.optional-base'
 
 dependencies {
-	compile 'com.hazelcast:hazelcast', optional
-	compile 'com.nimbusds:oauth2-oidc-sdk'
-	compile 'javax.servlet:javax.servlet-api'
-	compile 'org.apache.commons:commons-collections4'
-	compile 'org.apache.commons:commons-text'
-	compile 'org.apache.httpcomponents:httpclient'
-	compile 'org.bouncycastle:bcprov-jdk15on'
-	compile 'org.slf4j:slf4j-api'
+	compile project(':openid-provider-core')
+
+	compile 'org.springframework:spring-jdbc', optional
+	compile 'org.springframework:spring-webmvc'
 
 	testCompile 'com.h2database:h2'
 	testCompile 'com.jayway.jsonpath:json-path'

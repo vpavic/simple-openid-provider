@@ -14,20 +14,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.client.ClientService;
-
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link ClientRegistrationEndpoint}.
+ * Tests for {@link CheckSessionIframe}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class ClientRegistrationEndpointTests {
+public class CheckSessionIframeTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -40,8 +40,10 @@ public class ClientRegistrationEndpointTests {
 	}
 
 	@Test
-	public void test() {
-		// TODO
+	public void getCheckSessionIframe() throws Exception {
+		this.mvc.perform(get(CheckSessionIframe.PATH_MAPPING)).andExpect(status().isOk())
+				.andExpect(content().string(containsString("<title>Check Session Iframe</title>")))
+				.andExpect(content().string(containsString("var cookie = getCookie(\"sid\");")));
 	}
 
 	@Configuration
@@ -49,8 +51,13 @@ public class ClientRegistrationEndpointTests {
 	static class Config {
 
 		@Bean
-		public ClientRegistrationEndpoint clientRegistrationEndpoint() {
-			return new ClientRegistrationEndpoint(mock(ClientRepository.class), mock(ClientService.class));
+		public CheckSessionHandler checkSessionIframeHandler() {
+			return new CheckSessionHandler("sid");
+		}
+
+		@Bean
+		public CheckSessionIframe checkSessionIframe() {
+			return new CheckSessionIframe(checkSessionIframeHandler());
 		}
 
 	}

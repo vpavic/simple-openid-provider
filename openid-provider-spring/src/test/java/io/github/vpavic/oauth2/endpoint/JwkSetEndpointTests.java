@@ -71,8 +71,13 @@ public class JwkSetEndpointTests {
 		}
 
 		@Bean
+		public JwkSetHandler jwkSetEndpointHandler() {
+			return new JwkSetHandler(jwkSetLoader());
+		}
+
+		@Bean
 		public JwkSetEndpoint jwkSetEndpoint() {
-			return new JwkSetEndpoint(jwkSetLoader());
+			return new JwkSetEndpoint(jwkSetEndpointHandler());
 		}
 
 	}

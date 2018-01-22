@@ -21,8 +21,6 @@ import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimHelper;
@@ -34,10 +32,7 @@ import io.github.vpavic.oauth2.claim.ClaimSource;
  * @author Vedran Pavic
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
-@RequestMapping(path = UserInfoEndpoint.PATH_MAPPING)
-public class UserInfoEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/userinfo";
+public class UserInfoHandler {
 
 	private final AccessTokenClaimsResolver accessTokenClaimsResolver;
 
@@ -47,7 +42,7 @@ public class UserInfoEndpoint {
 
 	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
-	public UserInfoEndpoint(AccessTokenClaimsResolver accessTokenClaimsResolver, ClaimSource claimSource) {
+	public UserInfoHandler(AccessTokenClaimsResolver accessTokenClaimsResolver, ClaimSource claimSource) {
 		Objects.requireNonNull(accessTokenClaimsResolver, "accessTokenClaimsResolver must not be null");
 		Objects.requireNonNull(claimSource, "claimSource must not be null");
 		this.accessTokenClaimsResolver = accessTokenClaimsResolver;
@@ -62,7 +57,6 @@ public class UserInfoEndpoint {
 		this.scopeClaims = scopeClaims;
 	}
 
-	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
 	@SuppressWarnings("unchecked")
 	public void getUserInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);

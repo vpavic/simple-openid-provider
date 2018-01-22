@@ -27,20 +27,11 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientRegistrationRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientUpdateRequest;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientService;
 
-@RequestMapping(path = ClientRegistrationEndpoint.PATH_MAPPING)
-public class ClientRegistrationEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/register";
+public class ClientRegistrationHandler {
 
 	private final ClientRepository clientRepository;
 
@@ -50,7 +41,7 @@ public class ClientRegistrationEndpoint {
 
 	private BearerAccessToken apiAccessToken;
 
-	public ClientRegistrationEndpoint(ClientRepository clientRepository, ClientService clientService) {
+	public ClientRegistrationHandler(ClientRepository clientRepository, ClientService clientService) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(clientService, "clientService must not be null");
 		this.clientRepository = clientRepository;
@@ -65,7 +56,6 @@ public class ClientRegistrationEndpoint {
 		this.apiAccessToken = apiAccessToken;
 	}
 
-	@GetMapping
 	public void getClientRegistrations(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 
@@ -92,7 +82,6 @@ public class ClientRegistrationEndpoint {
 		}
 	}
 
-	@PostMapping
 	public void handleClientRegistrationRequest(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
@@ -117,9 +106,8 @@ public class ClientRegistrationEndpoint {
 		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
 	}
 
-	@GetMapping(path = "/{id:.*}")
 	public void getClientConfiguration(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable ClientID id) throws IOException {
+			ClientID id) throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 		ClientRegistrationResponse registrationResponse;
 
@@ -135,9 +123,8 @@ public class ClientRegistrationEndpoint {
 		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
 	}
 
-	@PutMapping(path = "/{id:.*}")
 	public void updateClientConfiguration(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable ClientID id) throws IOException {
+			ClientID id) throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 		ClientRegistrationResponse registrationResponse;
 
@@ -157,9 +144,8 @@ public class ClientRegistrationEndpoint {
 		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
 	}
 
-	@DeleteMapping(path = "/{id:.*}")
 	public void deleteClientConfiguration(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable ClientID id) throws IOException {
+			ClientID id) throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 
 		try {

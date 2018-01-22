@@ -9,6 +9,7 @@ import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.client.ClientService;
 import io.github.vpavic.oauth2.client.DefaultClientService;
 import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
+import io.github.vpavic.oauth2.endpoint.ClientRegistrationHandler;
 
 @Configuration
 public class ClientRegistrationConfiguration {
@@ -33,10 +34,10 @@ public class ClientRegistrationConfiguration {
 
 	@Bean
 	public ClientRegistrationEndpoint clientRegistrationEndpoint() {
-		ClientRegistrationEndpoint endpoint = new ClientRegistrationEndpoint(this.clientRepository, clientService());
-		endpoint.setAllowOpenRegistration(this.properties.getRegistration().isOpenRegistrationEnabled());
-		endpoint.setApiAccessToken(this.properties.getRegistration().getApiAccessToken());
-		return endpoint;
+		ClientRegistrationHandler handler = new ClientRegistrationHandler(this.clientRepository, clientService());
+		handler.setAllowOpenRegistration(this.properties.getRegistration().isOpenRegistrationEnabled());
+		handler.setApiAccessToken(this.properties.getRegistration().getApiAccessToken());
+		return new ClientRegistrationEndpoint(handler);
 	}
 
 	private String registrationUriTemplate() {

@@ -15,8 +15,10 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import io.github.vpavic.oauth2.LogoutConfiguration.LogoutCondition;
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.endpoint.CheckSessionHandler;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
+import io.github.vpavic.oauth2.endpoint.EndSessionHandler;
 
 @Configuration
 @Conditional(LogoutCondition.class)
@@ -37,16 +39,16 @@ public class LogoutConfiguration {
 
 	@Bean
 	public EndSessionEndpoint endSessionEndpoint() {
-		EndSessionEndpoint endpoint = new EndSessionEndpoint(this.providerProperties.getIssuer(),
-				this.clientRepository);
-		endpoint.setFrontChannelLogoutEnabled(this.providerProperties.getFrontChannelLogout().isEnabled());
-		return endpoint;
+		EndSessionHandler handler = new EndSessionHandler(this.providerProperties.getIssuer(), this.clientRepository);
+		handler.setFrontChannelLogoutEnabled(this.providerProperties.getFrontChannelLogout().isEnabled());
+		return new EndSessionEndpoint(handler);
 	}
 
 	@Bean
 	@Conditional(SessionManagementCondition.class)
 	public CheckSessionIframe checkSessionIframe() {
-		return new CheckSessionIframe(this.serverProperties.getSession().getCookie().getName());
+		CheckSessionHandler handler = new CheckSessionHandler(this.serverProperties.getSession().getCookie().getName());
+		return new CheckSessionIframe(handler);
 	}
 
 	private static class SessionManagementCondition extends SpringBootCondition {

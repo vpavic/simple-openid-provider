@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,20 +15,22 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import static org.hamcrest.Matchers.containsString;
+import io.github.vpavic.oauth2.client.ClientRepository;
+
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link CheckSessionIframe}.
+ * Tests for {@link EndSessionEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class CheckSessionIframeTests {
+public class EndSessionEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -40,10 +43,9 @@ public class CheckSessionIframeTests {
 	}
 
 	@Test
-	public void getCheckSessionIframe() throws Exception {
-		this.mvc.perform(get(CheckSessionIframe.PATH_MAPPING)).andExpect(status().isOk())
-				.andExpect(content().string(containsString("<title>Check Session Iframe</title>")))
-				.andExpect(content().string(containsString("var cookie = getCookie(\"sid\");")));
+	public void getEndSessionEndpoint() throws Exception {
+		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk())
+				.andExpect(forwardedUrl("/logout"));
 	}
 
 	@Configuration
@@ -51,8 +53,18 @@ public class CheckSessionIframeTests {
 	static class Config {
 
 		@Bean
-		public CheckSessionIframe endSessionEndpoint() {
-			return new CheckSessionIframe("sid");
+		public ClientRepository clientRepository() {
+			return mock(ClientRepository.class);
+		}
+
+		@Bean
+		public EndSessionHandler endSessionEndpointHandler() {
+			return new EndSessionHandler(new Issuer("http://example.com"), clientRepository());
+		}
+
+		@Bean
+		public EndSessionEndpoint endSessionEndpoint() {
+			return new EndSessionEndpoint(endSessionEndpointHandler());
 		}
 
 	}

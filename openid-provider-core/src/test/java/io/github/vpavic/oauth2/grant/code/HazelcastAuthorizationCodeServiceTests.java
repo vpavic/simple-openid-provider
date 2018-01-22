@@ -8,11 +8,11 @@ import com.hazelcast.core.IMap;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.beans.DirectFieldAccessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,15 +58,14 @@ public class HazelcastAuthorizationCodeServiceTests {
 	}
 
 	@Test
-	public void setMapName_Valid_ShouldSetMapName() {
+	public void setMapName_Valid_ShouldSetMapName() throws IllegalAccessException {
 		String mapName = "myMap";
 		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
 				this.hazelcastInstance);
 		authorizationCodeService.setMapName(mapName);
 		authorizationCodeService.init();
 
-		assertThat((String) new DirectFieldAccessor(authorizationCodeService).getPropertyValue("mapName"))
-				.isEqualTo(mapName);
+		assertThat(FieldUtils.readField(authorizationCodeService, "mapName", true)).isEqualTo(mapName);
 	}
 
 	@Test
@@ -90,15 +89,14 @@ public class HazelcastAuthorizationCodeServiceTests {
 	}
 
 	@Test
-	public void setCodeLifetime_Valid_ShouldSetCodeLifetime() {
+	public void setCodeLifetime_Valid_ShouldSetCodeLifetime() throws IllegalAccessException {
 		Duration codeLifetime = Duration.ofMinutes(1);
 		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
 				this.hazelcastInstance);
 		authorizationCodeService.setCodeLifetime(codeLifetime);
 		authorizationCodeService.init();
 
-		assertThat((Duration) new DirectFieldAccessor(authorizationCodeService).getPropertyValue("codeLifetime"))
-				.isEqualTo(codeLifetime);
+		assertThat(FieldUtils.readField(authorizationCodeService, "codeLifetime", true)).isEqualTo(codeLifetime);
 	}
 
 	@Test

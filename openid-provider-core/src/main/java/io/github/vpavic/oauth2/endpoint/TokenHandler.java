@@ -20,8 +20,6 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.authentication.ClientRequestValidator;
 import io.github.vpavic.oauth2.client.ClientRepository;
@@ -35,16 +33,13 @@ import io.github.vpavic.oauth2.grant.GrantHandler;
  * @see <a href="https://tools.ietf.org/html/rfc7636">RFC 7636: Proof Key for Code Exchange by OAuth Public Clients</a>
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
-@RequestMapping(path = TokenEndpoint.PATH_MAPPING)
-public class TokenEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/token";
+public class TokenHandler {
 
 	private final Map<Class<?>, GrantHandler> grantHandlers;
 
 	private final ClientRequestValidator clientRequestValidator;
 
-	public TokenEndpoint(Map<Class<?>, GrantHandler> grantHandlers, Issuer issuer, ClientRepository clientRepository) {
+	public TokenHandler(Map<Class<?>, GrantHandler> grantHandlers, Issuer issuer, ClientRepository clientRepository) {
 		Objects.requireNonNull(grantHandlers, "grantHandlers must not be null");
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
@@ -55,7 +50,6 @@ public class TokenEndpoint {
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
-	@PostMapping
 	public void handleTokenRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
 		TokenResponse tokenResponse;

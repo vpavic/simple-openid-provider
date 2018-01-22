@@ -31,8 +31,10 @@ import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.ClientRegistrationEndpoint;
 import io.github.vpavic.oauth2.endpoint.DiscoveryEndpoint;
+import io.github.vpavic.oauth2.endpoint.DiscoveryHandler;
 import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
 import io.github.vpavic.oauth2.endpoint.JwkSetEndpoint;
+import io.github.vpavic.oauth2.endpoint.JwkSetHandler;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
@@ -80,12 +82,14 @@ public class DiscoveryConfiguration {
 
 	@Bean
 	public DiscoveryEndpoint discoveryEndpoint() {
-		return new DiscoveryEndpoint(providerMetadata());
+		DiscoveryHandler handler = new DiscoveryHandler(providerMetadata());
+		return new DiscoveryEndpoint(handler);
 	}
 
 	@Bean
 	public JwkSetEndpoint jwkSetEndpoint() {
-		return new JwkSetEndpoint(this.jwkSetLoader);
+		JwkSetHandler handler = new JwkSetHandler(this.jwkSetLoader);
+		return new JwkSetEndpoint(handler);
 	}
 
 	private Issuer issuer() {

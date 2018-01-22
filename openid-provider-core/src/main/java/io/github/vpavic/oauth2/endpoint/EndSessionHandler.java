@@ -23,16 +23,10 @@ import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 
-@RequestMapping(path = EndSessionEndpoint.PATH_MAPPING)
-public class EndSessionEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/logout";
+public class EndSessionHandler {
 
 	private final Issuer issuer;
 
@@ -40,7 +34,7 @@ public class EndSessionEndpoint {
 
 	private boolean frontChannelLogoutEnabled;
 
-	public EndSessionEndpoint(Issuer issuer, ClientRepository clientRepository) {
+	public EndSessionHandler(Issuer issuer, ClientRepository clientRepository) {
 		Objects.requireNonNull(issuer, "issuer must not be null");
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		this.issuer = issuer;
@@ -51,7 +45,6 @@ public class EndSessionEndpoint {
 		this.frontChannelLogoutEnabled = frontChannelLogoutEnabled;
 	}
 
-	@GetMapping
 	public void getLogoutPrompt(HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
 		if (request.getQueryString() != null) {
@@ -69,7 +62,6 @@ public class EndSessionEndpoint {
 		request.getRequestDispatcher("/logout").forward(request, response);
 	}
 
-	@PostMapping
 	public void handleLogoutSuccess(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String postLogoutRedirectUri = request.getParameter("post_logout_redirect_uri");
 

@@ -57,9 +57,14 @@ public class DiscoveryEndpointTests {
 	static class Config {
 
 		@Bean
-		public DiscoveryEndpoint discoveryEndpoint() {
-			return new DiscoveryEndpoint(new OIDCProviderMetadata(new Issuer("http://example.com"),
+		public DiscoveryHandler discoveryEndpointHandler() {
+			return new DiscoveryHandler(new OIDCProviderMetadata(new Issuer("http://example.com"),
 					Collections.singletonList(SubjectType.PUBLIC), URI.create("http://example.com/jwks.json")));
+		}
+
+		@Bean
+		public DiscoveryEndpoint discoveryEndpoint() {
+			return new DiscoveryEndpoint(discoveryEndpointHandler());
 		}
 
 	}

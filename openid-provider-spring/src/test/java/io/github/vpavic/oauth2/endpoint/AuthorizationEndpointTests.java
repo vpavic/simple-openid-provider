@@ -572,9 +572,14 @@ public class AuthorizationEndpointTests {
 		}
 
 		@Bean
-		public AuthorizationEndpoint authorizationEndpoint() {
-			return new AuthorizationEndpoint(clientRepository(), authorizationCodeService(), tokenService(),
+		public AuthorizationHandler authorizationEndpointHandler() {
+			return new AuthorizationHandler(clientRepository(), authorizationCodeService(), tokenService(),
 					subjectResolver(), scopeResolver());
+		}
+
+		@Bean
+		public AuthorizationEndpoint authorizationEndpoint() {
+			return new AuthorizationEndpoint(authorizationEndpointHandler());
 		}
 
 	}

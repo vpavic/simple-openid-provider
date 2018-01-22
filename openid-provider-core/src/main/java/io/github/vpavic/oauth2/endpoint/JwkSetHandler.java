@@ -7,8 +7,6 @@ import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.jose.jwk.JWKSet;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
@@ -17,19 +15,15 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
  *
  * @author Vedran Pavic
  */
-@RequestMapping(path = JwkSetEndpoint.PATH_MAPPING)
-public class JwkSetEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/keys";
+public class JwkSetHandler {
 
 	private final JwkSetLoader jwkSetLoader;
 
-	public JwkSetEndpoint(JwkSetLoader jwkSetLoader) {
+	public JwkSetHandler(JwkSetLoader jwkSetLoader) {
 		Objects.requireNonNull(jwkSetLoader, "jwkSetLoader must not be null");
 		this.jwkSetLoader = jwkSetLoader;
 	}
 
-	@GetMapping
 	public void getJwkSet(HttpServletResponse response) throws IOException {
 		JWKSet jwkSet = this.jwkSetLoader.load();
 

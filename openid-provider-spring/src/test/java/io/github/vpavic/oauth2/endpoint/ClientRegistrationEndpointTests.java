@@ -14,20 +14,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
-import io.github.vpavic.oauth2.claim.ClaimSource;
+import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.client.ClientService;
 
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link UserInfoEndpoint}.
+ * Tests for {@link ClientRegistrationEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class UserInfoEndpointTests {
+public class ClientRegistrationEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -49,8 +49,13 @@ public class UserInfoEndpointTests {
 	static class Config {
 
 		@Bean
-		public UserInfoEndpoint userInfoEndpoint() {
-			return new UserInfoEndpoint(mock(AccessTokenClaimsResolver.class), mock(ClaimSource.class));
+		public ClientRegistrationHandler clientRegistrationEndpointHandler() {
+			return new ClientRegistrationHandler(mock(ClientRepository.class), mock(ClientService.class));
+		}
+
+		@Bean
+		public ClientRegistrationEndpoint clientRegistrationEndpoint() {
+			return new ClientRegistrationEndpoint(clientRegistrationEndpointHandler());
 		}
 
 	}

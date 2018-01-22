@@ -8,8 +8,6 @@ import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.text.StrSubstitutor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * Check session iframe endpoint implementation.
@@ -17,10 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author Vedran Pavic
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
-@RequestMapping(path = CheckSessionIframe.PATH_MAPPING)
-public class CheckSessionIframe {
-
-	public static final String PATH_MAPPING = "/oauth2/check-session";
+public class CheckSessionHandler {
 
 	// @formatter:off
 	private static final String CHECK_SESSION_IFRAME_TEMPLATE = "<!DOCTYPE html>"
@@ -99,12 +94,11 @@ public class CheckSessionIframe {
 
 	private String checkSessionIframe;
 
-	public CheckSessionIframe(String cookieName) {
+	public CheckSessionHandler(String cookieName) {
 		Objects.requireNonNull(cookieName, "cookieName must not be null");
 		this.cookieName = cookieName;
 	}
 
-	@GetMapping
 	public void checkSession(HttpServletResponse response) throws IOException {
 		if (this.checkSessionIframe == null) {
 			this.checkSessionIframe = buildCheckSessionIframe();

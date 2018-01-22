@@ -16,9 +16,13 @@ import io.github.vpavic.oauth2.authentication.JwtAccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
+import io.github.vpavic.oauth2.endpoint.AuthorizationHandler;
 import io.github.vpavic.oauth2.endpoint.TokenEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenHandler;
 import io.github.vpavic.oauth2.endpoint.TokenRevocationEndpoint;
+import io.github.vpavic.oauth2.endpoint.TokenRevocationHandler;
 import io.github.vpavic.oauth2.endpoint.UserInfoEndpoint;
+import io.github.vpavic.oauth2.endpoint.UserInfoHandler;
 import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.grant.client.ClientCredentialsGrantHandler;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeGrantHandler;
@@ -90,11 +94,11 @@ public class CoreConfiguration {
 
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
-		AuthorizationEndpoint authorizationEndpoint = new AuthorizationEndpoint(this.clientRepository,
-				this.authorizationCodeService, tokenService(), this.subjectResolver, this.scopeResolver);
-		authorizationEndpoint.setAcr(this.properties.getAuthorization().getAcrs().get(1));
-		authorizationEndpoint.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
-		return authorizationEndpoint;
+		AuthorizationHandler handler = new AuthorizationHandler(this.clientRepository, this.authorizationCodeService,
+				tokenService(), this.subjectResolver, this.scopeResolver);
+		handler.setAcr(this.properties.getAuthorization().getAcrs().get(1));
+		handler.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
+		return new AuthorizationEndpoint(handler);
 	}
 
 	@Bean
@@ -115,12 +119,15 @@ public class CoreConfiguration {
 		grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
 		grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
 
-		return new TokenEndpoint(grantHandlers, this.properties.getIssuer(), this.clientRepository);
+		TokenHandler handler = new TokenHandler(grantHandlers, this.properties.getIssuer(), this.clientRepository);
+		return new TokenEndpoint(handler);
 	}
 
 	@Bean
 	public TokenRevocationEndpoint tokenRevocationEndpoint() {
-		return new TokenRevocationEndpoint(this.properties.getIssuer(), this.clientRepository, this.refreshTokenStore);
+		TokenRevocationHandler handler = new TokenRevocationHandler(this.properties.getIssuer(), this.clientRepository,
+				this.refreshTokenStore);
+		return new TokenRevocationEndpoint(handler);
 	}
 
 	@Bean
@@ -134,10 +141,10 @@ public class CoreConfiguration {
 
 	@Bean
 	public UserInfoEndpoint userInfoEndpoint() {
-		UserInfoEndpoint endpoint = new UserInfoEndpoint(accessTokenClaimsResolver(), this.claimSource);
-		endpoint.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
-		endpoint.setScopeClaims(this.properties.getClaim().getScopeClaims());
-		return endpoint;
+		UserInfoHandler handler = new UserInfoHandler(accessTokenClaimsResolver(), this.claimSource);
+		handler.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
+		handler.setScopeClaims(this.properties.getClaim().getScopeClaims());
+		return new UserInfoEndpoint(handler);
 	}
 
 }

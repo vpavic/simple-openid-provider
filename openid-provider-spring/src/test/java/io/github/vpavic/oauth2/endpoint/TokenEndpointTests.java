@@ -472,7 +472,7 @@ public class TokenEndpointTests {
 		}
 
 		@Bean
-		public TokenEndpoint tokenEndpoint() {
+		public TokenHandler tokenEndpointHandler() {
 			AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
 					clientRepository(), tokenService(), authorizationCodeService());
 			ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
@@ -488,7 +488,12 @@ public class TokenEndpointTests {
 			grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
 			grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
 
-			return new TokenEndpoint(grantHandlers, new Issuer("http://example.com"), clientRepository());
+			return new TokenHandler(grantHandlers, new Issuer("http://example.com"), clientRepository());
+		}
+
+		@Bean
+		public TokenEndpoint tokenEndpoint() {
+			return new TokenEndpoint(tokenEndpointHandler());
 		}
 
 	}

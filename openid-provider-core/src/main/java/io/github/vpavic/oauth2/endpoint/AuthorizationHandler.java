@@ -42,8 +42,6 @@ import com.nimbusds.openid.connect.sdk.claims.AMR;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
@@ -65,10 +63,7 @@ import io.github.vpavic.oauth2.token.TokenService;
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
-@RequestMapping(path = AuthorizationEndpoint.PATH_MAPPING)
-public class AuthorizationEndpoint {
-
-	public static final String PATH_MAPPING = "/oauth2/authorize";
+public class AuthorizationHandler {
 
 	public static final String AUTH_REQUEST_URI_ATTRIBUTE = "continue";
 
@@ -86,7 +81,7 @@ public class AuthorizationEndpoint {
 
 	private boolean sessionManagementEnabled;
 
-	public AuthorizationEndpoint(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
+	public AuthorizationHandler(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
 			TokenService tokenService, SubjectResolver subjectResolver, ScopeResolver scopeResolver) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(tokenService, "tokenService must not be null");
@@ -108,7 +103,6 @@ public class AuthorizationEndpoint {
 		this.sessionManagementEnabled = sessionManagementEnabled;
 	}
 
-	@GetMapping
 	public void authorize(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		AuthorizationResponse authResponse;
 
@@ -151,7 +145,7 @@ public class AuthorizationEndpoint {
 				return;
 			}
 
-			request.getSession().removeAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE);
+			request.getSession().removeAttribute(AuthorizationHandler.AUTH_REQUEST_URI_ATTRIBUTE);
 
 			if (responseType.impliesCodeFlow()) {
 				authResponse = handleAuthorizationCodeFlow(authRequest, client, request, subject);
@@ -251,7 +245,7 @@ public class AuthorizationEndpoint {
 			authRequestQuery = authRequest.toQueryString();
 		}
 
-		String authRequestUri = PATH_MAPPING + "?" + authRequestQuery;
+		String authRequestUri = "/oauth2/authorize?" + authRequestQuery;
 		request.getSession().setAttribute(AUTH_REQUEST_URI_ATTRIBUTE, authRequestUri);
 
 		response.sendRedirect("/login");

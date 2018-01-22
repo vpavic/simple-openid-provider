@@ -1,6 +1,5 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,20 +14,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
+import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
+import io.github.vpavic.oauth2.claim.ClaimSource;
 
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link TokenRevocationEndpoint}.
+ * Tests for {@link UserInfoEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class TokenRevocationEndpointTests {
+public class UserInfoEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -50,9 +49,13 @@ public class TokenRevocationEndpointTests {
 	static class Config {
 
 		@Bean
-		public TokenRevocationEndpoint tokenRevocationEndpoint() {
-			return new TokenRevocationEndpoint(new Issuer("http://example.com"), mock(ClientRepository.class),
-					mock(RefreshTokenStore.class));
+		public UserInfoHandler userInfoEndpointHandler() {
+			return new UserInfoHandler(mock(AccessTokenClaimsResolver.class), mock(ClaimSource.class));
+		}
+
+		@Bean
+		public UserInfoEndpoint userInfoEndpoint() {
+			return new UserInfoEndpoint(userInfoEndpointHandler());
 		}
 
 	}

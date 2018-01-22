@@ -16,21 +16,19 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.vpavic.oauth2.client.ClientRepository;
+import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 
 import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link EndSessionEndpoint}.
+ * Tests for {@link TokenRevocationEndpoint}.
  *
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class EndSessionEndpointTests {
+public class TokenRevocationEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -43,9 +41,8 @@ public class EndSessionEndpointTests {
 	}
 
 	@Test
-	public void getEndSessionEndpoint() throws Exception {
-		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk())
-				.andExpect(forwardedUrl("/logout"));
+	public void test() {
+		// TODO
 	}
 
 	@Configuration
@@ -53,13 +50,15 @@ public class EndSessionEndpointTests {
 	static class Config {
 
 		@Bean
-		public ClientRepository clientRepository() {
-			return mock(ClientRepository.class);
+		@SuppressWarnings("unchecked")
+		public TokenRevocationHandler tokenRevocationHandler() {
+			return new TokenRevocationHandler(new Issuer("http://example.com"), mock(ClientRepository.class),
+					mock(RefreshTokenStore.class));
 		}
 
 		@Bean
-		public EndSessionEndpoint endSessionEndpoint() {
-			return new EndSessionEndpoint(new Issuer("http://example.com"), clientRepository());
+		public TokenRevocationEndpoint tokenRevocationEndpoint() {
+			return new TokenRevocationEndpoint(tokenRevocationHandler());
 		}
 
 	}
