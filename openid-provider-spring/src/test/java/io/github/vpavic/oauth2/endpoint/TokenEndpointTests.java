@@ -139,7 +139,8 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, redirectUri));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
-				scope, Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null, null, null);
+				scope, Instant.now(), new ACR("1"), Collections.singletonList(AMR.PWD), new SessionID("test"), null,
+				null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -166,8 +167,8 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, redirectUri));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
-				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"), null,
-				null, null);
+				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), Collections.singletonList(AMR.PWD),
+				new SessionID("test"), null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -193,8 +194,8 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, redirectUri));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"),
-				new ClientID("test-client"), redirectUri, scope, Instant.now(), new ACR("1"), AMR.PWD,
-				new SessionID("test"), null, null, null);
+				new ClientID("test-client"), redirectUri, scope, Instant.now(), new ACR("1"),
+				Collections.singletonList(AMR.PWD), new SessionID("test"), null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -221,8 +222,8 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://bad.example.com")));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId,
-				URI.create("http://rp.example.com"), scope, Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
-				null, null, null);
+				URI.create("http://rp.example.com"), scope, Instant.now(), new ACR("1"),
+				Collections.singletonList(AMR.PWD), new SessionID("test"), null, null, null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -250,8 +251,9 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, redirectUri, codeVerifier));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
-				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
-				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
+				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), Collections.singletonList(AMR.PWD),
+				new SessionID("test"), CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod,
+				null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
@@ -277,8 +279,9 @@ public class TokenEndpointTests {
 				new AuthorizationCodeGrant(authorizationCode, URI.create("http://rp.example.com"), codeVerifier));
 
 		AuthorizationCodeContext context = new AuthorizationCodeContext(new Subject("user"), clientId, redirectUri,
-				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), AMR.PWD, new SessionID("test"),
-				CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod, null);
+				new Scope(OIDCScopeValue.OPENID), Instant.now(), new ACR("1"), Collections.singletonList(AMR.PWD),
+				new SessionID("test"), CodeChallenge.compute(codeChallengeMethod, codeVerifier), codeChallengeMethod,
+				null);
 		BearerAccessToken accessToken = new BearerAccessToken();
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 

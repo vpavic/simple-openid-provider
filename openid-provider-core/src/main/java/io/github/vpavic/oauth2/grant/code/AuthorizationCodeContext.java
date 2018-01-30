@@ -3,6 +3,7 @@ package io.github.vpavic.oauth2.grant.code;
 import java.io.Serializable;
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.Scope;
@@ -29,7 +30,7 @@ public class AuthorizationCodeContext implements Serializable {
 
 	private final ACR acr;
 
-	private final AMR amr;
+	private final List<AMR> amrs;
 
 	private final SessionID sessionId;
 
@@ -40,7 +41,7 @@ public class AuthorizationCodeContext implements Serializable {
 	private final Nonce nonce;
 
 	public AuthorizationCodeContext(Subject subject, ClientID clientId, URI redirectUri, Scope scope,
-			Instant authenticationTime, ACR acr, AMR amr, SessionID sessionId, CodeChallenge codeChallenge,
+			Instant authenticationTime, ACR acr, List<AMR> amrs, SessionID sessionId, CodeChallenge codeChallenge,
 			CodeChallengeMethod codeChallengeMethod, Nonce nonce) {
 		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(clientId, "clientId must not be null");
@@ -48,7 +49,7 @@ public class AuthorizationCodeContext implements Serializable {
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
-		Objects.requireNonNull(amr, "amr must not be null");
+		Objects.requireNonNull(amrs, "amrs must not be null");
 		Objects.requireNonNull(sessionId, "sessionId must not be null");
 		this.subject = subject;
 		this.clientId = clientId;
@@ -56,7 +57,7 @@ public class AuthorizationCodeContext implements Serializable {
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
-		this.amr = amr;
+		this.amrs = amrs;
 		this.sessionId = sessionId;
 		this.codeChallenge = codeChallenge;
 		this.codeChallengeMethod = codeChallengeMethod;
@@ -87,8 +88,8 @@ public class AuthorizationCodeContext implements Serializable {
 		return this.acr;
 	}
 
-	public AMR getAmr() {
-		return this.amr;
+	public List<AMR> getAmrs() {
+		return this.amrs;
 	}
 
 	public SessionID getSessionId() {

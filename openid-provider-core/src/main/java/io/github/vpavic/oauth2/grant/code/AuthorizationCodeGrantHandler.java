@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2.grant.code;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 import com.nimbusds.jwt.JWT;
@@ -95,7 +96,7 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 		Scope savedScope = context.getScope();
 		Instant authenticationTime = context.getAuthenticationTime();
 		ACR acr = context.getAcr();
-		AMR amr = context.getAmr();
+		List<AMR> amr = context.getAmrs();
 		SessionID sessionId = context.getSessionId();
 		Nonce nonce = context.getNonce();
 

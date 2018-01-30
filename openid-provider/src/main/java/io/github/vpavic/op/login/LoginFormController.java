@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 
-import io.github.vpavic.oauth2.endpoint.AuthorizationHandler;
+import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
 
 @Controller
 @RequestMapping(path = LoginFormController.PATH_MAPPING)
@@ -25,11 +25,11 @@ public class LoginFormController {
 
 	@GetMapping
 	public String getLoginForm(WebRequest request, Model model) {
-		String continueUri = (String) request.getAttribute(AuthorizationHandler.AUTH_REQUEST_URI_ATTRIBUTE,
+		String continueUri = (String) request.getAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE,
 				RequestAttributes.SCOPE_SESSION);
 
 		if (continueUri != null) {
-			model.addAttribute(AuthorizationHandler.AUTH_REQUEST_URI_ATTRIBUTE, continueUri);
+			model.addAttribute(AuthorizationEndpoint.AUTH_REQUEST_URI_ATTRIBUTE, continueUri);
 		}
 
 		return LOGIN_FORM_VIEW_NAME;

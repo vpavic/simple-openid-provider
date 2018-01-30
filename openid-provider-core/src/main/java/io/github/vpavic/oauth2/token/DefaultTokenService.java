@@ -3,7 +3,6 @@ package io.github.vpavic.oauth2.token;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -203,7 +202,7 @@ public class DefaultTokenService implements TokenService {
 		claimsSet.setAuthenticationTime(Date.from(idTokenRequest.getAuthenticationTime()));
 		claimsSet.setNonce(idTokenRequest.getNonce());
 		claimsSet.setACR(idTokenRequest.getAcr());
-		claimsSet.setAMR(Collections.singletonList(idTokenRequest.getAmr()));
+		claimsSet.setAMR(idTokenRequest.getAmrs());
 		claimsSet.setAuthorizedParty(new AuthorizedParty(clientId.getValue()));
 		claimsSet.putAll(userInfo);
 

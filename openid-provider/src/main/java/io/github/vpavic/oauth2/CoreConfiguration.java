@@ -32,7 +32,6 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
-import io.github.vpavic.oauth2.subject.SubjectResolver;
 import io.github.vpavic.oauth2.token.DefaultTokenService;
 import io.github.vpavic.oauth2.token.TokenService;
 
@@ -51,8 +50,6 @@ public class CoreConfiguration {
 
 	private final ClaimSource claimSource;
 
-	private final SubjectResolver subjectResolver;
-
 	private final ScopeResolver scopeResolver;
 
 	private final PasswordAuthenticationHandler passwordAuthenticationHandler;
@@ -61,7 +58,7 @@ public class CoreConfiguration {
 			ObjectProvider<JwkSetLoader> jwkSetLoader,
 			ObjectProvider<AuthorizationCodeService> authorizationCodeService,
 			ObjectProvider<RefreshTokenStore> refreshTokenStore, ObjectProvider<ClaimSource> claimSource,
-			ObjectProvider<SubjectResolver> subjectResolver, ObjectProvider<ScopeResolver> scopeResolver,
+			ObjectProvider<ScopeResolver> scopeResolver,
 			ObjectProvider<PasswordAuthenticationHandler> passwordAuthenticationHandler) {
 		this.properties = properties;
 		this.clientRepository = clientRepository.getObject();
@@ -69,7 +66,6 @@ public class CoreConfiguration {
 		this.authorizationCodeService = authorizationCodeService.getObject();
 		this.refreshTokenStore = refreshTokenStore.getObject();
 		this.claimSource = claimSource.getObject();
-		this.subjectResolver = subjectResolver.getObject();
 		this.scopeResolver = scopeResolver.getObject();
 		this.passwordAuthenticationHandler = passwordAuthenticationHandler.getObject();
 	}
@@ -94,8 +90,7 @@ public class CoreConfiguration {
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
 		AuthorizationHandler handler = new AuthorizationHandler(this.clientRepository, this.authorizationCodeService,
-				tokenService(), this.subjectResolver, this.scopeResolver);
-		handler.setAcr(this.properties.getAuthorization().getAcrs().get(1));
+				tokenService(), this.scopeResolver);
 		handler.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
 		return new AuthorizationEndpoint(handler);
 	}

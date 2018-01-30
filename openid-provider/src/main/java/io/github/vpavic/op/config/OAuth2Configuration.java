@@ -1,7 +1,6 @@
 package io.github.vpavic.op.config;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.text.ParseException;
 import java.time.Duration;
 
@@ -37,7 +36,6 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.scope.DefaultScopeResolver;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
-import io.github.vpavic.oauth2.subject.SubjectResolver;
 
 @Configuration
 @Import(OpenIdProviderConfiguration.class)
@@ -101,14 +99,6 @@ public class OAuth2Configuration {
 	@Bean
 	public ClaimSource claimSource() {
 		return (subject, claims) -> new UserInfo(subject);
-	}
-
-	@Bean
-	public SubjectResolver subjectResolver() {
-		return request -> {
-			Principal principal = request.getUserPrincipal();
-			return (principal != null) ? new Subject(principal.getName()) : null;
-		};
 	}
 
 	@Bean

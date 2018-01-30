@@ -1,6 +1,7 @@
 package io.github.vpavic.oauth2.token;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -26,7 +27,7 @@ public final class IdTokenRequest {
 
 	private final ACR acr;
 
-	private final AMR amr;
+	private final List<AMR> amrs;
 
 	private final SessionID sessionId;
 
@@ -37,13 +38,14 @@ public final class IdTokenRequest {
 	private final AuthorizationCode code;
 
 	public IdTokenRequest(Subject subject, OIDCClientInformation client, Scope scope, Instant authenticationTime,
-			ACR acr, AMR amr, SessionID sessionId, Nonce nonce, AccessToken accessToken, AuthorizationCode code) {
+			ACR acr, List<AMR> amrs, SessionID sessionId, Nonce nonce, AccessToken accessToken,
+			AuthorizationCode code) {
 		Objects.requireNonNull(subject, "subject must not be null");
 		Objects.requireNonNull(client, "client must not be null");
 		Objects.requireNonNull(scope, "scope must not be null");
 		Objects.requireNonNull(authenticationTime, "authenticationTime must not be null");
 		Objects.requireNonNull(acr, "acr must not be null");
-		Objects.requireNonNull(amr, "amr must not be null");
+		Objects.requireNonNull(amrs, "amrs must not be null");
 		if (!scope.contains(OIDCScopeValue.OPENID)) {
 			throw new IllegalArgumentException("Scope '" + OIDCScopeValue.OPENID + "' is required");
 		}
@@ -52,7 +54,7 @@ public final class IdTokenRequest {
 		this.scope = scope;
 		this.authenticationTime = authenticationTime;
 		this.acr = acr;
-		this.amr = amr;
+		this.amrs = amrs;
 		this.sessionId = sessionId;
 		this.nonce = nonce;
 		this.accessToken = accessToken;
@@ -79,8 +81,8 @@ public final class IdTokenRequest {
 		return this.acr;
 	}
 
-	public AMR getAmr() {
-		return this.amr;
+	public List<AMR> getAmrs() {
+		return this.amrs;
 	}
 
 	public SessionID getSessionId() {
