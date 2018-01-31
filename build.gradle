@@ -35,6 +35,6 @@ subprojects {
 	checkstyle {
 		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
 		configProperties.configDir = configFile.parentFile
-		toolVersion = '8.7'
+		toolVersion = '8.8'
 	}
 }
