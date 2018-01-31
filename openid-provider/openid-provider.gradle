@@ -12,7 +12,6 @@ dependencies {
 	compile 'com.h2database:h2'
 	compile 'com.hazelcast:hazelcast'
 	compile 'com.nimbusds:oauth2-oidc-sdk'
-	compile 'org.flywaydb:flyway-core'
 	compile 'org.postgresql:postgresql'
 	compile 'org.springframework.boot:spring-boot-devtools'
 	compile 'org.springframework.session:spring-session-hazelcast'
