@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -24,7 +25,7 @@ import io.github.vpavic.oauth2.endpoint.EndSessionHandler;
 @Conditional(LogoutCondition.class)
 public class LogoutConfiguration {
 
-	private final ServerProperties serverProperties;
+	private final Session.Cookie sessionCookieProperties;
 
 	private final OpenIdProviderProperties providerProperties;
 
@@ -32,7 +33,7 @@ public class LogoutConfiguration {
 
 	public LogoutConfiguration(ServerProperties serverProperties, OpenIdProviderProperties providerProperties,
 			ObjectProvider<ClientRepository> clientRepository) {
-		this.serverProperties = serverProperties;
+		this.sessionCookieProperties = serverProperties.getServlet().getSession().getCookie();
 		this.providerProperties = providerProperties;
 		this.clientRepository = clientRepository.getObject();
 	}
@@ -47,7 +48,7 @@ public class LogoutConfiguration {
 	@Bean
 	@Conditional(SessionManagementCondition.class)
 	public CheckSessionIframe checkSessionIframe() {
-		CheckSessionHandler handler = new CheckSessionHandler(this.serverProperties.getSession().getCookie().getName());
+		CheckSessionHandler handler = new CheckSessionHandler(this.sessionCookieProperties.getName());
 		return new CheckSessionIframe(handler);
 	}
 

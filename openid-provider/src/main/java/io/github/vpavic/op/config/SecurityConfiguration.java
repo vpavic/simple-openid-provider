@@ -1,6 +1,6 @@
 package io.github.vpavic.op.config;
 
-import org.springframework.boot.autoconfigure.security.StaticResourceRequest;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -75,7 +75,7 @@ public class SecurityConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 			// @formatter:off
 			http
-				.requestMatcher(StaticResourceRequest.toCommonLocations())
+				.requestMatcher(PathRequest.toStaticResources().atCommonLocations())
 				.authorizeRequests()
 					.anyRequest().permitAll()
 					.and()
