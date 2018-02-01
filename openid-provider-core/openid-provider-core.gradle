@@ -3,6 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'nebula.optional-base'
 
 dependencies {
+	api 'com.nimbusds:nimbus-jose-jwt'
 	api 'com.nimbusds:oauth2-oidc-sdk'
 
 	implementation 'org.apache.commons:commons-collections4'
