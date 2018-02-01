@@ -4,20 +4,19 @@ buildscript {
 	}
 
 	repositories {
-		maven { url 'https://plugins.gradle.org/m2/' }
-		maven { url 'https://repo.spring.io/plugins-release/' }
 		maven { url 'https://repo.spring.io/milestone/' }
 	}
 
 	dependencies {
-		classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
-		classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.3.0'
 		classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
 	}
 }
 
-apply plugin: 'base'
-apply plugin: 'com.github.ben-manes.versions'
+plugins {
+	id 'base'
+	id 'com.github.ben-manes.versions' version '0.17.0'
+	id 'nebula.optional-base' version '3.3.0' apply false
+}
 
 subprojects {
 	apply plugin: 'java'
