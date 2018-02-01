@@ -10,8 +10,6 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 
 /**
  * In-memory implementation of {@link AuthorizationCodeService} backed by a {@link ConcurrentMap}.
- *
- * @author Vedran Pavic
  */
 public class InMemoryAuthorizationCodeService implements AuthorizationCodeService {
 

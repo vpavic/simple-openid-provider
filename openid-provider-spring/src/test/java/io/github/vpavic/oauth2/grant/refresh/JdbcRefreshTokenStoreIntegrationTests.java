@@ -32,8 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for {@link JdbcRefreshTokenStore}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration

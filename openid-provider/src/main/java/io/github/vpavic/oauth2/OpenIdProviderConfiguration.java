@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Import;
 
 /**
  * OpenID Provider configuration.
- *
- * @author Vedran Pavic
  */
 @Configuration
 @EnableConfigurationProperties(OpenIdProviderProperties.class)

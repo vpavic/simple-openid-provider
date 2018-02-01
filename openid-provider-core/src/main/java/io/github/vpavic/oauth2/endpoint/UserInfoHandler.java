@@ -24,7 +24,6 @@ import io.github.vpavic.oauth2.claim.ClaimSource;
 /**
  * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.
  *
- * @author Vedran Pavic
  * @see <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core 1.0</a>
  */
 public class UserInfoHandler {

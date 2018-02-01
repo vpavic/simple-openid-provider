@@ -38,8 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
  * </pre>
  *
  * Table name can be customize using {@link #setTableName(String)}.
- *
- * @author Vedran Pavic
  */
 public class JdbcRefreshTokenStore implements RefreshTokenStore {
 

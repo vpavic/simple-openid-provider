@@ -21,8 +21,6 @@ import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for OpenID Provider.
- *
- * @author Vedran Pavic
  */
 @ConfigurationProperties("op")
 @Validated

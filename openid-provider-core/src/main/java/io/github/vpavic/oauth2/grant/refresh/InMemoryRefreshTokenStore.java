@@ -15,8 +15,6 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 
 /**
  * In-memory implementation of {@link RefreshTokenStore} backed by a {@link ConcurrentMap}.
- *
- * @author Vedran Pavic
  */
 public class InMemoryRefreshTokenStore implements RefreshTokenStore {
 

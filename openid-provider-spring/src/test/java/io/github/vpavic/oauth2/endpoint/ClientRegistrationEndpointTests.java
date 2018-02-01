@@ -21,8 +21,6 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link ClientRegistrationEndpoint}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration

@@ -66,8 +66,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Tests for {@link AuthorizationEndpoint}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration

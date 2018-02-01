@@ -18,8 +18,6 @@ import org.apache.commons.lang3.StringUtils;
  *
  * By default uses map named {@code op.authorizationCodes} and code lifetime of 5 minutes. These can be customize using
  * {@link #setMapName(String)} and {@link #setCodeLifetime(Duration)}, respectively.
- *
- * @author Vedran Pavic
  */
 public class HazelcastAuthorizationCodeService implements AuthorizationCodeService {
 

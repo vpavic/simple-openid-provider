@@ -12,8 +12,6 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 
 /**
  * Collection of utils for client related testing scenarios.
- *
- * @author Vedran Pavic
  */
 final class ClientTestUtils {
 

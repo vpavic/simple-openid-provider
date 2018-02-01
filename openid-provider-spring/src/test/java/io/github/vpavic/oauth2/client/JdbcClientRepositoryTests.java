@@ -31,8 +31,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
  * Tests for {@link JdbcClientRepository}.
- *
- * @author Vedran Pavic
  */
 public class JdbcClientRepositoryTests {
 

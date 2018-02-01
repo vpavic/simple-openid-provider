@@ -13,8 +13,6 @@ import com.nimbusds.openid.connect.sdk.claims.SessionID;
 
 /**
  * Collection of utils for authorization code related testing scenarios.
- *
- * @author Vedran Pavic
  */
 final class AuthorizationCodeTestUtils {
 

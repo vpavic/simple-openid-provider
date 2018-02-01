@@ -4,8 +4,6 @@ import com.nimbusds.jose.jwk.JWKSet;
 
 /**
  * {@link JWKSet} loader.
- *
- * @author Vedran Pavic
  */
 public interface JwkSetLoader {
 

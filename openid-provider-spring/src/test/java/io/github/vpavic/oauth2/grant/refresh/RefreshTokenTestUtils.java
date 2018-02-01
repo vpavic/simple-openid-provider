@@ -10,8 +10,6 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 
 /**
  * Collection of utils for refresh token related testing scenarios.
- *
- * @author Vedran Pavic
  */
 final class RefreshTokenTestUtils {
 

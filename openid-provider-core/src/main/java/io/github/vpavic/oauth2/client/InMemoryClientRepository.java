@@ -13,8 +13,6 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
 /**
  * In-memory implementation of {@link ClientRepository} backed by a {@link ConcurrentMap}.
- *
- * @author Vedran Pavic
  */
 public class InMemoryClientRepository implements ClientRepository {
 

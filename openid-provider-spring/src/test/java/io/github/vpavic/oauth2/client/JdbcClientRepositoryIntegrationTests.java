@@ -27,8 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for {@link JdbcClientRepository}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration

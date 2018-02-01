@@ -34,8 +34,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
  * Tests for {@link JdbcRefreshTokenStore}.
- *
- * @author Vedran Pavic
  */
 public class JdbcRefreshTokenStoreTests {
 

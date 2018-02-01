@@ -24,8 +24,6 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link TokenRevocationEndpoint}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration

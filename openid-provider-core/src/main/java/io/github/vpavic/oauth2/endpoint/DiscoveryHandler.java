@@ -8,7 +8,6 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 /**
  * Endpoint that publishes server's OpenID Provider Configuration.
  *
- * @author Vedran Pavic
  * @see <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery 1.0</a>
  */
 public class DiscoveryHandler {

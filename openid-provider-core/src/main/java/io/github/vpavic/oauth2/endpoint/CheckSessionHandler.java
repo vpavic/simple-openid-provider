@@ -9,7 +9,6 @@ import org.apache.commons.text.StrSubstitutor;
 /**
  * Check session iframe endpoint implementation.
  *
- * @author Vedran Pavic
  * @see <a href="https://openid.net/specs/openid-connect-session-1_0.html">OpenID Connect Session Management 1.0</a>
  */
 public class CheckSessionHandler {

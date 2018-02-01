@@ -25,8 +25,6 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 /**
  * A JWT based {@link AccessTokenClaimsResolver} implementation.
- *
- * @author Vedran Pavic
  */
 public class JwtAccessTokenClaimsResolver implements AccessTokenClaimsResolver {
 

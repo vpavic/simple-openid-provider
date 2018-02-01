@@ -24,8 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Tests for {@link EndSessionEndpoint}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration

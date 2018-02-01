@@ -9,8 +9,6 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 /**
  * Endpoint that publishes server's public RSA keys as a JSON Web Key (JWK) set.
- *
- * @author Vedran Pavic
  */
 public class JwkSetHandler {
 

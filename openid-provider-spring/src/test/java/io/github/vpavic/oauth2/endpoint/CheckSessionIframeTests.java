@@ -21,8 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Tests for {@link CheckSessionIframe}.
- *
- * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
 @WebAppConfiguration

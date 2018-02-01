@@ -27,7 +27,6 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Token Endpoint implementation.
  *
- * @author Vedran Pavic
  * @see <a href="https://tools.ietf.org/html/rfc6749">RFC 6749: The OAuth 2.0 Authorization Framework</a>
  * @see <a href="https://tools.ietf.org/html/rfc7009">RFC 7009: OAuth 2.0 Token Revocation</a>
  * @see <a href="https://tools.ietf.org/html/rfc7636">RFC 7636: Proof Key for Code Exchange by OAuth Public Clients</a>

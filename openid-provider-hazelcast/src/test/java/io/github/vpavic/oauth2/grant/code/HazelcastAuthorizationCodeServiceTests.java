@@ -26,8 +26,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
  * Tests for {@link HazelcastAuthorizationCodeService}.
- *
- * @author Vedran Pavic
  */
 public class HazelcastAuthorizationCodeServiceTests {
 
