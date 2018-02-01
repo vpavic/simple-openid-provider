@@ -1,11 +1,8 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Objects;
 
-import javax.servlet.http.HttpServletResponse;
-
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
 /**
@@ -25,16 +22,23 @@ public class DiscoveryHandler {
 		this.providerMetadata = providerMetadata;
 	}
 
-	public void getProviderMetadata(HttpServletResponse response) throws IOException {
-		if (this.providerMetadataJson == null) {
-			this.providerMetadataJson = serializeProviderMetadata();
+	public HTTPResponse getProviderMetadata() {
+		HTTPResponse httpResponse;
+
+		try {
+			if (this.providerMetadataJson == null) {
+				this.providerMetadataJson = serializeProviderMetadata();
+			}
+
+			httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
+			httpResponse.setContentType("application/json; charset=UTF-8");
+			httpResponse.setContent(this.providerMetadataJson);
+		}
+		catch (Exception e) {
+			httpResponse = new HTTPResponse(HTTPResponse.SC_SERVER_ERROR);
 		}
 
-		response.setContentType("application/json; charset=UTF-8");
-
-		PrintWriter writer = response.getWriter();
-		writer.print(this.providerMetadataJson);
-		writer.close();
+		return httpResponse;
 	}
 
 	private String serializeProviderMetadata() {

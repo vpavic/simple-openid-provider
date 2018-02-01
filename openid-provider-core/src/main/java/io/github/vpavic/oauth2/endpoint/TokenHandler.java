@@ -1,11 +1,7 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
@@ -13,10 +9,9 @@ import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.TokenRevocationRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Token;
@@ -60,9 +55,8 @@ public class TokenHandler {
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}
 
-	public void handleTokenRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-		TokenResponse tokenResponse;
+	public HTTPResponse handleTokenRequest(HTTPRequest httpRequest) {
+		HTTPResponse httpResponse;
 
 		try {
 			TokenRequest tokenRequest = TokenRequest.parse(httpRequest);
@@ -74,22 +68,25 @@ public class TokenHandler {
 			}
 
 			Tokens tokens = grantHandler.grant(tokenRequest);
-			tokenResponse = (tokens instanceof OIDCTokens) ? new OIDCTokenResponse((OIDCTokens) tokens)
+			AccessTokenResponse tokenResponse = (tokens instanceof OIDCTokens)
+					? new OIDCTokenResponse((OIDCTokens) tokens)
 					: new AccessTokenResponse(tokens);
+			httpResponse = tokenResponse.toHTTPResponse();
 		}
 		catch (JOSEException e) {
-			tokenResponse = new TokenErrorResponse(OAuth2Error.SERVER_ERROR);
+			TokenErrorResponse tokenResponse = new TokenErrorResponse(OAuth2Error.SERVER_ERROR);
+			httpResponse = tokenResponse.toHTTPResponse();
 		}
 		catch (GeneralException e) {
-			tokenResponse = new TokenErrorResponse(e.getErrorObject());
+			TokenErrorResponse tokenResponse = new TokenErrorResponse(e.getErrorObject());
+			httpResponse = tokenResponse.toHTTPResponse();
 		}
 
-		ServletUtils.applyHTTPResponse(tokenResponse.toHTTPResponse(), response);
+		return httpResponse;
 	}
 
-	public void handleTokenRevocationRequest(HttpServletRequest request, HttpServletResponse response)
-			throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+	public HTTPResponse handleTokenRevocationRequest(HTTPRequest httpRequest) {
+		HTTPResponse httpResponse;
 
 		try {
 			TokenRevocationRequest revocationRequest = TokenRevocationRequest.parse(httpRequest);
@@ -106,15 +103,17 @@ public class TokenHandler {
 
 			this.refreshTokenStore.revoke(refreshToken);
 
-			response.setStatus(HttpServletResponse.SC_OK);
+			httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
 		}
 		catch (JOSEException e) {
-			response.setStatus(HttpServletResponse.SC_OK);
+			httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
 		}
 		catch (GeneralException e) {
 			TokenErrorResponse tokenResponse = new TokenErrorResponse(e.getErrorObject());
-			ServletUtils.applyHTTPResponse(tokenResponse.toHTTPResponse(), response);
+			httpResponse = tokenResponse.toHTTPResponse();
 		}
+
+		return httpResponse;
 	}
 
 }

@@ -1,12 +1,9 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Objects;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
@@ -24,14 +21,20 @@ public class JwkSetHandler {
 		this.jwkSetLoader = jwkSetLoader;
 	}
 
-	public void getJwkSet(HttpServletResponse response) throws IOException {
-		JWKSet jwkSet = this.jwkSetLoader.load();
+	public HTTPResponse getJwkSet() {
+		HTTPResponse httpResponse;
+		try {
+			JWKSet jwkSet = this.jwkSetLoader.load();
 
-		response.setContentType(JWKSet.MIME_TYPE);
+			httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
+			httpResponse.setContentType(JWKSet.MIME_TYPE);
+			httpResponse.setContent(jwkSet.toJSONObject().toJSONString());
+		}
+		catch (Exception e) {
+			httpResponse = new HTTPResponse(HTTPResponse.SC_SERVER_ERROR);
+		}
 
-		PrintWriter writer = response.getWriter();
-		writer.print(jwkSet.toJSONObject().toJSONString());
-		writer.close();
+		return httpResponse;
 	}
 
 }

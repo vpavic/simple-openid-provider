@@ -6,6 +6,9 @@ import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +28,9 @@ public class TokenRevocationEndpoint {
 
 	@PostMapping
 	public void handleRevocationRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		this.handler.handleTokenRevocationRequest(request, response);
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+		HTTPResponse httpResponse = this.handler.handleTokenRevocationRequest(httpRequest);
+		ServletUtils.applyHTTPResponse(httpResponse, response);
 	}
 
 }

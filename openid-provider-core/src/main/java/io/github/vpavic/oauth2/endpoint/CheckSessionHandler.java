@@ -1,12 +1,9 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Objects;
 
-import javax.servlet.http.HttpServletResponse;
-
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.commons.text.StrSubstitutor;
 
 /**
@@ -99,16 +96,23 @@ public class CheckSessionHandler {
 		this.cookieName = cookieName;
 	}
 
-	public void checkSession(HttpServletResponse response) throws IOException {
-		if (this.checkSessionIframe == null) {
-			this.checkSessionIframe = buildCheckSessionIframe();
+	public HTTPResponse checkSession() {
+		HTTPResponse httpResponse;
+
+		try {
+			if (this.checkSessionIframe == null) {
+				this.checkSessionIframe = buildCheckSessionIframe();
+			}
+
+			httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
+			httpResponse.setContentType("text/html");
+			httpResponse.setContent(this.checkSessionIframe);
+		}
+		catch (Exception e) {
+			httpResponse = new HTTPResponse(HTTPResponse.SC_SERVER_ERROR);
 		}
 
-		response.setContentType("text/html");
-
-		PrintWriter writer = response.getWriter();
-		writer.print(this.checkSessionIframe);
-		writer.close();
+		return httpResponse;
 	}
 
 	private String buildCheckSessionIframe() {

@@ -5,6 +5,8 @@ import java.util.Objects;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +26,8 @@ public class CheckSessionIframe {
 
 	@GetMapping
 	public void checkSession(HttpServletResponse response) throws IOException {
-		this.handler.checkSession(response);
+		HTTPResponse httpResponse = this.handler.checkSession();
+		ServletUtils.applyHTTPResponse(httpResponse, response);
 	}
 
 }

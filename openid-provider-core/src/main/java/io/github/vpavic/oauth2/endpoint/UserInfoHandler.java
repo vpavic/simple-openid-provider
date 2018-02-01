@@ -1,24 +1,19 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
-import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 
@@ -58,9 +53,8 @@ public class UserInfoHandler {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void getUserInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-		UserInfoResponse userInfoResponse;
+	public HTTPResponse getUserInfo(HTTPRequest httpRequest) {
+		HTTPResponse httpResponse;
 
 		try {
 			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
@@ -72,15 +66,17 @@ public class UserInfoHandler {
 			Set<String> claims = ClaimHelper.resolveClaims(scope, this.scopeClaims);
 			UserInfo userInfo = this.claimSource.load(subject, claims);
 
-			userInfoResponse = new UserInfoSuccessResponse(userInfo);
+			UserInfoSuccessResponse userInfoResponse = new UserInfoSuccessResponse(userInfo);
+			httpResponse = userInfoResponse.toHTTPResponse();
 		}
 		catch (GeneralException e) {
-			userInfoResponse = new UserInfoErrorResponse(e.getErrorObject());
+			UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(e.getErrorObject());
+			httpResponse = userInfoResponse.toHTTPResponse();
 		}
 
-		ServletUtils.applyHTTPResponse(userInfoResponse.toHTTPResponse(), response);
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setHeader("Access-Control-Allow-Methods", "GET, POST");
+		httpRequest.setHeader("Access-Control-Allow-Origin", "*");
+		httpRequest.setHeader("Access-Control-Allow-Methods", "GET, POST");
+		return httpResponse;
 	}
 
 }

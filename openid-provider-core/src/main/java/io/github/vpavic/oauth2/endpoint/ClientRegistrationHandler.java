@@ -1,12 +1,7 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.ProtectedResourceRequest;
@@ -15,7 +10,7 @@ import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
 import com.nimbusds.oauth2.sdk.client.ClientRegistrationErrorResponse;
 import com.nimbusds.oauth2.sdk.client.ClientRegistrationResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.ServletUtils;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -56,8 +51,8 @@ public class ClientRegistrationHandler {
 		this.apiAccessToken = apiAccessToken;
 	}
 
-	public void getClientRegistrations(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+	public HTTPResponse getClientRegistrations(HTTPRequest httpRequest) {
+		HTTPResponse httpResponse;
 
 		try {
 			String authorizationHeader = httpRequest.getAuthorization();
@@ -70,22 +65,20 @@ public class ClientRegistrationHandler {
 			validateAccessToken(requestAccessToken);
 			List<OIDCClientInformation> clients = this.clientRepository.findAll();
 
-			response.setContentType("application/json; charset=UTF-8");
-
-			PrintWriter writer = response.getWriter();
-			writer.print(toJsonObject(clients).toJSONString());
-			writer.close();
+			httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
+			httpResponse.setContentType("application/json; charset=UTF-8");
+			httpResponse.setContent(toJsonObject(clients).toJSONString());
 		}
 		catch (GeneralException e) {
 			ClientRegistrationResponse registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
-			ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
+
+		return httpResponse;
 	}
 
-	public void handleClientRegistrationRequest(HttpServletRequest request, HttpServletResponse response)
-			throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-		ClientRegistrationResponse registrationResponse;
+	public HTTPResponse handleClientRegistrationRequest(HTTPRequest httpRequest) {
+		HTTPResponse httpResponse;
 
 		try {
 			OIDCClientRegistrationRequest registrationRequest = OIDCClientRegistrationRequest.parse(httpRequest);
@@ -97,36 +90,38 @@ public class ClientRegistrationHandler {
 			OIDCClientMetadata clientMetadata = registrationRequest.getOIDCClientMetadata();
 			OIDCClientInformation clientInformation = this.clientService.create(clientMetadata, true);
 
-			registrationResponse = new OIDCClientInformationResponse(clientInformation);
+			OIDCClientInformationResponse registrationResponse = new OIDCClientInformationResponse(clientInformation);
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
 		catch (GeneralException e) {
-			registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+			ClientRegistrationErrorResponse registrationResponse = new ClientRegistrationErrorResponse(
+					e.getErrorObject());
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
 
-		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+		return httpResponse;
 	}
 
-	public void getClientConfiguration(HttpServletRequest request, HttpServletResponse response,
-			ClientID id) throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-		ClientRegistrationResponse registrationResponse;
+	public HTTPResponse getClientConfiguration(HTTPRequest httpRequest, ClientID id) {
+		HTTPResponse httpResponse;
 
 		try {
 			ClientReadRequest clientReadRequest = ClientReadRequest.parse(httpRequest);
 			OIDCClientInformation client = resolveAndValidateClient(id, clientReadRequest);
-			registrationResponse = new OIDCClientInformationResponse(client);
+			OIDCClientInformationResponse registrationResponse = new OIDCClientInformationResponse(client);
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
 		catch (GeneralException e) {
-			registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+			ClientRegistrationErrorResponse registrationResponse = new ClientRegistrationErrorResponse(
+					e.getErrorObject());
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
 
-		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+		return httpResponse;
 	}
 
-	public void updateClientConfiguration(HttpServletRequest request, HttpServletResponse response,
-			ClientID id) throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-		ClientRegistrationResponse registrationResponse;
+	public HTTPResponse updateClientConfiguration(HTTPRequest httpRequest, ClientID id) {
+		HTTPResponse httpResponse;
 
 		try {
 			OIDCClientUpdateRequest clientUpdateRequest = OIDCClientUpdateRequest.parse(httpRequest);
@@ -135,18 +130,20 @@ public class ClientRegistrationHandler {
 			OIDCClientMetadata clientMetadata = clientUpdateRequest.getOIDCClientMetadata();
 			OIDCClientInformation client = this.clientService.update(id, clientMetadata);
 
-			registrationResponse = new OIDCClientInformationResponse(client);
+			OIDCClientInformationResponse registrationResponse = new OIDCClientInformationResponse(client);
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
 		catch (GeneralException e) {
-			registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
+			ClientRegistrationErrorResponse registrationResponse = new ClientRegistrationErrorResponse(
+					e.getErrorObject());
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
 
-		ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+		return httpResponse;
 	}
 
-	public void deleteClientConfiguration(HttpServletRequest request, HttpServletResponse response,
-			ClientID id) throws IOException {
-		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+	public HTTPResponse deleteClientConfiguration(HTTPRequest httpRequest, ClientID id) {
+		HTTPResponse httpResponse;
 
 		try {
 			ClientDeleteRequest clientDeleteRequest = ClientDeleteRequest.parse(httpRequest);
@@ -154,12 +151,14 @@ public class ClientRegistrationHandler {
 
 			this.clientRepository.deleteById(id);
 
-			response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+			httpResponse = new HTTPResponse(204);
 		}
 		catch (GeneralException e) {
 			ClientRegistrationResponse registrationResponse = new ClientRegistrationErrorResponse(e.getErrorObject());
-			ServletUtils.applyHTTPResponse(registrationResponse.toHTTPResponse(), response);
+			httpResponse = registrationResponse.toHTTPResponse();
 		}
+
+		return httpResponse;
 	}
 
 	private void validateAccessToken(AccessToken requestAccessToken) throws GeneralException {
