@@ -1,0 +1,14 @@
+apply plugin: 'maven'
+apply plugin: 'nebula.optional-base'
+
+dependencies {
+	compile project(':openid-provider-core')
+
+	compile 'com.hazelcast:hazelcast'
+
+	testCompile 'com.jayway.jsonpath:json-path'
+	testCompile 'junit:junit'
+	testCompile 'org.assertj:assertj-core'
+	testCompile 'org.hamcrest:hamcrest-library'
+	testCompile 'org.mockito:mockito-core'
+}

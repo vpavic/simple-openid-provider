@@ -1,6 +1,8 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
+	compile project(':openid-provider-core')
+	compile project(':openid-provider-hazelcast')
 	compile project(':openid-provider-spring')
 
 	compile 'org.springframework.boot:spring-boot-starter-cloud-connectors'
