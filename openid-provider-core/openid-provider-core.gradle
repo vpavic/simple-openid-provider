@@ -1,20 +1,30 @@
-apply plugin: 'maven'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
 apply plugin: 'nebula.optional-base'
 
 dependencies {
-	compile 'com.nimbusds:oauth2-oidc-sdk'
-	compile 'org.apache.commons:commons-collections4'
-	compile 'org.apache.commons:commons-text'
-	compile 'org.apache.httpcomponents:httpclient'
-	compile 'org.bouncycastle:bcprov-jdk15on'
-	compile 'org.slf4j:slf4j-api'
+	api 'com.nimbusds:oauth2-oidc-sdk'
 
-	testCompile 'com.h2database:h2'
-	testCompile 'com.jayway.jsonpath:json-path'
-	testCompile 'junit:junit'
-	testCompile 'org.assertj:assertj-core'
-	testCompile 'org.hamcrest:hamcrest-library'
-	testCompile 'org.mockito:mockito-core'
-	testCompile 'org.slf4j:slf4j-nop'
-	testCompile 'org.springframework:spring-test'
+	implementation 'org.apache.commons:commons-collections4'
+	implementation 'org.apache.commons:commons-text'
+	implementation 'org.apache.httpcomponents:httpclient'
+	implementation 'org.bouncycastle:bcprov-jdk15on'
+	implementation 'org.slf4j:slf4j-api'
+
+	testImplementation 'com.h2database:h2'
+	testImplementation 'com.jayway.jsonpath:json-path'
+	testImplementation 'junit:junit'
+	testImplementation 'org.assertj:assertj-core'
+	testImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'org.mockito:mockito-core'
+	testImplementation 'org.slf4j:slf4j-nop'
+	testImplementation 'org.springframework:spring-test'
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
 }

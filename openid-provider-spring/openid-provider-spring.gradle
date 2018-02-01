@@ -1,24 +1,33 @@
-apply plugin: 'maven'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
 apply plugin: 'nebula.optional-base'
 
 dependencies {
-	compile project(':openid-provider-core')
+	api project(':openid-provider-core')
 
-	compile 'org.springframework:spring-jdbc', optional
-	compile 'org.springframework:spring-webmvc'
-	compile 'org.springframework.security:spring-security-config'
-	compile 'org.springframework.security:spring-security-web'
+	implementation 'org.springframework:spring-jdbc', optional
+	implementation 'org.springframework:spring-webmvc'
+	implementation 'org.springframework.security:spring-security-config'
+	implementation 'org.springframework.security:spring-security-web'
 
 	compileOnly 'javax.servlet:javax.servlet-api'
 
-	testCompile 'com.h2database:h2'
-	testCompile 'com.jayway.jsonpath:json-path'
-	testCompile 'javax.servlet:javax.servlet-api'
-	testCompile 'junit:junit'
-	testCompile 'org.assertj:assertj-core'
-	testCompile 'org.hamcrest:hamcrest-library'
-	testCompile 'org.mockito:mockito-core'
-	testCompile 'org.slf4j:slf4j-nop'
-	testCompile 'org.springframework:spring-test'
-	testCompile 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2'
+	testImplementation 'com.jayway.jsonpath:json-path'
+	testImplementation 'javax.servlet:javax.servlet-api'
+	testImplementation 'junit:junit'
+	testImplementation 'org.assertj:assertj-core'
+	testImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'org.mockito:mockito-core'
+	testImplementation 'org.slf4j:slf4j-nop'
+	testImplementation 'org.springframework:spring-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
 }

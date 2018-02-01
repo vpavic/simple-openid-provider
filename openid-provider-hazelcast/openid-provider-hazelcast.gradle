@@ -1,14 +1,23 @@
-apply plugin: 'maven'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
 apply plugin: 'nebula.optional-base'
 
 dependencies {
-	compile project(':openid-provider-core')
+	api project(':openid-provider-core')
 
-	compile 'com.hazelcast:hazelcast'
+	implementation 'com.hazelcast:hazelcast'
 
-	testCompile 'com.jayway.jsonpath:json-path'
-	testCompile 'junit:junit'
-	testCompile 'org.assertj:assertj-core'
-	testCompile 'org.hamcrest:hamcrest-library'
-	testCompile 'org.mockito:mockito-core'
+	testImplementation 'com.jayway.jsonpath:json-path'
+	testImplementation 'junit:junit'
+	testImplementation 'org.assertj:assertj-core'
+	testImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'org.mockito:mockito-core'
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
 }
