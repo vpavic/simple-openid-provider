@@ -1,9 +1,3 @@
-pluginManagement {
-	repositories {
-		gradlePluginPortal()
-	}
-}
-
 rootProject.name = 'simple-openid-provider'
 
 FileTree buildFiles = fileTree(rootDir) {
