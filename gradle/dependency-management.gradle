@@ -8,7 +8,7 @@ dependencyManagement {
 
 	dependencies {
 		dependency 'com.nimbusds:nimbus-jose-jwt:5.4'
-		dependency 'com.nimbusds:oauth2-oidc-sdk:5.52'
+		dependency 'com.nimbusds:oauth2-oidc-sdk:5.53'
 		dependency 'org.apache.commons:commons-collections4:4.1'
 		dependency 'org.apache.commons:commons-text:1.2'
 		dependency 'org.bouncycastle:bcprov-jdk15on:1.59'
