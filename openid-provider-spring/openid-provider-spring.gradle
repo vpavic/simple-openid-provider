@@ -19,7 +19,6 @@ dependencies {
 	testImplementation 'org.assertj:assertj-core'
 	testImplementation 'org.hamcrest:hamcrest-library'
 	testImplementation 'org.mockito:mockito-core'
-	testImplementation 'org.slf4j:slf4j-nop'
 	testImplementation 'org.springframework:spring-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 }

@@ -6,6 +6,7 @@ dependencies {
 	api project(':openid-provider-core')
 
 	implementation 'com.hazelcast:hazelcast'
+	implementation 'org.apache.commons:commons-lang3'
 
 	testImplementation 'com.jayway.jsonpath:json-path'
 	testImplementation 'junit:junit'
