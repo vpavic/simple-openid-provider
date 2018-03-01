@@ -2,7 +2,7 @@ apply plugin: 'com.github.ben-manes.versions'
 
 dependencies {
 	implementation 'org.springframework:spring-framework-bom:5.0.4.RELEASE'
-	implementation 'org.springframework.security:spring-security-bom:5.0.2.RELEASE'
+	implementation 'org.springframework.security:spring-security-bom:5.0.3.RELEASE'
 
 	constraints {
 		implementation 'com.hazelcast:hazelcast:3.9.3'
