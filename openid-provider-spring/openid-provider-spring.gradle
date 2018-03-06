@@ -5,6 +5,7 @@ apply plugin: 'nebula.optional-base'
 dependencies {
 	api project(':openid-provider-core')
 
+	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.springframework:spring-jdbc', optional
 	implementation 'org.springframework:spring-webmvc'
 	implementation 'org.springframework.security:spring-security-config'
