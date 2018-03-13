@@ -6,7 +6,7 @@ dependencies {
 
 	constraints {
 		implementation 'com.hazelcast:hazelcast:3.9.3'
-		implementation 'com.nimbusds:nimbus-jose-jwt:5.6'
+		implementation 'com.nimbusds:nimbus-jose-jwt:5.7'
 		implementation 'com.nimbusds:oauth2-oidc-sdk:5.56'
 		implementation 'org.apache.commons:commons-collections4:4.1'
 		implementation 'org.apache.commons:commons-lang3:3.7'
