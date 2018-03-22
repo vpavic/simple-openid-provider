@@ -16,6 +16,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.client.ClientType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.id.Subject;
@@ -93,11 +94,16 @@ public class AuthorizationHandler {
 			ClientID clientId = authRequest.getClientID();
 			URI redirectUri = authRequest.getRedirectionURI();
 			State state = authRequest.getState();
+			CodeChallenge codeChallenge = authRequest.getCodeChallenge();
 			Prompt prompt = authRequest.getPrompt();
 			OIDCClientInformation client = resolveClient(clientId);
 			OIDCClientMetadata clientMetadata = client.getOIDCMetadata();
 
 			validateRedirectionURI(redirectUri, clientMetadata);
+
+			if (client.inferClientType().equals(ClientType.PUBLIC) && codeChallenge == null) {
+				throw new GeneralException(OAuth2Error.INVALID_REQUEST.setDescription("Code challenge required"));
+			}
 
 			if (!clientMetadata.getResponseTypes().contains(responseType)) {
 				ErrorObject error = OAuth2Error.UNAUTHORIZED_CLIENT;
