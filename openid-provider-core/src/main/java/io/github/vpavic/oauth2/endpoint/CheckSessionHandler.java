@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.commons.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 
 /**
  * Check session iframe endpoint implementation.
@@ -115,7 +115,7 @@ public class CheckSessionHandler {
 	}
 
 	private String buildCheckSessionIframe() {
-		return StrSubstitutor.replace(CHECK_SESSION_IFRAME_TEMPLATE,
+		return StringSubstitutor.replace(CHECK_SESSION_IFRAME_TEMPLATE,
 				Collections.singletonMap("cookieName", this.cookieName));
 	}
 
