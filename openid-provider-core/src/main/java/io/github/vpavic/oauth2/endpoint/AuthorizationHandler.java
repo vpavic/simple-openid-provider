@@ -102,7 +102,8 @@ public class AuthorizationHandler {
 			validateRedirectionURI(redirectUri, clientMetadata);
 
 			if (client.inferClientType().equals(ClientType.PUBLIC) && codeChallenge == null) {
-				throw new GeneralException(OAuth2Error.INVALID_REQUEST.setDescription("Code challenge required"));
+				ErrorObject error = OAuth2Error.INVALID_REQUEST.setDescription("Code challenge required");
+				throw new GeneralException(error.getDescription(), error, clientId, redirectUri, responseMode, state);
 			}
 
 			if (!clientMetadata.getResponseTypes().contains(responseType)) {
