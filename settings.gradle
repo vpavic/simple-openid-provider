@@ -1,7 +1,5 @@
 rootProject.name = 'simple-openid-provider'
 
-enableFeaturePreview('IMPROVED_POM_SUPPORT')
-
 FileTree buildFiles = fileTree(rootDir) {
 	include '**/*.gradle'
 	exclude '/gradle', 'build.gradle', 'settings.gradle'
