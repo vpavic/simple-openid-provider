@@ -11,7 +11,7 @@ dependencyManagement {
 		dependency 'com.h2database:h2:1.4.197'
 		dependency 'com.hazelcast:hazelcast:3.9.3'
 		dependency 'com.jayway.jsonpath:json-path:2.4.0'
-		dependency 'com.nimbusds:nimbus-jose-jwt:5.7'
+		dependency 'com.nimbusds:nimbus-jose-jwt:5.9'
 		dependency 'com.nimbusds:oauth2-oidc-sdk:5.57'
 		dependency 'javax.servlet:javax.servlet-api:4.0.0'
 		dependency 'junit:junit:4.12'
