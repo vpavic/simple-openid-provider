@@ -10,11 +10,10 @@ import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,9 +27,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
  * Tests for {@link HazelcastAuthorizationCodeService}.
  */
 public class HazelcastAuthorizationCodeServiceTests {
-
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
 
 	private HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
@@ -49,10 +45,8 @@ public class HazelcastAuthorizationCodeServiceTests {
 
 	@Test
 	public void construct_NullHazelcastInstance_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("hazelcastInstance must not be null");
-
-		new HazelcastAuthorizationCodeService(null);
+		assertThatThrownBy(() -> new HazelcastAuthorizationCodeService(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("hazelcastInstance must not be null");
 	}
 
 	@Test
@@ -68,22 +62,22 @@ public class HazelcastAuthorizationCodeServiceTests {
 
 	@Test
 	public void setMapName_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("mapName must not be null");
+		assertThatThrownBy(() -> {
+			HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+					this.hazelcastInstance);
+			authorizationCodeService.setMapName(null);
+		}).isInstanceOf(NullPointerException.class).hasMessage("mapName must not be null");
 
-		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
-				this.hazelcastInstance);
-		authorizationCodeService.setMapName(null);
 	}
 
 	@Test
 	public void setTableName_Empty_ShouldThrowException() {
-		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown.expectMessage("mapName must not be empty");
+		assertThatThrownBy(() -> {
+			HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+					this.hazelcastInstance);
+			authorizationCodeService.setMapName(" ");
+		}).isInstanceOf(IllegalArgumentException.class).hasMessage("mapName must not be empty");
 
-		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
-				this.hazelcastInstance);
-		authorizationCodeService.setMapName(" ");
 	}
 
 	@Test
@@ -99,12 +93,11 @@ public class HazelcastAuthorizationCodeServiceTests {
 
 	@Test
 	public void setCodeLifetime_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("codeLifetime must not be null");
-
-		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
-				this.hazelcastInstance);
-		authorizationCodeService.setCodeLifetime(null);
+		assertThatThrownBy(() -> {
+			HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+					this.hazelcastInstance);
+			authorizationCodeService.setCodeLifetime(null);
+		}).isInstanceOf(NullPointerException.class).hasMessage("codeLifetime must not be null");
 	}
 
 	@Test
@@ -121,10 +114,8 @@ public class HazelcastAuthorizationCodeServiceTests {
 
 	@Test
 	public void create_NullContext_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("context must not be null");
-
-		this.authorizationCodeService.create(null);
+		assertThatThrownBy(() -> this.authorizationCodeService.create(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("context must not be null");
 	}
 
 	@Test
@@ -141,19 +132,15 @@ public class HazelcastAuthorizationCodeServiceTests {
 	}
 
 	@Test
-	public void consume_Missing_ShouldThrowException() throws GeneralException {
-		this.thrown.expect(GeneralException.class);
-		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
-
-		this.authorizationCodeService.consume(new AuthorizationCode());
+	public void consume_Missing_ShouldThrowException() {
+		assertThatThrownBy(() -> this.authorizationCodeService.consume(new AuthorizationCode()))
+				.isInstanceOf(GeneralException.class).hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 	}
 
 	@Test
-	public void consume_NullCode_ShouldThrowException() throws GeneralException {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("code must not be null");
-
-		this.authorizationCodeService.consume(null);
+	public void consume_NullCode_ShouldThrowException() {
+		assertThatThrownBy(() -> this.authorizationCodeService.consume(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("code must not be null");
 	}
 
 }

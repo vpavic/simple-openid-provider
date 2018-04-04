@@ -10,9 +10,7 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +27,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Integration tests for {@link JdbcRefreshTokenStore}.
@@ -44,9 +43,6 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	@Autowired
 	private JdbcRefreshTokenStore refreshTokenStore;
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	@Test
 	public void save_Valid_ShouldInsert() {
 		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(null));
@@ -56,11 +52,10 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Test
 	public void save_Existing_ShouldThrowException() {
-		this.thrown.expect(DuplicateKeyException.class);
-
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
-		this.refreshTokenStore.save(context);
+
+		assertThatThrownBy(() -> this.refreshTokenStore.save(context)).isInstanceOf(DuplicateKeyException.class);
 	}
 
 	@Test
@@ -73,21 +68,18 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void load_Missing_ShouldThrowException() throws GeneralException {
-		this.thrown.expect(GeneralException.class);
-		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
-
-		this.refreshTokenStore.load(new RefreshToken());
+	public void load_Missing_ShouldThrowException() {
+		assertThatThrownBy(() -> this.refreshTokenStore.load(new RefreshToken())).isInstanceOf(GeneralException.class)
+				.hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 	}
 
 	@Test
-	public void load_Expired_ShouldThrowException() throws GeneralException {
+	public void load_Expired_ShouldThrowException() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
 		this.refreshTokenStore.save(context);
-		this.thrown.expect(GeneralException.class);
-		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
-		this.refreshTokenStore.load(context.getRefreshToken());
+		assertThatThrownBy(() -> this.refreshTokenStore.load(context.getRefreshToken()))
+				.isInstanceOf(GeneralException.class).hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 	}
 
 	@Test

@@ -10,9 +10,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -20,6 +18,7 @@ import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalMatchers.and;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,9 +36,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
  */
 public class JdbcRefreshTokenStoreTests {
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	private JdbcOperations jdbcOperations = mock(JdbcOperations.class);
 
 	private JdbcRefreshTokenStore refreshTokenStore;
@@ -52,10 +48,8 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void construct_NullJdbcOperations_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("jdbcOperations must not be null");
-
-		new JdbcRefreshTokenStore(null);
+		assertThatThrownBy(() -> new JdbcRefreshTokenStore(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("jdbcOperations must not be null");
 	}
 
 	@Test
@@ -79,20 +73,18 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void setTableName_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("tableName must not be null");
-
-		JdbcRefreshTokenStore refreshTokenStore = new JdbcRefreshTokenStore(this.jdbcOperations);
-		refreshTokenStore.setTableName(null);
+		assertThatThrownBy(() -> {
+			JdbcRefreshTokenStore refreshTokenStore = new JdbcRefreshTokenStore(this.jdbcOperations);
+			refreshTokenStore.setTableName(null);
+		}).isInstanceOf(NullPointerException.class).hasMessage("tableName must not be null");
 	}
 
 	@Test
 	public void setTableName_Empty_ShouldThrowException() {
-		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown.expectMessage("tableName must not be empty");
-
-		JdbcRefreshTokenStore refreshTokenStore = new JdbcRefreshTokenStore(this.jdbcOperations);
-		refreshTokenStore.setTableName(" ");
+		assertThatThrownBy(() -> {
+			JdbcRefreshTokenStore refreshTokenStore = new JdbcRefreshTokenStore(this.jdbcOperations);
+			refreshTokenStore.setTableName(" ");
+		}).isInstanceOf(IllegalArgumentException.class).hasMessage("tableName must not be empty");
 	}
 
 	@Test
@@ -107,10 +99,8 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void save_NullContext_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("context must not be null");
-
-		this.refreshTokenStore.save(null);
+		assertThatThrownBy(() -> this.refreshTokenStore.save(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("context must not be null");
 
 		verifyZeroInteractions(this.jdbcOperations);
 	}
@@ -129,14 +119,13 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void load_Missing_ShouldThrowException() throws GeneralException {
+	public void load_Missing_ShouldThrowException() {
 		RefreshToken token = new RefreshToken();
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString()))
 				.willThrow(EmptyResultDataAccessException.class);
-		this.thrown.expect(GeneralException.class);
-		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
-		this.refreshTokenStore.load(token);
+		assertThatThrownBy(() -> this.refreshTokenStore.load(token)).isInstanceOf(GeneralException.class)
+				.hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
 		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
 				eq(token.getValue()));
@@ -145,25 +134,24 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void load_Expired_ShouldThrowException() throws GeneralException {
+	public void load_Expired_ShouldThrowException() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(context);
-		this.thrown.expect(GeneralException.class);
-		this.thrown.expectMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
-		this.refreshTokenStore.load(context.getRefreshToken());
+		assertThatThrownBy(() -> this.refreshTokenStore.load(context.getRefreshToken()))
+				.isInstanceOf(GeneralException.class).hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 
 		verify(this.jdbcOperations, times(1)).queryForObject(startsWith("SELECT"), any(RowMapper.class),
 				eq(context.getRefreshToken().getValue()));
+		verify(this.jdbcOperations, times(1)).update(and(startsWith("DELETE"), endsWith("WHERE token = ?")),
+				any(PreparedStatementSetter.class));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
-	public void load_Null_ShouldThrowException() throws GeneralException {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("refreshToken must not be null");
-
-		this.refreshTokenStore.load(null);
+	public void load_Null_ShouldThrowException() {
+		assertThatThrownBy(() -> this.refreshTokenStore.load(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("refreshToken must not be null");
 	}
 
 	@Test
@@ -212,18 +200,16 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void findByClientIdAndSubject_NullClientId_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("clientId must not be null");
-
-		this.refreshTokenStore.findByClientIdAndSubject(null, new Subject(UUID.randomUUID().toString()));
+		assertThatThrownBy(
+				() -> this.refreshTokenStore.findByClientIdAndSubject(null, new Subject(UUID.randomUUID().toString())))
+						.isInstanceOf(NullPointerException.class).hasMessage("clientId must not be null");
 	}
 
 	@Test
 	public void findByClientIdAndSubject_NullSubject_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("subject must not be null");
-
-		this.refreshTokenStore.findByClientIdAndSubject(new ClientID(UUID.randomUUID().toString()), null);
+		assertThatThrownBy(
+				() -> this.refreshTokenStore.findByClientIdAndSubject(new ClientID(UUID.randomUUID().toString()), null))
+						.isInstanceOf(NullPointerException.class).hasMessage("subject must not be null");
 	}
 
 	@Test
@@ -266,10 +252,8 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void findBySubject_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("subject must not be null");
-
-		this.refreshTokenStore.findBySubject(null);
+		assertThatThrownBy(() -> this.refreshTokenStore.findBySubject(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("subject must not be null");
 	}
 
 	@Test
@@ -283,10 +267,8 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void revoke_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("refreshToken must not be null");
-
-		this.refreshTokenStore.revoke(null);
+		assertThatThrownBy(() -> this.refreshTokenStore.revoke(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("refreshToken must not be null");
 	}
 
 	@Test
@@ -301,10 +283,8 @@ public class JdbcRefreshTokenStoreTests {
 
 	@Test
 	public void revokeAllForSubject_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("subject must not be null");
-
-		this.refreshTokenStore.revokeAllForSubject(null);
+		assertThatThrownBy(() -> this.refreshTokenStore.revokeAllForSubject(null))
+				.isInstanceOf(NullPointerException.class).hasMessage("subject must not be null");
 	}
 
 	@Test

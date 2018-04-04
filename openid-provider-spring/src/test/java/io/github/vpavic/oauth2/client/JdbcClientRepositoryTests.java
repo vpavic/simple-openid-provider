@@ -7,15 +7,14 @@ import java.util.UUID;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalMatchers.and;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,9 +33,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
  */
 public class JdbcClientRepositoryTests {
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	private JdbcOperations jdbcOperations = mock(JdbcOperations.class);
 
 	private JdbcClientRepository clientRepository;
@@ -49,10 +45,8 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	public void construct_NullJdbcOperations_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("jdbcOperations must not be null");
-
-		new JdbcClientRepository(null);
+		assertThatThrownBy(() -> new JdbcClientRepository(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("jdbcOperations must not be null");
 	}
 
 	@Test
@@ -76,20 +70,19 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	public void setTableName_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("tableName must not be null");
-
-		JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
-		clientRepository.setTableName(null);
+		assertThatThrownBy(() -> {
+			JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
+			clientRepository.setTableName(null);
+		}).isInstanceOf(NullPointerException.class).hasMessage("tableName must not be null");
 	}
 
 	@Test
 	public void setTableName_Empty_ShouldThrowException() {
-		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown.expectMessage("tableName must not be empty");
+		assertThatThrownBy(() -> {
+			JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
+			clientRepository.setTableName(" ");
+		}).isInstanceOf(IllegalArgumentException.class).hasMessage("tableName must not be empty");
 
-		JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
-		clientRepository.setTableName(" ");
 	}
 
 	@Test
@@ -115,10 +108,8 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	public void save_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("client must not be null");
-
-		this.clientRepository.save(null);
+		assertThatThrownBy(() -> this.clientRepository.save(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("client must not be null");
 
 		verifyZeroInteractions(this.jdbcOperations);
 	}
@@ -150,10 +141,8 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	public void findById_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("id must not be null");
-
-		this.clientRepository.findById(null);
+		assertThatThrownBy(() -> this.clientRepository.findById(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("id must not be null");
 	}
 
 	@Test
@@ -189,10 +178,8 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	public void deleteById_Null_ShouldThrowException() {
-		this.thrown.expect(NullPointerException.class);
-		this.thrown.expectMessage("id must not be null");
-
-		this.clientRepository.deleteById(null);
+		assertThatThrownBy(() -> this.clientRepository.deleteById(null)).isInstanceOf(NullPointerException.class)
+				.hasMessage("id must not be null");
 	}
 
 }
