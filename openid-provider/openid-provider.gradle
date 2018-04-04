@@ -1,25 +1,25 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-	implementation project(':openid-provider-core')
-	implementation project(':openid-provider-hazelcast')
-	implementation project(':openid-provider-spring')
+	compile project(':openid-provider-core')
+	compile project(':openid-provider-hazelcast')
+	compile project(':openid-provider-spring')
 
-	implementation 'org.springframework.boot:spring-boot-starter-cloud-connectors'
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compile 'org.springframework.boot:spring-boot-starter-cloud-connectors'
+	compile 'org.springframework.boot:spring-boot-starter-jdbc'
+	compile 'org.springframework.boot:spring-boot-starter-security'
+	compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	compile 'org.springframework.boot:spring-boot-starter-web'
 
-	implementation 'com.h2database:h2'
-	implementation 'com.hazelcast:hazelcast'
-	implementation 'com.nimbusds:oauth2-oidc-sdk'
-	implementation 'org.postgresql:postgresql'
-	implementation 'org.springframework.boot:spring-boot-devtools'
-	implementation 'org.springframework.session:spring-session-hazelcast'
-	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4'
-	implementation 'org.webjars:bootstrap'
-	implementation 'org.webjars:webjars-locator-core'
+	compile 'com.h2database:h2'
+	compile 'com.hazelcast:hazelcast'
+	compile 'com.nimbusds:oauth2-oidc-sdk'
+	compile 'org.postgresql:postgresql'
+	compile 'org.springframework.boot:spring-boot-devtools'
+	compile 'org.springframework.session:spring-session-hazelcast'
+	compile 'org.thymeleaf.extras:thymeleaf-extras-springsecurity4'
+	compile 'org.webjars:bootstrap'
+	compile 'org.webjars:webjars-locator-core'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testCompile 'org.springframework.boot:spring-boot-starter-test'
 }

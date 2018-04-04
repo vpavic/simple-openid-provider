@@ -1,11 +1,11 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compile 'org.springframework.boot:spring-boot-starter-security'
+	compile 'org.springframework.boot:spring-boot-starter-web'
 
-	implementation 'org.springframework.security:spring-security-oauth2-client'
-	implementation 'org.springframework.security:spring-security-oauth2-jose'
+	compile 'org.springframework.security:spring-security-oauth2-client'
+	compile 'org.springframework.security:spring-security-oauth2-jose'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
