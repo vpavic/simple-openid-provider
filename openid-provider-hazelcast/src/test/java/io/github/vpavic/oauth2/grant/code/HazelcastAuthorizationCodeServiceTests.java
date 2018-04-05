@@ -9,8 +9,8 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,7 +34,7 @@ public class HazelcastAuthorizationCodeServiceTests {
 
 	private HazelcastAuthorizationCodeService authorizationCodeService;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
 	public void setUp() {
 		given(this.hazelcastInstance.getMap(anyString())).willReturn(this.codesMap);
@@ -67,7 +67,6 @@ public class HazelcastAuthorizationCodeServiceTests {
 					this.hazelcastInstance);
 			authorizationCodeService.setMapName(null);
 		}).isInstanceOf(NullPointerException.class).hasMessage("mapName must not be null");
-
 	}
 
 	@Test
@@ -77,7 +76,6 @@ public class HazelcastAuthorizationCodeServiceTests {
 					this.hazelcastInstance);
 			authorizationCodeService.setMapName(" ");
 		}).isInstanceOf(IllegalArgumentException.class).hasMessage("mapName must not be empty");
-
 	}
 
 	@Test

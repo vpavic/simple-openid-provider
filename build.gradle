@@ -17,6 +17,12 @@ subprojects {
 		mavenCentral()
 	}
 
+	test {
+		useJUnitPlatform {
+			includeEngines 'junit-jupiter', 'junit-vintage'
+		}
+	}
+
 	checkstyle {
 		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
 		configProperties.configDir = configFile.parentFile

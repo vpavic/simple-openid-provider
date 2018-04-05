@@ -9,8 +9,8 @@ import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -40,7 +40,7 @@ public class JdbcRefreshTokenStoreTests {
 
 	private JdbcRefreshTokenStore refreshTokenStore;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		this.refreshTokenStore = new JdbcRefreshTokenStore(this.jdbcOperations);
 		this.refreshTokenStore.init();

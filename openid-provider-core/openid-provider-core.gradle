@@ -15,10 +15,12 @@ dependencies {
 
 	testImplementation 'com.h2database:h2'
 	testImplementation 'com.jayway.jsonpath:json-path'
-	testImplementation 'junit:junit'
 	testImplementation 'org.assertj:assertj-core'
 	testImplementation 'org.hamcrest:hamcrest-library'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api'
 	testImplementation 'org.mockito:mockito-core'
+
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
 publishing {

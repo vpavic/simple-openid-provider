@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.PreparedStatementSetter;
@@ -37,7 +37,7 @@ public class JdbcClientRepositoryTests {
 
 	private JdbcClientRepository clientRepository;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		this.clientRepository = new JdbcClientRepository(this.jdbcOperations);
 		this.clientRepository.init();
@@ -82,7 +82,6 @@ public class JdbcClientRepositoryTests {
 			JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
 			clientRepository.setTableName(" ");
 		}).isInstanceOf(IllegalArgumentException.class).hasMessage("tableName must not be empty");
-
 	}
 
 	@Test
