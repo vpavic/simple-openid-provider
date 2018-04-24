@@ -31,25 +31,36 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
+import io.github.vpavic.oauth2.token.IdTokenService;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.RefreshTokenService;
 
 public class AuthorizationCodeGrantHandler implements GrantHandler {
 
 	private final ClientRepository clientRepository;
 
-	private final TokenService tokenService;
+	private final AccessTokenService accessTokenService;
+
+	private final RefreshTokenService refreshTokenService;
+
+	private final IdTokenService idTokenService;
 
 	private final AuthorizationCodeService authorizationCodeService;
 
-	public AuthorizationCodeGrantHandler(ClientRepository clientRepository, TokenService tokenService,
+	public AuthorizationCodeGrantHandler(ClientRepository clientRepository, AccessTokenService accessTokenService,
+			RefreshTokenService refreshTokenService, IdTokenService idTokenService,
 			AuthorizationCodeService authorizationCodeService) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(accessTokenService, "accessTokenService must not be null");
+		Objects.requireNonNull(refreshTokenService, "refreshTokenService must not be null");
+		Objects.requireNonNull(idTokenService, "idTokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
 		this.clientRepository = clientRepository;
-		this.tokenService = tokenService;
+		this.accessTokenService = accessTokenService;
+		this.refreshTokenService = refreshTokenService;
+		this.idTokenService = idTokenService;
 		this.authorizationCodeService = authorizationCodeService;
 	}
 
@@ -102,18 +113,18 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, savedScope);
-		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		AccessToken accessToken = this.accessTokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
 		if (client.getOIDCMetadata().getGrantTypes().contains(GrantType.REFRESH_TOKEN)
 				|| savedScope.contains(OIDCScopeValue.OFFLINE_ACCESS)) {
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(subject, clientId, savedScope);
-			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+			refreshToken = this.refreshTokenService.createRefreshToken(refreshTokenRequest);
 		}
 
 		IdTokenRequest idTokenRequest = new IdTokenRequest(subject, client, savedScope, authenticationTime, acr, amr,
 				sessionId, nonce, accessToken, null);
-		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
+		JWT idToken = this.idTokenService.createIdToken(idTokenRequest);
 
 		return new OIDCTokens(idToken.serialize(), accessToken, refreshToken);
 	}

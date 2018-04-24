@@ -17,8 +17,9 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.RefreshTokenService;
 
 public class RefreshTokenGrantHandler implements GrantHandler {
 
@@ -26,17 +27,21 @@ public class RefreshTokenGrantHandler implements GrantHandler {
 
 	private final ClientRepository clientRepository;
 
-	private final TokenService tokenService;
+	private final AccessTokenService accessTokenService;
+
+	private final RefreshTokenService refreshTokenService;
 
 	private final RefreshTokenStore refreshTokenStore;
 
-	public RefreshTokenGrantHandler(ClientRepository clientRepository, TokenService tokenService,
-			RefreshTokenStore refreshTokenStore) {
+	public RefreshTokenGrantHandler(ClientRepository clientRepository, AccessTokenService accessTokenService,
+			RefreshTokenService refreshTokenService, RefreshTokenStore refreshTokenStore) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(accessTokenService, "accessTokenService must not be null");
+		Objects.requireNonNull(refreshTokenService, "refreshTokenService must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
 		this.clientRepository = clientRepository;
-		this.tokenService = tokenService;
+		this.accessTokenService = accessTokenService;
+		this.refreshTokenService = refreshTokenService;
 		this.refreshTokenStore = refreshTokenStore;
 	}
 
@@ -55,13 +60,13 @@ public class RefreshTokenGrantHandler implements GrantHandler {
 
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, originalScope);
-		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		AccessToken accessToken = this.accessTokenService.createAccessToken(accessTokenRequest);
 		RefreshToken updatedRefreshToken = null;
 
 		if (this.updateRefreshToken) {
 			this.refreshTokenStore.revoke(refreshToken);
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(subject, clientId, originalScope);
-			updatedRefreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+			updatedRefreshToken = this.refreshTokenService.createRefreshToken(refreshTokenRequest);
 		}
 
 		return new Tokens(accessToken, updatedRefreshToken);

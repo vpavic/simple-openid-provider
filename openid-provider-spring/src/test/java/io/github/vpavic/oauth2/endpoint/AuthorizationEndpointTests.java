@@ -47,8 +47,9 @@ import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.IdTokenService;
 
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,7 +83,10 @@ public class AuthorizationEndpointTests {
 	private AuthorizationCodeService authorizationCodeService;
 
 	@Autowired
-	private TokenService tokenService;
+	private AccessTokenService accessTokenService;
+
+	@Autowired
+	private IdTokenService idTokenService;
 
 	@Autowired
 	private ScopeResolver scopeResolver;
@@ -96,7 +100,7 @@ public class AuthorizationEndpointTests {
 
 		reset(this.clientRepository);
 		reset(this.authorizationCodeService);
-		reset(this.tokenService);
+		reset(this.idTokenService);
 		reset(this.scopeResolver);
 	}
 
@@ -284,8 +288,8 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -304,7 +308,7 @@ public class AuthorizationEndpointTests {
 		JWT idToken = new PlainJWT(new JWTClaimsSet.Builder().build());
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenClient());
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -323,8 +327,8 @@ public class AuthorizationEndpointTests {
 		State state = new State();
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(implicitWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
 
@@ -394,8 +398,8 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
@@ -415,7 +419,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenClient());
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
@@ -435,7 +439,7 @@ public class AuthorizationEndpointTests {
 		AuthorizationCode authorizationCode = new AuthorizationCode();
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithTokenClient());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
@@ -458,8 +462,8 @@ public class AuthorizationEndpointTests {
 		State state = new State();
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(hybridWithIdTokenAndTokenClient());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 		given(this.authorizationCodeService.create(any(AuthorizationCodeContext.class))).willReturn(authorizationCode);
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.will(returnsSecondArg());
@@ -569,8 +573,13 @@ public class AuthorizationEndpointTests {
 		}
 
 		@Bean
-		public TokenService tokenService() {
-			return mock(TokenService.class);
+		public AccessTokenService accessTokenService() {
+			return mock(AccessTokenService.class);
+		}
+
+		@Bean
+		public IdTokenService idTokenService() {
+			return mock(IdTokenService.class);
 		}
 
 		@Bean
@@ -580,8 +589,8 @@ public class AuthorizationEndpointTests {
 
 		@Bean
 		public AuthorizationHandler authorizationEndpointHandler() {
-			return new AuthorizationHandler(clientRepository(), authorizationCodeService(), tokenService(),
-					scopeResolver());
+			return new AuthorizationHandler(clientRepository(), authorizationCodeService(), accessTokenService(),
+					idTokenService(), scopeResolver());
 		}
 
 		@Bean

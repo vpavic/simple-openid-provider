@@ -41,8 +41,9 @@ import io.github.vpavic.oauth2.grant.code.AuthorizationCodeContext;
 import io.github.vpavic.oauth2.grant.code.AuthorizationCodeService;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.IdTokenService;
 
 /**
  * OAuth 2.0 and OpenID Connect 1.0 compatible Authorization Endpoint implementation.
@@ -60,21 +61,25 @@ public class AuthorizationHandler {
 
 	private final AuthorizationCodeService authorizationCodeService;
 
-	private final TokenService tokenService;
+	private final AccessTokenService accessTokenService;
+
+	private final IdTokenService idTokenService;
 
 	private final ScopeResolver scopeResolver;
 
 	private boolean sessionManagementEnabled;
 
 	public AuthorizationHandler(ClientRepository clientRepository, AuthorizationCodeService authorizationCodeService,
-			TokenService tokenService, ScopeResolver scopeResolver) {
+			AccessTokenService accessTokenService, IdTokenService idTokenService, ScopeResolver scopeResolver) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-		Objects.requireNonNull(tokenService, "tokenService must not be null");
 		Objects.requireNonNull(authorizationCodeService, "authorizationCodeService must not be null");
+		Objects.requireNonNull(accessTokenService, "accessTokenService must not be null");
+		Objects.requireNonNull(idTokenService, "idTokenService must not be null");
 		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 		this.clientRepository = clientRepository;
-		this.tokenService = tokenService;
 		this.authorizationCodeService = authorizationCodeService;
+		this.accessTokenService = accessTokenService;
+		this.idTokenService = idTokenService;
 		this.scopeResolver = scopeResolver;
 	}
 
@@ -236,12 +241,12 @@ public class AuthorizationHandler {
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
 			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
-			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+			accessToken = this.accessTokenService.createAccessToken(accessTokenRequest);
 		}
 
 		IdTokenRequest idTokenRequest = new IdTokenRequest(subject, client, scope, authTime, acr, amrs, sessionId,
 				nonce, accessToken, null);
-		JWT idToken = this.tokenService.createIdToken(idTokenRequest);
+		JWT idToken = this.idTokenService.createIdToken(idTokenRequest);
 
 		return new AuthenticationSuccessResponse(redirectUri, null, idToken, accessToken, state, sessionState,
 				responseMode);
@@ -270,7 +275,7 @@ public class AuthorizationHandler {
 
 		if (responseType.contains(ResponseType.Value.TOKEN)) {
 			AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
-			accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+			accessToken = this.accessTokenService.createAccessToken(accessTokenRequest);
 		}
 
 		JWT idToken = null;
@@ -278,7 +283,7 @@ public class AuthorizationHandler {
 		if (responseType.contains(OIDCResponseTypeValue.ID_TOKEN)) {
 			IdTokenRequest idTokenRequest = new IdTokenRequest(subject, client, scope, authTime, acr, amrs, sessionId,
 					nonce, accessToken, code);
-			idToken = this.tokenService.createIdToken(idTokenRequest);
+			idToken = this.idTokenService.createIdToken(idTokenRequest);
 		}
 
 		return new AuthenticationSuccessResponse(redirectUri, code, idToken, accessToken, state, sessionState,

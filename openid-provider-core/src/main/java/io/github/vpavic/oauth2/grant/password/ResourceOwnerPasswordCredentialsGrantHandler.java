@@ -20,27 +20,33 @@ import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 import io.github.vpavic.oauth2.token.RefreshTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.RefreshTokenService;
 
 public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandler {
 
 	private final ClientRepository clientRepository;
 
-	private final TokenService tokenService;
+	private final AccessTokenService accessTokenService;
+
+	private final RefreshTokenService refreshTokenService;
 
 	private final ScopeResolver scopeResolver;
 
 	private final PasswordAuthenticationHandler passwordAuthenticationHandler;
 
-	public ResourceOwnerPasswordCredentialsGrantHandler(ClientRepository clientRepository, TokenService tokenService,
-			ScopeResolver scopeResolver, PasswordAuthenticationHandler passwordAuthenticationHandler) {
+	public ResourceOwnerPasswordCredentialsGrantHandler(ClientRepository clientRepository,
+			AccessTokenService accessTokenService, RefreshTokenService refreshTokenService, ScopeResolver scopeResolver,
+			PasswordAuthenticationHandler passwordAuthenticationHandler) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
-		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(accessTokenService, "accessTokenService must not be null");
+		Objects.requireNonNull(refreshTokenService, "refreshTokenService must not be null");
 		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
 		Objects.requireNonNull(passwordAuthenticationHandler, "passwordAuthenticationHandler must not be null");
 		this.clientRepository = clientRepository;
-		this.tokenService = tokenService;
+		this.accessTokenService = accessTokenService;
+		this.refreshTokenService = refreshTokenService;
 		this.scopeResolver = scopeResolver;
 		this.passwordAuthenticationHandler = passwordAuthenticationHandler;
 	}
@@ -64,12 +70,12 @@ public class ResourceOwnerPasswordCredentialsGrantHandler implements GrantHandle
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		Scope scope = this.scopeResolver.resolve(subject, requestedScope, client.getOIDCMetadata());
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
-		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		AccessToken accessToken = this.accessTokenService.createAccessToken(accessTokenRequest);
 		RefreshToken refreshToken = null;
 
 		if (client.getOIDCMetadata().getGrantTypes().contains(GrantType.REFRESH_TOKEN)) {
 			RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest(subject, clientId, scope);
-			refreshToken = this.tokenService.createRefreshToken(refreshTokenRequest);
+			refreshToken = this.refreshTokenService.createRefreshToken(refreshTokenRequest);
 		}
 
 		return new Tokens(accessToken, refreshToken);

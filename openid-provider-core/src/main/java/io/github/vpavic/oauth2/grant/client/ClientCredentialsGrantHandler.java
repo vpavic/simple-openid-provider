@@ -17,7 +17,7 @@ import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.grant.GrantHandler;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 
 public class ClientCredentialsGrantHandler implements GrantHandler {
 
@@ -25,16 +25,16 @@ public class ClientCredentialsGrantHandler implements GrantHandler {
 
 	private final ScopeResolver scopeResolver;
 
-	private final TokenService tokenService;
+	private final AccessTokenService accessTokenService;
 
 	public ClientCredentialsGrantHandler(ClientRepository clientRepository, ScopeResolver scopeResolver,
-			TokenService tokenService) {
+			AccessTokenService accessTokenService) {
 		Objects.requireNonNull(clientRepository, "clientRepository must not be null");
 		Objects.requireNonNull(scopeResolver, "scopeResolver must not be null");
-		Objects.requireNonNull(tokenService, "tokenService must not be null");
+		Objects.requireNonNull(accessTokenService, "accessTokenService must not be null");
 		this.clientRepository = clientRepository;
 		this.scopeResolver = scopeResolver;
-		this.tokenService = tokenService;
+		this.accessTokenService = accessTokenService;
 	}
 
 	@Override
@@ -49,7 +49,7 @@ public class ClientCredentialsGrantHandler implements GrantHandler {
 		OIDCClientInformation client = this.clientRepository.findById(clientId);
 		Scope scope = this.scopeResolver.resolve(subject, tokenRequest.getScope(), client.getOIDCMetadata());
 		AccessTokenRequest accessTokenRequest = new AccessTokenRequest(subject, client, scope);
-		AccessToken accessToken = this.tokenService.createAccessToken(accessTokenRequest);
+		AccessToken accessToken = this.accessTokenService.createAccessToken(accessTokenRequest);
 
 		return new Tokens(accessToken, null);
 	}

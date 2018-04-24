@@ -65,8 +65,10 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
 import io.github.vpavic.oauth2.token.AccessTokenRequest;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 import io.github.vpavic.oauth2.token.IdTokenRequest;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.IdTokenService;
+import io.github.vpavic.oauth2.token.RefreshTokenService;
 
 import static org.mockito.AdditionalAnswers.returnsSecondArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,7 +99,10 @@ public class TokenEndpointTests {
 	private AuthorizationCodeService authorizationCodeService;
 
 	@Autowired
-	private TokenService tokenService;
+	private AccessTokenService accessTokenService;
+
+	@Autowired
+	private IdTokenService idTokenService;
 
 	@Autowired
 	private ScopeResolver scopeResolver;
@@ -114,7 +119,7 @@ public class TokenEndpointTests {
 
 		reset(this.clientRepository);
 		reset(this.authorizationCodeService);
-		reset(this.tokenService);
+		reset(this.accessTokenService);
 		reset(this.scopeResolver);
 		reset(this.authenticationHandler);
 		reset(this.refreshTokenStore);
@@ -140,8 +145,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -168,8 +173,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -195,8 +200,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -223,8 +228,8 @@ public class TokenEndpointTests {
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -252,8 +257,8 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -280,8 +285,8 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class))).willReturn(client(ClientAuthenticationMethod.NONE));
 		given(this.authorizationCodeService.consume(eq(authorizationCode))).willReturn(context);
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
-		given(this.tokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.idTokenService.createIdToken(any(IdTokenRequest.class))).willReturn(idToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -303,7 +308,7 @@ public class TokenEndpointTests {
 				.willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.willAnswer(returnsSecondArg());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -326,7 +331,7 @@ public class TokenEndpointTests {
 				.willReturn(new Subject("user"));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.willAnswer(returnsSecondArg());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -345,7 +350,7 @@ public class TokenEndpointTests {
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.willAnswer(returnsSecondArg());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -365,7 +370,7 @@ public class TokenEndpointTests {
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
 		given(this.scopeResolver.resolve(any(Subject.class), any(Scope.class), any(OIDCClientMetadata.class)))
 				.willAnswer(returnsSecondArg());
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 
 		MockHttpServletRequestBuilder request = post("/oauth2/token").content(tokenRequest.toHTTPRequest().getQuery())
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -384,7 +389,7 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(new RefreshTokenContext(
 				new RefreshToken(), clientId, new Subject("user"), new Scope(OIDCScopeValue.OPENID), null));
 
@@ -406,7 +411,7 @@ public class TokenEndpointTests {
 
 		given(this.clientRepository.findById(any(ClientID.class)))
 				.willReturn(client(ClientAuthenticationMethod.CLIENT_SECRET_POST));
-		given(this.tokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
+		given(this.accessTokenService.createAccessToken(any(AccessTokenRequest.class))).willReturn(accessToken);
 		given(this.refreshTokenStore.load(any(RefreshToken.class))).willReturn(new RefreshTokenContext(
 				new RefreshToken(), clientId, new Subject("user"), new Scope(OIDCScopeValue.OPENID), null));
 
@@ -448,8 +453,18 @@ public class TokenEndpointTests {
 		}
 
 		@Bean
-		public TokenService tokenService() {
-			return mock(TokenService.class);
+		public AccessTokenService accessTokenService() {
+			return mock(AccessTokenService.class);
+		}
+
+		@Bean
+		public RefreshTokenService refreshTokenService() {
+			return mock(RefreshTokenService.class);
+		}
+
+		@Bean
+		public IdTokenService idTokenService() {
+			return mock(IdTokenService.class);
 		}
 
 		@Bean
@@ -470,13 +485,15 @@ public class TokenEndpointTests {
 		@Bean
 		public TokenHandler tokenEndpointHandler() {
 			AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
-					clientRepository(), tokenService(), authorizationCodeService());
+					clientRepository(), accessTokenService(), refreshTokenService(), idTokenService(),
+					authorizationCodeService());
 			ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
-					clientRepository(), tokenService(), scopeResolver(), authenticationHandler());
+					clientRepository(), accessTokenService(), refreshTokenService(), scopeResolver(),
+					authenticationHandler());
 			ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
-					clientRepository(), scopeResolver(), tokenService());
+					clientRepository(), scopeResolver(), accessTokenService());
 			RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(clientRepository(),
-					tokenService(), refreshTokenStore());
+					accessTokenService(), refreshTokenService(), refreshTokenStore());
 
 			Map<Class<?>, GrantHandler> grantHandlers = new HashMap<>();
 			grantHandlers.put(AuthorizationCodeGrant.class, authorizationCodeGrantHandler);

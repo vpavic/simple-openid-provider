@@ -32,8 +32,12 @@ import io.github.vpavic.oauth2.grant.refresh.RefreshTokenGrantHandler;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
 import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 import io.github.vpavic.oauth2.scope.ScopeResolver;
-import io.github.vpavic.oauth2.token.DefaultTokenService;
-import io.github.vpavic.oauth2.token.TokenService;
+import io.github.vpavic.oauth2.token.AccessTokenService;
+import io.github.vpavic.oauth2.token.DefaultIdTokenService;
+import io.github.vpavic.oauth2.token.DefaultRefreshTokenService;
+import io.github.vpavic.oauth2.token.IdTokenService;
+import io.github.vpavic.oauth2.token.JwtAccessTokenService;
+import io.github.vpavic.oauth2.token.RefreshTokenService;
 
 @Configuration
 public class CoreConfiguration {
@@ -71,16 +75,30 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public TokenService tokenService() {
-		DefaultTokenService tokenService = new DefaultTokenService(this.properties.getIssuer(), this.jwkSetLoader,
-				this.claimSource, this.refreshTokenStore);
-		tokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
-		tokenService.setAccessTokenLifetime(Duration.ofSeconds(this.properties.getAccessToken().getLifetime()));
-		tokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
-		tokenService.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
-		tokenService.setAccessTokenClientIdClaim(this.properties.getAccessToken().getClientIdClaim());
-		tokenService.setAccessTokenSubjectClaims(this.properties.getAccessToken().getSubjectClaims());
-		tokenService.setRefreshTokenLifetime(Duration.ofSeconds(this.properties.getRefreshToken().getLifetime()));
+	public AccessTokenService accessTokenService() {
+		JwtAccessTokenService accessTokenService = new JwtAccessTokenService(this.properties.getIssuer(),
+				this.jwkSetLoader, this.claimSource);
+		accessTokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
+		accessTokenService.setAccessTokenLifetime(Duration.ofSeconds(this.properties.getAccessToken().getLifetime()));
+		accessTokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
+		accessTokenService.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
+		accessTokenService.setAccessTokenClientIdClaim(this.properties.getAccessToken().getClientIdClaim());
+		accessTokenService.setAccessTokenSubjectClaims(this.properties.getAccessToken().getSubjectClaims());
+		return accessTokenService;
+	}
+
+	@Bean
+	public RefreshTokenService refreshTokenService() {
+		DefaultRefreshTokenService refreshTokenService = new DefaultRefreshTokenService(this.refreshTokenStore);
+		refreshTokenService
+				.setRefreshTokenLifetime(Duration.ofSeconds(this.properties.getRefreshToken().getLifetime()));
+		return refreshTokenService;
+	}
+
+	@Bean
+	public IdTokenService idTokenService() {
+		DefaultIdTokenService tokenService = new DefaultIdTokenService(this.properties.getIssuer(), this.jwkSetLoader,
+				this.claimSource);
 		tokenService.setIdTokenLifetime(Duration.ofSeconds(this.properties.getIdToken().getLifetime()));
 		tokenService.setScopeClaims(this.properties.getClaim().getScopeClaims());
 		tokenService.setFrontChannelLogoutEnabled(this.properties.getFrontChannelLogout().isEnabled());
@@ -90,7 +108,7 @@ public class CoreConfiguration {
 	@Bean
 	public AuthorizationEndpoint authorizationEndpoint() {
 		AuthorizationHandler handler = new AuthorizationHandler(this.clientRepository, this.authorizationCodeService,
-				tokenService(), this.scopeResolver);
+				accessTokenService(), idTokenService(), this.scopeResolver);
 		handler.setSessionManagementEnabled(this.properties.getSessionManagement().isEnabled());
 		return new AuthorizationEndpoint(handler);
 	}
@@ -98,13 +116,15 @@ public class CoreConfiguration {
 	@Bean
 	public TokenHandler tokenHandler() {
 		AuthorizationCodeGrantHandler authorizationCodeGrantHandler = new AuthorizationCodeGrantHandler(
-				this.clientRepository, tokenService(), this.authorizationCodeService);
+				this.clientRepository, accessTokenService(), refreshTokenService(), idTokenService(),
+				this.authorizationCodeService);
 		ResourceOwnerPasswordCredentialsGrantHandler passwordCredentialsGrantHandler = new ResourceOwnerPasswordCredentialsGrantHandler(
-				this.clientRepository, tokenService(), this.scopeResolver, this.passwordAuthenticationHandler);
+				this.clientRepository, accessTokenService(), refreshTokenService(), this.scopeResolver,
+				this.passwordAuthenticationHandler);
 		ClientCredentialsGrantHandler clientCredentialsGrantHandler = new ClientCredentialsGrantHandler(
-				this.clientRepository, this.scopeResolver, tokenService());
+				this.clientRepository, this.scopeResolver, accessTokenService());
 		RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(this.clientRepository,
-				tokenService(), this.refreshTokenStore);
+				accessTokenService(), refreshTokenService(), this.refreshTokenStore);
 		refreshTokenGrantHandler.setUpdateRefreshToken(this.properties.getRefreshToken().isUpdate());
 
 		Map<Class<?>, GrantHandler> grantHandlers = new HashMap<>();
