@@ -9,7 +9,7 @@ buildFiles.each { File buildFile ->
 	String projectName = buildFile.name.replace('.gradle', '')
 	String projectPath = ':' + projectName
 	include projectPath
-	def project = findProject("${projectPath}")
+	def project = findProject(projectPath)
 	project.name = projectName
 	project.projectDir = buildFile.parentFile
 	project.buildFileName = buildFile.name
