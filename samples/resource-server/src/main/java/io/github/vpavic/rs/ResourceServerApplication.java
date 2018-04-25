@@ -31,7 +31,7 @@ public class ResourceServerApplication {
 	static class SecurityConfig extends ResourceServerConfigurerAdapter {
 
 		@Override
-		public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+		public void configure(ResourceServerSecurityConfigurer resources) {
 			resources.tokenStore(new JwkTokenStore("http://localhost:6432/oauth2/keys"));
 		}
 

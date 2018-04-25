@@ -80,7 +80,7 @@ public class ClientRequestValidator {
 		@Override
 		public List<? extends PublicKey> selectPublicKeys(ClientID claimedClientID,
 				ClientAuthenticationMethod authMethod, JWSHeader jwsHeader, boolean forceRefresh,
-				Context<OIDCClientInformation> context) throws InvalidClientException {
+				Context<OIDCClientInformation> context) {
 			return Collections.emptyList();
 		}
 
