@@ -8,10 +8,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = { "spring.security.oauth2.client.registration.simple-op-code.client-id=test-client",
 		"spring.security.oauth2.client.registration.simple-op-code.client-secret=test-secret"})
-public class RelyingPartyApplicationTests {
+class RelyingPartyApplicationTests {
 
 	@Test
-	public void contextLoads() {
+	void contextLoads() {
 	}
 
 }

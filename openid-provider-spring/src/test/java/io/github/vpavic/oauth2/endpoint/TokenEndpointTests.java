@@ -85,7 +85,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class TokenEndpointTests {
+class TokenEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -114,7 +114,7 @@ public class TokenEndpointTests {
 	private RefreshTokenStore refreshTokenStore;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 
 		reset(this.clientRepository);
@@ -126,7 +126,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void authCode_basicAuth_isOk() throws Exception {
+	void authCode_basicAuth_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 		URI redirectUri = URI.create("http://rp.example.com");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
@@ -155,7 +155,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void authCode_postAuth_isOk() throws Exception {
+	void authCode_postAuth_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 		URI redirectUri = URI.create("http://rp.example.com");
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -182,7 +182,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void authCode_mismatchedClientId_shouldThrowException() throws Exception {
+	void authCode_mismatchedClientId_shouldThrowException() throws Exception {
 		URI redirectUri = URI.create("http://rp.example.com");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -210,7 +210,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void authCode_mismatchedRedirectUri_shouldThrowException() throws Exception {
+	void authCode_mismatchedRedirectUri_shouldThrowException() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 		Scope scope = new Scope(OIDCScopeValue.OPENID);
 		AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -238,7 +238,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void authCode_pkcePlain_isOk() throws Exception {
+	void authCode_pkcePlain_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 		URI redirectUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
@@ -266,7 +266,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void authCode_pkceS256_isOk() throws Exception {
+	void authCode_pkceS256_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 		URI redirectUri = URI.create("http://rp.example.com");
 		CodeVerifier codeVerifier = new CodeVerifier();
@@ -294,7 +294,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void resourceOwnerPasswordCredentials_basicAuth_isOk() throws Exception {
+	void resourceOwnerPasswordCredentials_basicAuth_isOk() throws Exception {
 		ClientSecretBasic clientAuth = new ClientSecretBasic(new ClientID("test-client"), new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")),
@@ -317,7 +317,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void resourceOwnerPasswordCredentials_postAuth_isOk() throws Exception {
+	void resourceOwnerPasswordCredentials_postAuth_isOk() throws Exception {
 		ClientSecretPost clientAuth = new ClientSecretPost(new ClientID("test-client"), new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new ResourceOwnerPasswordCredentialsGrant("user", new Secret("password")),
@@ -339,7 +339,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void clientCredentials_basicAuth_isOk() throws Exception {
+	void clientCredentials_basicAuth_isOk() throws Exception {
 		ClientSecretBasic clientAuth = new ClientSecretBasic(new ClientID("test-client"), new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new ClientCredentialsGrant(), new Scope("test"));
@@ -359,7 +359,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void clientCredentials_postAuth_isOk() throws Exception {
+	void clientCredentials_postAuth_isOk() throws Exception {
 		ClientSecretPost clientAuth = new ClientSecretPost(new ClientID("test-client"), new Secret("test-secret"));
 		TokenRequest tokenRequest = new TokenRequest(URI.create("http://op.example.com"), clientAuth,
 				new ClientCredentialsGrant(), new Scope("test"));
@@ -378,7 +378,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void refreshToken_basicAuth_isOk() throws Exception {
+	void refreshToken_basicAuth_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 
 		ClientSecretBasic clientAuth = new ClientSecretBasic(clientId, new Secret("test-secret"));
@@ -400,7 +400,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void refreshToken_postAuth_isOk() throws Exception {
+	void refreshToken_postAuth_isOk() throws Exception {
 		ClientID clientId = new ClientID("test-client");
 
 		ClientSecretPost clientAuth = new ClientSecretPost(clientId, new Secret("test-secret"));
@@ -421,7 +421,7 @@ public class TokenEndpointTests {
 	}
 
 	@Test
-	public void invalid_noParams_isBadRequest() throws Exception {
+	void invalid_noParams_isBadRequest() throws Exception {
 		this.mvc.perform(post("/oauth2/token").contentType(MediaType.APPLICATION_FORM_URLENCODED))
 				.andExpect(status().isBadRequest());
 	}

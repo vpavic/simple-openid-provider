@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class DiscoveryEndpointTests {
+class DiscoveryEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -38,12 +38,12 @@ public class DiscoveryEndpointTests {
 	private MockMvc mvc;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
-	public void getProviderMetadata() throws Exception {
+	void getProviderMetadata() throws Exception {
 		this.mvc.perform(get("/.well-known/openid-configuration")).andExpect(status().isOk())
 				.andExpect(jsonPath("$.issuer").value("http://example.com"))
 				.andExpect(jsonPath("$.subject_types_supported").value("public"))

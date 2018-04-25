@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class CheckSessionIframeTests {
+class CheckSessionIframeTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -33,12 +33,12 @@ public class CheckSessionIframeTests {
 	private MockMvc mvc;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
-	public void getCheckSessionIframe() throws Exception {
+	void getCheckSessionIframe() throws Exception {
 		this.mvc.perform(get(CheckSessionIframe.PATH_MAPPING)).andExpect(status().isOk())
 				.andExpect(content().string(containsString("<title>Check Session Iframe</title>")))
 				.andExpect(content().string(containsString("var cookie = getCookie(\"sid\");")));

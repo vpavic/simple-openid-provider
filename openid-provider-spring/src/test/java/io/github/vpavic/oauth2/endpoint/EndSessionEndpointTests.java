@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class EndSessionEndpointTests {
+class EndSessionEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -36,12 +36,12 @@ public class EndSessionEndpointTests {
 	private MockMvc mvc;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
-	public void getEndSessionEndpoint() throws Exception {
+	void getEndSessionEndpoint() throws Exception {
 		this.mvc.perform(get(EndSessionEndpoint.PATH_MAPPING)).andExpect(status().isOk())
 				.andExpect(forwardedUrl("/logout"));
 	}

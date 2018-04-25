@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class ClientRegistrationEndpointTests {
+class ClientRegistrationEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -33,12 +33,12 @@ public class ClientRegistrationEndpointTests {
 	private MockMvc mvc;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
-	public void test() {
+	void test() {
 		// TODO
 	}
 

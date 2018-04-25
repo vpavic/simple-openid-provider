@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
 @Transactional
-public class JdbcRefreshTokenStoreIntegrationTests {
+class JdbcRefreshTokenStoreIntegrationTests {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -44,14 +44,14 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	private JdbcRefreshTokenStore refreshTokenStore;
 
 	@Test
-	public void save_Valid_ShouldInsert() {
+	void save_Valid_ShouldInsert() {
 		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(null));
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(1);
 	}
 
 	@Test
-	public void save_Existing_ShouldThrowException() {
+	void save_Existing_ShouldThrowException() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
 
@@ -59,7 +59,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void load_Existing_ShouldReturnClient() throws GeneralException {
+	void load_Existing_ShouldReturnClient() throws GeneralException {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
 
@@ -68,13 +68,13 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void load_Missing_ShouldThrowException() {
+	void load_Missing_ShouldThrowException() {
 		assertThatThrownBy(() -> this.refreshTokenStore.load(new RefreshToken())).isInstanceOf(GeneralException.class)
 				.hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 	}
 
 	@Test
-	public void load_Expired_ShouldThrowException() {
+	void load_Expired_ShouldThrowException() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
 		this.refreshTokenStore.save(context);
 
@@ -83,7 +83,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void findByClientIdAndSubject_Existing_ShouldReturnClient() {
+	void findByClientIdAndSubject_Existing_ShouldReturnClient() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
 
@@ -93,13 +93,13 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void findByClientIdAndSubject_Missing_ShouldReturnNull() {
+	void findByClientIdAndSubject_Missing_ShouldReturnNull() {
 		assertThat(this.refreshTokenStore.findByClientIdAndSubject(new ClientID(UUID.randomUUID().toString()),
 				new Subject(UUID.randomUUID().toString()))).isNull();
 	}
 
 	@Test
-	public void findByClientIdAndSubject_Expired_ShouldReturnNull() {
+	void findByClientIdAndSubject_Expired_ShouldReturnNull() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
 		this.refreshTokenStore.save(context);
 
@@ -108,7 +108,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void findBySubject_Existing_ShouldReturnClientList() {
+	void findBySubject_Existing_ShouldReturnClientList() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
 
@@ -117,12 +117,12 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void findBySubject_Missing_ShouldReturnEmptyList() {
+	void findBySubject_Missing_ShouldReturnEmptyList() {
 		assertThat(this.refreshTokenStore.findBySubject(new Subject(UUID.randomUUID().toString()))).isEmpty();
 	}
 
 	@Test
-	public void findBySubject_Expired_ShouldReturnEmptyList() {
+	void findBySubject_Expired_ShouldReturnEmptyList() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1));
 		this.refreshTokenStore.save(context);
 
@@ -130,7 +130,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void revoke_Existing_ShouldReturnNull() {
+	void revoke_Existing_ShouldReturnNull() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
 		this.refreshTokenStore.revoke(context.getRefreshToken());
@@ -139,14 +139,14 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void revoke_Missing_ShouldReturnNull() {
+	void revoke_Missing_ShouldReturnNull() {
 		this.refreshTokenStore.revoke(new RefreshToken());
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
 	}
 
 	@Test
-	public void revokeAllForSubject_Existing_ShouldReturnNull() {
+	void revokeAllForSubject_Existing_ShouldReturnNull() {
 		RefreshTokenContext context = RefreshTokenTestUtils.createRefreshTokenContext(null);
 		this.refreshTokenStore.save(context);
 		this.refreshTokenStore.revokeAllForSubject(context.getSubject());
@@ -155,14 +155,14 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void revokeAllForSubject_Missing_ShouldReturnNull() {
+	void revokeAllForSubject_Missing_ShouldReturnNull() {
 		this.refreshTokenStore.revokeAllForSubject(new Subject(UUID.randomUUID().toString()));
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "refresh_tokens")).isEqualTo(0);
 	}
 
 	@Test
-	public void cleanExpiredTokens_Valid_ShouldReturnNull() {
+	void cleanExpiredTokens_Valid_ShouldReturnNull() {
 		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(null));
 		this.refreshTokenStore.cleanExpiredTokens();
 
@@ -170,7 +170,7 @@ public class JdbcRefreshTokenStoreIntegrationTests {
 	}
 
 	@Test
-	public void cleanExpiredTokens_Expired_ShouldReturnNull() {
+	void cleanExpiredTokens_Expired_ShouldReturnNull() {
 		this.refreshTokenStore.save(RefreshTokenTestUtils.createRefreshTokenContext(Instant.now().minusSeconds(1)));
 		this.refreshTokenStore.cleanExpiredTokens();
 

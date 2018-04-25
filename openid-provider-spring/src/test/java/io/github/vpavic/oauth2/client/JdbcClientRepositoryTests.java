@@ -24,33 +24,32 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
  * Tests for {@link JdbcClientRepository}.
  */
-public class JdbcClientRepositoryTests {
+class JdbcClientRepositoryTests {
 
 	private JdbcOperations jdbcOperations = mock(JdbcOperations.class);
 
 	private JdbcClientRepository clientRepository;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.clientRepository = new JdbcClientRepository(this.jdbcOperations);
 		this.clientRepository.init();
 	}
 
 	@Test
-	public void construct_NullJdbcOperations_ShouldThrowException() {
+	void construct_NullJdbcOperations_ShouldThrowException() {
 		assertThatThrownBy(() -> new JdbcClientRepository(null)).isInstanceOf(NullPointerException.class)
 				.hasMessage("jdbcOperations must not be null");
 	}
 
 	@Test
-	public void setTableName_Valid_ShouldSetTableName() {
+	void setTableName_Valid_ShouldSetTableName() {
 		String tableName = "my_table";
 		JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
 		clientRepository.setTableName(tableName);
@@ -69,7 +68,7 @@ public class JdbcClientRepositoryTests {
 	}
 
 	@Test
-	public void setTableName_Null_ShouldThrowException() {
+	void setTableName_Null_ShouldThrowException() {
 		assertThatThrownBy(() -> {
 			JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
 			clientRepository.setTableName(null);
@@ -77,7 +76,7 @@ public class JdbcClientRepositoryTests {
 	}
 
 	@Test
-	public void setTableName_Empty_ShouldThrowException() {
+	void setTableName_Empty_ShouldThrowException() {
 		assertThatThrownBy(() -> {
 			JdbcClientRepository clientRepository = new JdbcClientRepository(this.jdbcOperations);
 			clientRepository.setTableName(" ");
@@ -85,28 +84,28 @@ public class JdbcClientRepositoryTests {
 	}
 
 	@Test
-	public void save_New_ShouldInsert() {
+	void save_New_ShouldInsert() {
 		given(this.jdbcOperations.update(anyString(), any(PreparedStatementSetter.class))).willReturn(0);
 
 		this.clientRepository.save(ClientTestUtils.createClient());
 
-		verify(this.jdbcOperations, times(1)).update(startsWith("UPDATE"), any(PreparedStatementSetter.class));
-		verify(this.jdbcOperations, times(1)).update(startsWith("INSERT"), any(PreparedStatementSetter.class));
+		verify(this.jdbcOperations).update(startsWith("UPDATE"), any(PreparedStatementSetter.class));
+		verify(this.jdbcOperations).update(startsWith("INSERT"), any(PreparedStatementSetter.class));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
-	public void save_Existing_ShouldUpdate() {
+	void save_Existing_ShouldUpdate() {
 		given(this.jdbcOperations.update(anyString(), any(PreparedStatementSetter.class))).willReturn(1);
 
 		this.clientRepository.save(ClientTestUtils.createClient());
 
-		verify(this.jdbcOperations, times(1)).update(startsWith("UPDATE"), any(PreparedStatementSetter.class));
+		verify(this.jdbcOperations).update(startsWith("UPDATE"), any(PreparedStatementSetter.class));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
-	public void save_Null_ShouldThrowException() {
+	void save_Null_ShouldThrowException() {
 		assertThatThrownBy(() -> this.clientRepository.save(null)).isInstanceOf(NullPointerException.class)
 				.hasMessage("client must not be null");
 
@@ -115,68 +114,68 @@ public class JdbcClientRepositoryTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void findById_Existing_ShouldReturnClient() {
+	void findById_Existing_ShouldReturnClient() {
 		OIDCClientInformation client = ClientTestUtils.createClient();
 		ClientID id = client.getID();
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(client);
 
 		assertThat(this.clientRepository.findById(id)).isNotNull();
-		verify(this.jdbcOperations, times(1)).queryForObject(and(startsWith("SELECT"), endsWith("WHERE id = ?")),
+		verify(this.jdbcOperations).queryForObject(and(startsWith("SELECT"), endsWith("WHERE id = ?")),
 				any(RowMapper.class), eq(id.getValue()));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void findById_Missing_ShouldReturnNull() {
+	void findById_Missing_ShouldReturnNull() {
 		ClientID id = new ClientID(UUID.randomUUID().toString());
 		given(this.jdbcOperations.queryForObject(anyString(), any(RowMapper.class), anyString())).willReturn(null);
 
 		assertThat(this.clientRepository.findById(id)).isNull();
-		verify(this.jdbcOperations, times(1)).queryForObject(and(startsWith("SELECT"), endsWith("WHERE id = ?")),
+		verify(this.jdbcOperations).queryForObject(and(startsWith("SELECT"), endsWith("WHERE id = ?")),
 				any(RowMapper.class), eq(id.getValue()));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
-	public void findById_Null_ShouldThrowException() {
+	void findById_Null_ShouldThrowException() {
 		assertThatThrownBy(() -> this.clientRepository.findById(null)).isInstanceOf(NullPointerException.class)
 				.hasMessage("id must not be null");
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void findAll_Na_ShouldReturnClients() {
+	void findAll_Na_ShouldReturnClients() {
 		given(this.jdbcOperations.query(anyString(), any(RowMapper.class)))
 				.willReturn(Arrays.asList(ClientTestUtils.createClient(), ClientTestUtils.createClient()));
 
 		assertThat(this.clientRepository.findAll()).hasSize(2);
-		verify(this.jdbcOperations, times(1)).query(and(startsWith("SELECT"), not(endsWith("WHERE id = ?"))),
+		verify(this.jdbcOperations).query(and(startsWith("SELECT"), not(endsWith("WHERE id = ?"))),
 				any(RowMapper.class));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void findAll_Na_ShouldReturnEmptyList() {
+	void findAll_Na_ShouldReturnEmptyList() {
 		given(this.jdbcOperations.query(anyString(), any(RowMapper.class))).willReturn(Collections.emptyList());
 
 		assertThat(this.clientRepository.findAll()).isEmpty();
-		verify(this.jdbcOperations, times(1)).query(and(startsWith("SELECT"), not(endsWith("WHERE id = ?"))),
+		verify(this.jdbcOperations).query(and(startsWith("SELECT"), not(endsWith("WHERE id = ?"))),
 				any(RowMapper.class));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
-	public void deleteById_Valid_ShouldReturnNull() {
+	void deleteById_Valid_ShouldReturnNull() {
 		this.clientRepository.deleteById(new ClientID(UUID.randomUUID().toString()));
 
-		verify(this.jdbcOperations, times(1)).update(startsWith("DELETE"), any(PreparedStatementSetter.class));
+		verify(this.jdbcOperations).update(startsWith("DELETE"), any(PreparedStatementSetter.class));
 		verifyZeroInteractions(this.jdbcOperations);
 	}
 
 	@Test
-	public void deleteById_Null_ShouldThrowException() {
+	void deleteById_Null_ShouldThrowException() {
 		assertThatThrownBy(() -> this.clientRepository.deleteById(null)).isInstanceOf(NullPointerException.class)
 				.hasMessage("id must not be null");
 	}

@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
 @Transactional
-public class JdbcClientRepositoryIntegrationTests {
+class JdbcClientRepositoryIntegrationTests {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -40,14 +40,14 @@ public class JdbcClientRepositoryIntegrationTests {
 	private JdbcClientRepository clientRepository;
 
 	@Test
-	public void save_New_ShouldInsert() {
+	void save_New_ShouldInsert() {
 		this.clientRepository.save(ClientTestUtils.createClient());
 
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "clients")).isEqualTo(1);
 	}
 
 	@Test
-	public void save_Existing_ShouldUpdate() {
+	void save_Existing_ShouldUpdate() {
 		OIDCClientInformation client = ClientTestUtils.createClient();
 		this.clientRepository.save(client);
 		client = new OIDCClientInformation(client.getID(), client.getIDIssueDate(), client.getOIDCMetadata(),
@@ -58,7 +58,7 @@ public class JdbcClientRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void findById_Existing_ShouldReturnClient() {
+	void findById_Existing_ShouldReturnClient() {
 		OIDCClientInformation client = ClientTestUtils.createClient();
 		this.clientRepository.save(client);
 
@@ -67,13 +67,13 @@ public class JdbcClientRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void findById_Missing_ShouldReturnNull() {
+	void findById_Missing_ShouldReturnNull() {
 		assertThat(this.clientRepository.findById(new ClientID(UUID.randomUUID().toString()))).isNull();
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "clients")).isEqualTo(0);
 	}
 
 	@Test
-	public void findAll_Na_ShouldReturnClients() {
+	void findAll_Na_ShouldReturnClients() {
 		this.clientRepository.save(ClientTestUtils.createClient());
 		this.clientRepository.save(ClientTestUtils.createClient());
 
@@ -82,13 +82,13 @@ public class JdbcClientRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void findAll_Na_ShouldReturnEmptyList() {
+	void findAll_Na_ShouldReturnEmptyList() {
 		assertThat(this.clientRepository.findAll()).hasSize(0);
 		assertThat(JdbcTestUtils.countRowsInTable(this.jdbcTemplate, "clients")).isEqualTo(0);
 	}
 
 	@Test
-	public void deleteById_Valid_ShouldReturnNull() {
+	void deleteById_Valid_ShouldReturnNull() {
 		OIDCClientInformation client = ClientTestUtils.createClient();
 		this.clientRepository.save(client);
 		this.clientRepository.deleteById(client.getID());

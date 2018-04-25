@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class JwkSetEndpointTests {
+class JwkSetEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -41,14 +41,14 @@ public class JwkSetEndpointTests {
 	private JwkSetLoader jwkSetLoader;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 
 		reset(this.jwkSetLoader);
 	}
 
 	@Test
-	public void getKeys() throws Exception {
+	void getKeys() throws Exception {
 		given(this.jwkSetLoader.load()).willReturn(new JWKSet());
 
 		this.mvc.perform(get("/oauth2/keys")).andExpect(status().isOk()).andExpect(jsonPath("$.keys").isEmpty());

@@ -28,7 +28,7 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class TokenRevocationEndpointTests {
+class TokenRevocationEndpointTests {
 
 	@Autowired
 	private WebApplicationContext wac;
@@ -36,12 +36,12 @@ public class TokenRevocationEndpointTests {
 	private MockMvc mvc;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 	}
 
 	@Test
-	public void test() {
+	void test() {
 		// TODO
 	}
 
