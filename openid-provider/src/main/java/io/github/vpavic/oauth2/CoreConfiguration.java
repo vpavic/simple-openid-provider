@@ -12,7 +12,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.vpavic.oauth2.authentication.JwtAccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
 import io.github.vpavic.oauth2.client.ClientRepository;
 import io.github.vpavic.oauth2.endpoint.AuthorizationEndpoint;
@@ -148,18 +147,8 @@ public class CoreConfiguration {
 	}
 
 	@Bean
-	public JwtAccessTokenClaimsResolver accessTokenClaimsResolver() {
-		JwtAccessTokenClaimsResolver authenticationResolver = new JwtAccessTokenClaimsResolver(
-				this.properties.getIssuer(), this.jwkSetLoader);
-		authenticationResolver.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
-		authenticationResolver.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
-		return authenticationResolver;
-	}
-
-	@Bean
 	public UserInfoEndpoint userInfoEndpoint() {
-		UserInfoHandler handler = new UserInfoHandler(accessTokenClaimsResolver(), this.claimSource);
-		handler.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
+		UserInfoHandler handler = new UserInfoHandler(accessTokenService(), this.claimSource);
 		handler.setScopeClaims(this.properties.getClaim().getScopeClaims());
 		return new UserInfoEndpoint(handler);
 	}

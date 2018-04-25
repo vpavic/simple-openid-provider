@@ -10,16 +10,18 @@ import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerTokenError;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 
-import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimHelper;
 import io.github.vpavic.oauth2.claim.ClaimSource;
+import io.github.vpavic.oauth2.token.AccessTokenContext;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 
 /**
  * OpenID Connect 1.0 compatible UserInfo Endpoint implementation.
@@ -28,30 +30,23 @@ import io.github.vpavic.oauth2.claim.ClaimSource;
  */
 public class UserInfoHandler {
 
-	private final AccessTokenClaimsResolver accessTokenClaimsResolver;
+	private final AccessTokenService accessTokenService;
 
 	private final ClaimSource claimSource;
 
-	private String accessTokenScopeClaim = "scp";
-
 	private Map<Scope.Value, List<String>> scopeClaims = new HashMap<>();
 
-	public UserInfoHandler(AccessTokenClaimsResolver accessTokenClaimsResolver, ClaimSource claimSource) {
-		Objects.requireNonNull(accessTokenClaimsResolver, "accessTokenClaimsResolver must not be null");
+	public UserInfoHandler(AccessTokenService accessTokenService, ClaimSource claimSource) {
+		Objects.requireNonNull(accessTokenService, "accessTokenService must not be null");
 		Objects.requireNonNull(claimSource, "claimSource must not be null");
-		this.accessTokenClaimsResolver = accessTokenClaimsResolver;
+		this.accessTokenService = accessTokenService;
 		this.claimSource = claimSource;
-	}
-
-	public void setAccessTokenScopeClaim(String accessTokenScopeClaim) {
-		this.accessTokenScopeClaim = accessTokenScopeClaim;
 	}
 
 	public void setScopeClaims(Map<Scope.Value, List<String>> scopeClaims) {
 		this.scopeClaims = scopeClaims;
 	}
 
-	@SuppressWarnings("unchecked")
 	public HTTPResponse getUserInfo(HTTPRequest httpRequest) {
 		HTTPResponse httpResponse;
 
@@ -59,11 +54,13 @@ public class UserInfoHandler {
 			UserInfoRequest userInfoRequest = UserInfoRequest.parse(httpRequest);
 			AccessToken accessToken = userInfoRequest.getAccessToken();
 
-			Map<String, Object> accessTokenClaims = this.accessTokenClaimsResolver.resolveClaims(accessToken);
-			Subject subject = new Subject((String) accessTokenClaims.get("sub"));
-			Scope scope = Scope.parse((List<String>) accessTokenClaims.get(this.accessTokenScopeClaim));
+			AccessTokenContext accessTokenContext = this.accessTokenService.resolveAccessTokenContext(accessToken);
+			Scope scope = accessTokenContext.getScope();
+			if (scope.isEmpty() || !scope.contains(OIDCScopeValue.OPENID.getValue())) {
+				throw new GeneralException(BearerTokenError.INSUFFICIENT_SCOPE);
+			}
 			Set<String> claims = ClaimHelper.resolveClaims(scope, this.scopeClaims);
-			UserInfo userInfo = this.claimSource.load(subject, claims);
+			UserInfo userInfo = this.claimSource.load(accessTokenContext.getSubject(), claims);
 
 			UserInfoSuccessResponse userInfoResponse = new UserInfoSuccessResponse(userInfo);
 			httpResponse = userInfoResponse.toHTTPResponse();

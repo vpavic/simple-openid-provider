@@ -14,8 +14,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.authentication.AccessTokenClaimsResolver;
 import io.github.vpavic.oauth2.claim.ClaimSource;
+import io.github.vpavic.oauth2.token.AccessTokenService;
 
 import static org.mockito.Mockito.mock;
 
@@ -48,7 +48,7 @@ public class UserInfoEndpointTests {
 
 		@Bean
 		public UserInfoHandler userInfoEndpointHandler() {
-			return new UserInfoHandler(mock(AccessTokenClaimsResolver.class), mock(ClaimSource.class));
+			return new UserInfoHandler(mock(AccessTokenService.class), mock(ClaimSource.class));
 		}
 
 		@Bean

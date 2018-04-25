@@ -1,5 +1,6 @@
 package io.github.vpavic.oauth2.token;
 
+import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,7 +25,15 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.KeyType;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.proc.BadJOSEException;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.assertions.jwt.JWTAssertionDetails;
 import com.nimbusds.oauth2.sdk.assertions.jwt.JWTAssertionFactory;
@@ -35,6 +44,7 @@ import com.nimbusds.oauth2.sdk.id.JWTID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -130,6 +140,42 @@ public class JwtAccessTokenService implements AccessTokenService {
 		catch (JOSEException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public AccessTokenContext resolveAccessTokenContext(AccessToken accessToken) throws GeneralException {
+		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
+		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(this.accessTokenJwsAlgorithm,
+				(jwkSelector, context) -> jwkSelector.select(this.jwkSetLoader.load()));
+		jwtProcessor.setJWSKeySelector(keySelector);
+		JWTClaimsSet claimsSet;
+		try {
+			claimsSet = jwtProcessor.process(accessToken.getValue(), null);
+		}
+		catch (ParseException | BadJOSEException | JOSEException e) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
+
+		if (!this.issuer.getValue().equals(claimsSet.getIssuer())) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
+		if (!claimsSet.getAudience().contains(this.issuer.getValue())) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
+		if (Instant.now().isAfter(claimsSet.getExpirationTime().toInstant())) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
+		try {
+			Scope scope = Scope.parse(claimsSet.getStringListClaim(this.accessTokenScopeClaim));
+			Subject subject = new Subject(claimsSet.getSubject());
+			return new AccessTokenContext(scope, subject);
+		}
+		catch (ParseException e) {
+			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
+		}
+//		if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
+//			throw new GeneralException(BearerTokenError.INSUFFICIENT_SCOPE);
+//		}
 	}
 
 	public void setResourceScopes(Map<Scope.Value, String> resourceScopes) {
