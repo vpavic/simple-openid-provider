@@ -173,9 +173,6 @@ public class JwtAccessTokenService implements AccessTokenService {
 		catch (ParseException e) {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
-//		if (scopes.isEmpty() || !scopes.contains(OIDCScopeValue.OPENID.getValue())) {
-//			throw new GeneralException(BearerTokenError.INSUFFICIENT_SCOPE);
-//		}
 	}
 
 	public void setResourceScopes(Map<Scope.Value, String> resourceScopes) {

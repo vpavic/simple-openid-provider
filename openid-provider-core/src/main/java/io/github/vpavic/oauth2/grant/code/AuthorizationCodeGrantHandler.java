@@ -80,8 +80,7 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 		if (!context.getClientId().equals(resolveClientId(tokenRequest))) {
 			throw new GeneralException(OAuth2Error.INVALID_GRANT);
 		}
-		if (!context.getRedirectUri()
-				.equals(((AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant()).getRedirectionURI())) {
+		if (!context.getRedirectUri().equals(authorizationCodeGrant.getRedirectionURI())) {
 			throw new GeneralException(OAuth2Error.INVALID_GRANT);
 		}
 
