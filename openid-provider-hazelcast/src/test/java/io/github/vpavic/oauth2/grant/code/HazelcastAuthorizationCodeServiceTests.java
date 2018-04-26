@@ -8,15 +8,14 @@ import com.hazelcast.core.IMap;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,15 +30,10 @@ class HazelcastAuthorizationCodeServiceTests {
 
 	private IMap codesMap = mock(IMap.class);
 
-	private HazelcastAuthorizationCodeService authorizationCodeService;
-
 	@BeforeEach
 	@SuppressWarnings("unchecked")
 	void setUp() {
 		given(this.hazelcastInstance.getMap(anyString())).willReturn(this.codesMap);
-
-		this.authorizationCodeService = new HazelcastAuthorizationCodeService(this.hazelcastInstance);
-		this.authorizationCodeService.init();
 	}
 
 	@Test
@@ -49,14 +43,14 @@ class HazelcastAuthorizationCodeServiceTests {
 	}
 
 	@Test
-	void setMapName_Valid_ShouldSetMapName() throws IllegalAccessException {
+	void setMapName_Valid_ShouldSetMapName() {
 		String mapName = "myMap";
 		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
 				this.hazelcastInstance);
 		authorizationCodeService.setMapName(mapName);
 		authorizationCodeService.init();
 
-		assertThat(FieldUtils.readField(authorizationCodeService, "mapName", true)).isEqualTo(mapName);
+		verify(this.hazelcastInstance).getMap(eq("myMap"));
 	}
 
 	@Test
@@ -78,14 +72,16 @@ class HazelcastAuthorizationCodeServiceTests {
 	}
 
 	@Test
-	void setCodeLifetime_Valid_ShouldSetCodeLifetime() throws IllegalAccessException {
+	@SuppressWarnings("unchecked")
+	void setCodeLifetime_Valid_ShouldSetCodeLifetime() {
 		Duration codeLifetime = Duration.ofMinutes(1);
 		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
 				this.hazelcastInstance);
 		authorizationCodeService.setCodeLifetime(codeLifetime);
 		authorizationCodeService.init();
+		authorizationCodeService.create(AuthorizationCodeTestUtils.createAuthorizationCodeContext());
 
-		assertThat(FieldUtils.readField(authorizationCodeService, "codeLifetime", true)).isEqualTo(codeLifetime);
+		verify(this.codesMap).put(anyString(), any(), eq(codeLifetime.getSeconds()), eq(TimeUnit.SECONDS));
 	}
 
 	@Test
@@ -100,7 +96,10 @@ class HazelcastAuthorizationCodeServiceTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	void create_Valid_ShouldPut() {
-		this.authorizationCodeService.create(AuthorizationCodeTestUtils.createAuthorizationCodeContext());
+		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+				this.hazelcastInstance);
+		authorizationCodeService.init();
+		authorizationCodeService.create(AuthorizationCodeTestUtils.createAuthorizationCodeContext());
 
 		verify(this.hazelcastInstance).getMap(anyString());
 		verify(this.codesMap).put(anyString(), any(AuthorizationCodeContext.class), anyLong(), any(TimeUnit.class));
@@ -110,7 +109,11 @@ class HazelcastAuthorizationCodeServiceTests {
 
 	@Test
 	void create_NullContext_ShouldThrowException() {
-		assertThatThrownBy(() -> this.authorizationCodeService.create(null)).isInstanceOf(NullPointerException.class)
+		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+				this.hazelcastInstance);
+		authorizationCodeService.init();
+
+		assertThatThrownBy(() -> authorizationCodeService.create(null)).isInstanceOf(NullPointerException.class)
 				.hasMessage("context must not be null");
 	}
 
@@ -119,7 +122,10 @@ class HazelcastAuthorizationCodeServiceTests {
 		given(this.codesMap.remove(anyString()))
 				.willReturn(AuthorizationCodeTestUtils.createAuthorizationCodeContext());
 
-		this.authorizationCodeService.consume(new AuthorizationCode());
+		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+				this.hazelcastInstance);
+		authorizationCodeService.init();
+		authorizationCodeService.consume(new AuthorizationCode());
 
 		verify(this.hazelcastInstance).getMap(anyString());
 		verify(this.codesMap).remove(anyString());
@@ -129,13 +135,21 @@ class HazelcastAuthorizationCodeServiceTests {
 
 	@Test
 	void consume_Missing_ShouldThrowException() {
-		assertThatThrownBy(() -> this.authorizationCodeService.consume(new AuthorizationCode()))
+		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+				this.hazelcastInstance);
+		authorizationCodeService.init();
+
+		assertThatThrownBy(() -> authorizationCodeService.consume(new AuthorizationCode()))
 				.isInstanceOf(GeneralException.class).hasMessage(OAuth2Error.INVALID_GRANT.getDescription());
 	}
 
 	@Test
 	void consume_NullCode_ShouldThrowException() {
-		assertThatThrownBy(() -> this.authorizationCodeService.consume(null)).isInstanceOf(NullPointerException.class)
+		HazelcastAuthorizationCodeService authorizationCodeService = new HazelcastAuthorizationCodeService(
+				this.hazelcastInstance);
+		authorizationCodeService.init();
+
+		assertThatThrownBy(() -> authorizationCodeService.consume(null)).isInstanceOf(NullPointerException.class)
 				.hasMessage("code must not be null");
 	}
 

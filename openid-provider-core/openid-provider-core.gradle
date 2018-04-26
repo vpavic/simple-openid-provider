@@ -8,8 +8,6 @@ dependencies {
 	api 'com.nimbusds:oauth2-oidc-sdk'
 	api 'net.minidev:json-smart'
 
-	implementation 'org.apache.commons:commons-collections4'
-	implementation 'org.apache.commons:commons-text'
 	implementation 'org.apache.httpcomponents:httpclient'
 	implementation 'org.bouncycastle:bcprov-jdk15on'
 

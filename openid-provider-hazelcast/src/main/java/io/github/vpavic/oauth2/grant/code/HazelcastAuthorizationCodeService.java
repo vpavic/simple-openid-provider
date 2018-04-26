@@ -11,7 +11,8 @@ import com.hazelcast.core.IMap;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.commons.lang3.StringUtils;
+
+import io.github.vpavic.oauth2.util.StringUtils;
 
 /**
  * Hazelcast implementation of {@link AuthorizationCodeService}.

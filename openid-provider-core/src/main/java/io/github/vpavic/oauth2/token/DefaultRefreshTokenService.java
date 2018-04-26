@@ -8,10 +8,10 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
-import org.apache.commons.collections4.SetUtils;
 
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenContext;
 import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
+import io.github.vpavic.oauth2.util.SetUtils;
 
 public class DefaultRefreshTokenService implements RefreshTokenService {
 
