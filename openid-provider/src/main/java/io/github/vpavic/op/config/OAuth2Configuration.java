@@ -1,7 +1,5 @@
 package io.github.vpavic.op.config;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.time.Duration;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -14,7 +12,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -71,10 +68,9 @@ public class OAuth2Configuration {
 	public JwkSetLoader jwkSetLoader() {
 		return () -> {
 			try {
-				Resource jwkSetResource = this.resourceLoader.getResource(JWK_SET_LOCATION);
-				return JWKSet.load(jwkSetResource.getInputStream());
+				return JWKSet.load(this.resourceLoader.getResource(JWK_SET_LOCATION).getInputStream());
 			}
-			catch (IOException | ParseException e) {
+			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		};
