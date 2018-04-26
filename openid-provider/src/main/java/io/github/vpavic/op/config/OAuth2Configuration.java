@@ -21,7 +21,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.util.FileCopyUtils;
 
 import io.github.vpavic.oauth2.OpenIdProviderConfiguration;
 import io.github.vpavic.oauth2.OpenIdProviderProperties;
@@ -73,9 +72,7 @@ public class OAuth2Configuration {
 		return () -> {
 			try {
 				Resource jwkSetResource = this.resourceLoader.getResource(JWK_SET_LOCATION);
-				String jwkSetJson = new String(FileCopyUtils.copyToByteArray(jwkSetResource.getInputStream()));
-
-				return JWKSet.parse(jwkSetJson);
+				return JWKSet.load(jwkSetResource.getInputStream());
 			}
 			catch (IOException | ParseException e) {
 				throw new RuntimeException(e);
