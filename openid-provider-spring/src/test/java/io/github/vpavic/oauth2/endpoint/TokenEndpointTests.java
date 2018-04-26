@@ -2,10 +2,10 @@ package io.github.vpavic.oauth2.endpoint;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -495,11 +495,8 @@ class TokenEndpointTests {
 			RefreshTokenGrantHandler refreshTokenGrantHandler = new RefreshTokenGrantHandler(clientRepository(),
 					accessTokenService(), refreshTokenService(), refreshTokenStore());
 
-			Map<Class<?>, GrantHandler> grantHandlers = new HashMap<>();
-			grantHandlers.put(AuthorizationCodeGrant.class, authorizationCodeGrantHandler);
-			grantHandlers.put(ResourceOwnerPasswordCredentialsGrant.class, passwordCredentialsGrantHandler);
-			grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
-			grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
+			List<GrantHandler> grantHandlers = Arrays.asList(authorizationCodeGrantHandler, passwordCredentialsGrantHandler,
+					clientCredentialsGrantHandler, refreshTokenGrantHandler);
 
 			return new TokenHandler(grantHandlers, refreshTokenStore(), new Issuer("http://example.com"),
 					clientRepository());

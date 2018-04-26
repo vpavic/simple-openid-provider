@@ -1,7 +1,9 @@
 package io.github.vpavic.oauth2.endpoint;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
@@ -40,7 +42,7 @@ public class TokenHandler {
 
 	private final ClientRequestValidator clientRequestValidator;
 
-	public TokenHandler(Map<Class<?>, GrantHandler> grantHandlers, RefreshTokenStore refreshTokenStore, Issuer issuer,
+	public TokenHandler(List<GrantHandler> grantHandlers, RefreshTokenStore refreshTokenStore, Issuer issuer,
 			ClientRepository clientRepository) {
 		Objects.requireNonNull(grantHandlers, "grantHandlers must not be null");
 		Objects.requireNonNull(refreshTokenStore, "refreshTokenStore must not be null");
@@ -49,7 +51,7 @@ public class TokenHandler {
 		if (grantHandlers.isEmpty()) {
 			throw new IllegalArgumentException("grantHandlers must not be empty");
 		}
-		this.grantHandlers = grantHandlers;
+		this.grantHandlers = grantHandlers.stream().collect(Collectors.toMap(GrantHandler::grantType, entry -> entry));
 		this.refreshTokenStore = refreshTokenStore;
 		this.clientRequestValidator = new ClientRequestValidator(issuer, clientRepository);
 	}

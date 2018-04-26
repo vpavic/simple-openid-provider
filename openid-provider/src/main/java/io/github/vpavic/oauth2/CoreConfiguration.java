@@ -1,13 +1,9 @@
 package io.github.vpavic.oauth2;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
-import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
-import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
-import com.nimbusds.oauth2.sdk.ResourceOwnerPasswordCredentialsGrant;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -126,11 +122,8 @@ public class CoreConfiguration {
 				accessTokenService(), refreshTokenService(), this.refreshTokenStore);
 		refreshTokenGrantHandler.setUpdateRefreshToken(this.properties.getRefreshToken().isUpdate());
 
-		Map<Class<?>, GrantHandler> grantHandlers = new HashMap<>();
-		grantHandlers.put(AuthorizationCodeGrant.class, authorizationCodeGrantHandler);
-		grantHandlers.put(ResourceOwnerPasswordCredentialsGrant.class, passwordCredentialsGrantHandler);
-		grantHandlers.put(ClientCredentialsGrant.class, clientCredentialsGrantHandler);
-		grantHandlers.put(RefreshTokenGrant.class, refreshTokenGrantHandler);
+		List<GrantHandler> grantHandlers = Arrays.asList(authorizationCodeGrantHandler, passwordCredentialsGrantHandler,
+				clientCredentialsGrantHandler, refreshTokenGrantHandler);
 
 		return new TokenHandler(grantHandlers, this.refreshTokenStore, this.properties.getIssuer(),
 				this.clientRepository);

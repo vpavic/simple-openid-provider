@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -65,8 +66,13 @@ public class AuthorizationCodeGrantHandler implements GrantHandler {
 	}
 
 	@Override
+	public Class<? extends AuthorizationGrant> grantType() {
+		return AuthorizationCodeGrant.class;
+	}
+
+	@Override
 	public Tokens grant(TokenRequest tokenRequest) throws GeneralException {
-		if (!(tokenRequest.getAuthorizationGrant() instanceof AuthorizationCodeGrant)) {
+		if (!supports(tokenRequest.getAuthorizationGrant())) {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 

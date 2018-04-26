@@ -2,6 +2,7 @@ package io.github.vpavic.oauth2.grant.refresh;
 
 import java.util.Objects;
 
+import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
@@ -46,8 +47,13 @@ public class RefreshTokenGrantHandler implements GrantHandler {
 	}
 
 	@Override
+	public Class<? extends AuthorizationGrant> grantType() {
+		return RefreshTokenGrant.class;
+	}
+
+	@Override
 	public Tokens grant(TokenRequest tokenRequest) throws GeneralException {
-		if (!(tokenRequest.getAuthorizationGrant() instanceof RefreshTokenGrant)) {
+		if (!supports(tokenRequest.getAuthorizationGrant())) {
 			throw new GeneralException(OAuth2Error.UNSUPPORTED_GRANT_TYPE);
 		}
 

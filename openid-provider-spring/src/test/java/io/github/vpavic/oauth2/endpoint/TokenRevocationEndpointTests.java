@@ -1,6 +1,6 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.util.Map;
+import java.util.List;
 
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +52,7 @@ class TokenRevocationEndpointTests {
 		@Bean
 		@SuppressWarnings("unchecked")
 		public TokenHandler tokenHandler() {
-			return new TokenHandler(mock(Map.class), mock(RefreshTokenStore.class), new Issuer("http://example.com"),
+			return new TokenHandler(mock(List.class), mock(RefreshTokenStore.class), new Issuer("http://example.com"),
 					mock(ClientRepository.class));
 		}
 
