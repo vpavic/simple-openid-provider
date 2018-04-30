@@ -7,18 +7,16 @@ configurations {
 	}
 }
 
+ext['junit-jupiter.version'] = '5.2.0'
+
 dependencyManagement {
 	imports {
+		mavenBom 'org.junit:junit-bom:5.2.0'
 		mavenBom 'org.springframework:spring-framework-bom:5.0.5.RELEASE'
 		mavenBom 'org.springframework.security:spring-security-bom:5.0.4.RELEASE'
 	}
 
 	dependencies {
-		dependencySet(group: 'org.junit.jupiter', version: '5.1.1') {
-			entry 'junit-jupiter-api'
-			entry 'junit-jupiter-engine'
-		}
-
 		dependency 'com.h2database:h2:1.4.197'
 		dependency 'com.hazelcast:hazelcast:3.10'
 		dependency 'com.jayway.jsonpath:json-path:2.4.0'
