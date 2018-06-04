@@ -1,10 +1,6 @@
 package io.github.vpavic.oauth2.endpoint;
 
-import java.util.List;
-
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,10 +13,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import io.github.vpavic.oauth2.client.ClientRepository;
-import io.github.vpavic.oauth2.grant.refresh.RefreshTokenStore;
-
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 
 /**
  * Tests for {@link TokenRevocationEndpoint}.
@@ -33,27 +27,26 @@ class TokenRevocationEndpointTests {
 	@Autowired
 	private WebApplicationContext wac;
 
+	@Autowired
+	private TokenHandler tokenHandler;
+
 	private MockMvc mvc;
 
 	@BeforeEach
 	void setUp() {
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+		reset(this.tokenHandler);
 	}
 
-	@Test
-	void test() {
-		// TODO
-	}
+	// TODO add tests
 
 	@Configuration
 	@EnableWebMvc
 	static class Config {
 
 		@Bean
-		@SuppressWarnings("unchecked")
 		public TokenHandler tokenHandler() {
-			return new TokenHandler(mock(List.class), mock(RefreshTokenStore.class), new Issuer("http://example.com"),
-					mock(ClientRepository.class));
+			return mock(TokenHandler.class);
 		}
 
 		@Bean

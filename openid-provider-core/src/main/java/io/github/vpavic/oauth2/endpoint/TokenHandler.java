@@ -3,10 +3,12 @@ package io.github.vpavic.oauth2.endpoint;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
@@ -79,7 +81,8 @@ public class TokenHandler {
 			httpResponse = tokenResponse.toHTTPResponse();
 		}
 		catch (GeneralException e) {
-			TokenErrorResponse tokenResponse = new TokenErrorResponse(e.getErrorObject());
+			ErrorObject error = Optional.ofNullable(e.getErrorObject()).orElse(OAuth2Error.INVALID_REQUEST);
+			TokenErrorResponse tokenResponse = new TokenErrorResponse(error);
 			httpResponse = tokenResponse.toHTTPResponse();
 		}
 
