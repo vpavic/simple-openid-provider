@@ -8,6 +8,7 @@ configurations {
 }
 
 ext['junit-jupiter.version'] = '5.2.0'
+ext['spring-session-bom.version'] = 'Apple-SR1'
 
 dependencyManagement {
 	imports {
