@@ -18,6 +18,7 @@ import io.github.vpavic.oauth2.endpoint.CheckSessionHandler;
 import io.github.vpavic.oauth2.endpoint.CheckSessionIframe;
 import io.github.vpavic.oauth2.endpoint.EndSessionEndpoint;
 import io.github.vpavic.oauth2.endpoint.EndSessionHandler;
+import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 @Configuration
 @Conditional(LogoutCondition.class)
@@ -25,17 +26,21 @@ public class LogoutConfiguration {
 
 	private final OpenIdProviderProperties providerProperties;
 
+	private final JwkSetLoader jwkSetLoader;
+
 	private final ClientRepository clientRepository;
 
-	public LogoutConfiguration(OpenIdProviderProperties providerProperties,
+	public LogoutConfiguration(OpenIdProviderProperties providerProperties, ObjectProvider<JwkSetLoader> jwkSetLoader,
 			ObjectProvider<ClientRepository> clientRepository) {
 		this.providerProperties = providerProperties;
+		this.jwkSetLoader = jwkSetLoader.getObject();
 		this.clientRepository = clientRepository.getObject();
 	}
 
 	@Bean
 	public EndSessionEndpoint endSessionEndpoint() {
-		EndSessionHandler handler = new EndSessionHandler(this.providerProperties.getIssuer(), this.clientRepository);
+		EndSessionHandler handler = new EndSessionHandler(this.providerProperties.getIssuer(), this.jwkSetLoader,
+				this.clientRepository);
 		handler.setFrontChannelLogoutEnabled(this.providerProperties.getFrontChannelLogout().isEnabled());
 		return new EndSessionEndpoint(handler);
 	}

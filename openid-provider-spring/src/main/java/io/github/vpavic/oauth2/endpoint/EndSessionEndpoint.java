@@ -13,10 +13,12 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.claims.SessionID;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping(path = EndSessionEndpoint.PATH_MAPPING)
@@ -36,13 +38,14 @@ public class EndSessionEndpoint {
 			throws IOException, ServletException {
 		if (request.getQueryString() != null) {
 			HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-
 			try {
 				LogoutRequest logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
+				request.setAttribute("idToken", logoutRequest.getIDTokenHint().serialize());
 				request.setAttribute("redirectUri", logoutRequest.getPostLogoutRedirectionURI());
 				request.setAttribute("state", logoutRequest.getState());
 			}
-			catch (ParseException ignored) {
+			catch (ParseException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
 			}
 		}
 

@@ -14,11 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class LogoutPromptController {
 
 	@GetMapping
-	public String logoutPrompt(@RequestAttribute(name = "redirectUri", required = false) URI redirectUri,
+	public String logoutPrompt(@RequestAttribute(name = "idToken", required = false) String idToken,
+			@RequestAttribute(name = "redirectUri", required = false) URI redirectUri,
 			@RequestAttribute(name = "state", required = false) State state, Model model) {
+		model.addAttribute("idToken", idToken);
 		model.addAttribute("redirectUri", redirectUri);
 		model.addAttribute("state", state);
-
 		return "logout";
 	}
 
