@@ -41,10 +41,12 @@
 	<div class="form-signout">
 		<form action="#" method="post" data-th-action="@{/logout}">
 			<h2 class="form-signout-heading">Sign out?</h2>
-			<input type="hidden" name="id_token_hint" data-th-value="${idToken}" data-th-if="${idToken != null}">
-			<input type="hidden" name="post_logout_redirect_uri" data-th-value="${redirectUri}"
-					data-th-if="${redirectUri != null}">
-			<input type="hidden" name="state" data-th-value="${state}" data-th-if="${state != null}">
+			<input type="hidden" name="id_token_hint" data-th-value="${logoutRequest.iDTokenHint.parsedString}"
+					data-th-if="${logoutRequest.iDTokenHint != null}">
+			<input type="hidden" name="post_logout_redirect_uri" data-th-value="${logoutRequest.postLogoutRedirectionURI}"
+					data-th-if="${logoutRequest.postLogoutRedirectionURI != null}">
+			<input type="hidden" name="state" data-th-value="${logoutRequest.state}"
+					data-th-if="${logoutRequest.state != null}">
 			<button class="btn btn-lg btn-primary btn-block">Yes</button>
 			<a href="#" class="btn btn-lg btn-default btn-block" data-th-href="@{/}">No</a>
 		</form>

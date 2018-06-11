@@ -117,10 +117,10 @@ public class EndSessionHandler {
 				State state = logoutRequest.getState();
 				if (state != null) {
 					// @formatter:off
-						resolvedPostLogoutRedirectUri = new URIBuilder(resolvedPostLogoutRedirectUri)
-								.addParameter("state", state.getValue())
-								.build();
-						// @formatter:on
+					resolvedPostLogoutRedirectUri = new URIBuilder(resolvedPostLogoutRedirectUri)
+							.addParameter("state", state.getValue())
+							.build();
+					// @formatter:on
 				}
 			}
 		}

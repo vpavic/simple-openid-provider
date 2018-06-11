@@ -36,19 +36,15 @@ public class EndSessionEndpoint {
 	@GetMapping
 	public void getLogoutPrompt(HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		if (request.getQueryString() != null) {
-			HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
-			try {
-				LogoutRequest logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
-				request.setAttribute("idToken", logoutRequest.getIDTokenHint().serialize());
-				request.setAttribute("redirectUri", logoutRequest.getPostLogoutRedirectionURI());
-				request.setAttribute("state", logoutRequest.getState());
-			}
-			catch (ParseException e) {
-				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-			}
+		HTTPRequest httpRequest = ServletUtils.createHTTPRequest(request);
+		LogoutRequest logoutRequest;
+		try {
+			logoutRequest = LogoutRequest.parse(httpRequest.getQuery());
 		}
-
+		catch (ParseException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+		}
+		request.setAttribute("logoutRequest", logoutRequest);
 		request.getRequestDispatcher("/logout").forward(request, response);
 	}
 
