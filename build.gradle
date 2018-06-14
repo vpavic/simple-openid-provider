@@ -2,7 +2,7 @@ plugins {
 	id 'base'
 	id 'com.github.ben-manes.versions' version '0.17.0' apply false
 	id 'nebula.optional-base' version '3.3.0' apply false
-	id 'org.springframework.boot' version '2.0.2.RELEASE' apply false
+	id 'org.springframework.boot' version '2.0.3.RELEASE' apply false
 }
 
 subprojects {
