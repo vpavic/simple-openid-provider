@@ -21,7 +21,7 @@ dependencyManagement {
 		dependency 'com.jayway.jsonpath:json-path:2.4.0'
 		dependency 'com.nimbusds:lang-tag:1.4.3'
 		dependency 'com.nimbusds:nimbus-jose-jwt:5.12'
-		dependency 'com.nimbusds:oauth2-oidc-sdk:5.62'
+		dependency 'com.nimbusds:oauth2-oidc-sdk:5.63'
 		dependency 'javax.servlet:javax.servlet-api:4.0.1'
 		dependency 'net.minidev:json-smart:2.3'
 		dependency 'org.apache.commons:commons-collections4:4.1'
