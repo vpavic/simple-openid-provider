@@ -38,6 +38,7 @@ class JwkSetHandlerTests {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	void getJwkSet_WithNoKeysLoaded_ShouldReturnResponse() {
 		given(this.jwkSetLoader.load()).willReturn(new JWKSet());
 
