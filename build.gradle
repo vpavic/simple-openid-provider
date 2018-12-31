@@ -1,8 +1,8 @@
 plugins {
 	id 'base'
 	id 'com.github.ben-manes.versions' version '0.20.0'
-	id 'nebula.optional-base' version '3.3.0' apply false
-	id 'org.springframework.boot' version '2.1.0.M2' apply false
+	id 'nebula.optional-base' version '5.0.0' apply false
+	id 'org.springframework.boot' version '2.1.1.RELEASE' apply false
 }
 
 subprojects {
@@ -15,7 +15,6 @@ subprojects {
 
 	repositories {
 		mavenCentral()
-		maven { url 'https://repo.spring.io/libs-milestone/' }
 	}
 
 	test {
@@ -25,6 +24,6 @@ subprojects {
 	checkstyle {
 		configFile = rootProject.file('config/checkstyle/checkstyle.xml')
 		configProperties.configDir = configFile.parentFile
-		toolVersion = '8.12'
+		toolVersion = '8.15'
 	}
 }

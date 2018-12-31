@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -91,7 +92,7 @@ public class AuthorizationEndpoint {
 
 		if (prompt != null && prompt.contains(Prompt.Type.LOGIN)) {
 			// @formatter:off
-			Map<String, String> authRequestParams = authRequest.toParameters().entrySet().stream()
+			Map<String, List<String>> authRequestParams = authRequest.toParameters().entrySet().stream()
 					.filter(entry -> !entry.getKey().equals("prompt"))
 					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 			// @formatter:on

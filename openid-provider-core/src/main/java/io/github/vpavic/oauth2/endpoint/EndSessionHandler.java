@@ -59,7 +59,7 @@ public class EndSessionHandler {
 		HTTPResponse httpResponse;
 
 		try {
-			Map<String, String> params = httpRequest.getQueryParameters();
+			Map<String, List<String>> params = httpRequest.getQueryParameters();
 			LogoutRequest logoutRequest = LogoutRequest.parse(params);
 			URI postLogoutRedirectUri = resolvePostLogoutRedirectUri(logoutRequest);
 

@@ -172,7 +172,7 @@ class EndSessionHandlerTests {
 	private static RSAKey generateKey() {
 		try {
 			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-			generator.initialize(512);
+			generator.initialize(2048);
 			KeyPair kp = generator.generateKeyPair();
 			RSAPublicKey publicKey = (RSAPublicKey) kp.getPublic();
 			RSAPrivateKey privateKey = (RSAPrivateKey) kp.getPrivate();
