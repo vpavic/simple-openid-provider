@@ -9,12 +9,9 @@ import com.hazelcast.config.MapIndexConfig;
 import com.hazelcast.core.HazelcastInstance;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.session.HazelcastSessionProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.session.hazelcast.HazelcastSessionRepository;
 import org.springframework.session.hazelcast.PrincipalNameExtractor;
-import org.springframework.session.web.http.CookieSerializer;
-import org.springframework.session.web.http.DefaultCookieSerializer;
 
 @Configuration
 public class SessionConfiguration {
@@ -53,14 +50,6 @@ public class SessionConfiguration {
 
 			config.addMapConfig(mapConfig);
 		}
-	}
-
-	@Bean
-	public CookieSerializer cookieSerializer() {
-		DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
-		cookieSerializer.setCookieName("sid");
-		cookieSerializer.setUseHttpOnlyCookie(false);
-		return cookieSerializer;
 	}
 
 }
