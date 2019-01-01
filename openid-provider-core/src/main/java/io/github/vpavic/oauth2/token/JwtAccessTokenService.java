@@ -54,6 +54,10 @@ import io.github.vpavic.oauth2.jwk.JwkSetLoader;
 
 public class JwtAccessTokenService implements AccessTokenService {
 
+	private static final String CLAIM_SCOPE = "scope";
+
+	private static final String CLAIM_CLIENT_ID = "client_id";
+
 	private static final BouncyCastleProvider jcaProvider = new BouncyCastleProvider();
 
 	private final Issuer issuer;
@@ -67,10 +71,6 @@ public class JwtAccessTokenService implements AccessTokenService {
 	private Duration accessTokenLifetime = Duration.ofMinutes(10);
 
 	private JWSAlgorithm accessTokenJwsAlgorithm = JWSAlgorithm.RS256;
-
-	private String accessTokenScopeClaim = "scp";
-
-	private String accessTokenClientIdClaim = "cid";
 
 	private List<String> accessTokenSubjectClaims = new ArrayList<>();
 
@@ -106,8 +106,8 @@ public class JwtAccessTokenService implements AccessTokenService {
 		Date issueTime = Date.from(now);
 		JWTID jwtId = new JWTID(UUID.randomUUID().toString());
 		UserInfo userInfo = this.claimSource.load(subject, new HashSet<>(this.accessTokenSubjectClaims));
-		userInfo.setClaim(this.accessTokenScopeClaim, scope);
-		userInfo.setClaim(this.accessTokenClientIdClaim, client.getID());
+		userInfo.setClaim(CLAIM_SCOPE, scope);
+		userInfo.setClaim(CLAIM_CLIENT_ID, client.getID());
 
 		try {
 			JWTAssertionDetails details = new JWTAssertionDetails(this.issuer, userInfo.getSubject(),
@@ -166,7 +166,7 @@ public class JwtAccessTokenService implements AccessTokenService {
 			throw new GeneralException(BearerTokenError.INVALID_TOKEN);
 		}
 		try {
-			Scope scope = Scope.parse(claimsSet.getStringListClaim(this.accessTokenScopeClaim));
+			Scope scope = Scope.parse(claimsSet.getStringListClaim(CLAIM_SCOPE));
 			Subject subject = new Subject(claimsSet.getSubject());
 			return new AccessTokenContext(scope, subject);
 		}
@@ -185,14 +185,6 @@ public class JwtAccessTokenService implements AccessTokenService {
 
 	public void setAccessTokenJwsAlgorithm(JWSAlgorithm accessTokenJwsAlgorithm) {
 		this.accessTokenJwsAlgorithm = accessTokenJwsAlgorithm;
-	}
-
-	public void setAccessTokenScopeClaim(String accessTokenScopeClaim) {
-		this.accessTokenScopeClaim = accessTokenScopeClaim;
-	}
-
-	public void setAccessTokenClientIdClaim(String accessTokenClientIdClaim) {
-		this.accessTokenClientIdClaim = accessTokenClientIdClaim;
 	}
 
 	public void setAccessTokenSubjectClaims(List<String> accessTokenSubjectClaims) {

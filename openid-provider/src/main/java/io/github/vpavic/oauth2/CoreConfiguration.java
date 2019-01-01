@@ -76,8 +76,6 @@ public class CoreConfiguration {
 		accessTokenService.setResourceScopes(this.properties.getAuthorization().getResourceScopes());
 		accessTokenService.setAccessTokenLifetime(Duration.ofSeconds(this.properties.getAccessToken().getLifetime()));
 		accessTokenService.setAccessTokenJwsAlgorithm(this.properties.getAccessToken().getJwsAlgorithm());
-		accessTokenService.setAccessTokenScopeClaim(this.properties.getAccessToken().getScopeClaim());
-		accessTokenService.setAccessTokenClientIdClaim(this.properties.getAccessToken().getClientIdClaim());
 		accessTokenService.setAccessTokenSubjectClaims(this.properties.getAccessToken().getSubjectClaims());
 		return accessTokenService;
 	}
