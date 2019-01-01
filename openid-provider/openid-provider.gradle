@@ -5,7 +5,6 @@ dependencies {
 	compile project(':openid-provider-hazelcast')
 	compile project(':openid-provider-spring')
 
-	compile 'org.springframework.boot:spring-boot-starter-cloud-connectors'
 	compile 'org.springframework.boot:spring-boot-starter-jdbc'
 	compile 'org.springframework.boot:spring-boot-starter-security'
 	compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
