@@ -15,8 +15,8 @@ public class RelyingPartyApplication {
 	}
 
 	@GetMapping(path = "/")
-	public String home(Authentication authentication) {
-		return authentication.getPrincipal().toString();
+	public Authentication home(Authentication authentication) {
+		return authentication;
 	}
 
 }

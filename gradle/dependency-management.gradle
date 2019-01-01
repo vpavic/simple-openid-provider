@@ -30,8 +30,6 @@ dependencyManagement {
 		dependency 'org.bouncycastle:bcprov-jdk15on:1.60'
 		dependency 'org.hamcrest:hamcrest-library:2.1'
 		dependency 'org.mockito:mockito-core:2.23.4'
-		dependency 'org.springframework.security:spring-security-jwt:1.0.9.RELEASE'
-		dependency 'org.springframework.security.oauth:spring-security-oauth2:2.3.4.RELEASE'
 		dependency 'org.webjars:bootstrap:3.3.7-1'
 	}
 }
